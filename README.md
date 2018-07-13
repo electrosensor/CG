@@ -1,8 +1,8 @@
 # Computer Graphics 203.3710, Summer 2018
 ## Students Team data
 
-Name: 'Your real name'  
-Student Number: 'Your student number'
+Name: Khvoles Yuri  
+Student Number: 329034847
 
 Name: 'Your real name'  
 Student Number: 'Your student number'
