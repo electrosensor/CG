@@ -4,8 +4,8 @@
 Name: Khvoles Yuri  
 Student Number: 329034847
 
-Name: 'Your real name'  
-Student Number: 'Your student number'
+Name: Aviad Bar-David
+Student Number: 066706383
 
 ### Lecturer
 *Roi Poranne*
