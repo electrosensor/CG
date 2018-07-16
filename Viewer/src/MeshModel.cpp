@@ -82,6 +82,26 @@ MeshModel::~MeshModel()
 {
 }
 
+void MeshModel::SetWorldTransform(glm::mat4x4 & transformation)
+{
+	worldTransform = transformation;
+}
+
+const glm::mat4x4& MeshModel::GetWorldTransform()
+{
+	return worldTransform;
+}
+
+void MeshModel::SetNormalTransform(glm::mat4x4 & transformation)
+{
+	normalTransform = transformation;
+}
+
+const glm::mat4x4 & MeshModel::GetNormalTransform()
+{
+	return normalTransform;
+}
+
 void MeshModel::LoadFile(const string& fileName)
 {
 	ifstream ifile(fileName.c_str());
@@ -125,9 +145,11 @@ void MeshModel::LoadFile(const string& fileName)
 	//Then vertexPositions should contain:
 	//vertexPositions={v1,v2,v3,v1,v3,v4}
 
-	glm::vec3* vertexPositions = new glm::vec3[faces.size() + FACE_ELEMENTS];
+	vertexPosSize = faces.size()*FACE_ELEMENTS;
+	vertexPositions = new glm::vec3[vertexPosSize];
+
 	// iterate through all stored faces and create triangles
-	int k=0;
+
 	for (vector<FaceIdx>::iterator it = faces.begin(); it != faces.end(); ++it)
 	{
 		for (int i = 0; i < FACE_ELEMENTS; i++)
@@ -136,12 +158,17 @@ void MeshModel::LoadFile(const string& fileName)
 			float x = vertices[currentVertexIdx].x;
 			float y = vertices[currentVertexIdx].y;
 			float z = vertices[currentVertexIdx].z;
-			vertexPositions[k++] = glm::vec3(x, y, z);
+			vertexPositions[i] = glm::vec3(x, y, z);
 		}
 	}
 }
 
 const vector<glm::vec3>* MeshModel::Draw()
 {
-	return NULL;
+	vector<glm::vec3>* meshModel = new vector<glm::vec3>();
+	for (size_t i = 0; i < vertexPosSize; i++)
+	{
+		meshModel->push_back(vertexPositions[i]);
+	}
+	return meshModel;
 }
