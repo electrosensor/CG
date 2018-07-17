@@ -8,7 +8,7 @@ using namespace std;
  */
 class Model
 {
-protected:
+public:
 	virtual ~Model() {}
 	virtual const vector<glm::vec3>* Draw() = 0;
 };

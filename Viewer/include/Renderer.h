@@ -21,8 +21,10 @@ private:
 	// Screen dimensions
 	int width, height;
 
-	// Draw's a pixel in location p with color color
-	void putPixel(int i, int j, const glm::vec3& color);
+	// Draws a pixel in location p with color color
+	void putPixel(int i, int j, const glm::vec3& color );
+	// Draws a line by Bresenham algorithm: 
+	void DrawLine(const glm::vec2& p1, const glm::vec2& p2, const glm::vec3& color);
 	// creates float array of dimension [3,w,h]
 	void createBuffers(int w, int h);
 	//##############################

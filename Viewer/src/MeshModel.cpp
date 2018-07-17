@@ -80,6 +80,7 @@ MeshModel::MeshModel(const string& fileName)
 
 MeshModel::~MeshModel()
 {
+	delete[] vertexPositions;
 }
 
 void MeshModel::SetWorldTransform(glm::mat4x4 & transformation)
@@ -149,16 +150,16 @@ void MeshModel::LoadFile(const string& fileName)
 	vertexPositions = new glm::vec3[vertexPosSize];
 
 	// iterate through all stored faces and create triangles
-
-	for (vector<FaceIdx>::iterator it = faces.begin(); it != faces.end(); ++it)
+	size_t posIdx = 0;
+	for each (FaceIdx faces in faces)
 	{
 		for (int i = 0; i < FACE_ELEMENTS; i++)
 		{
-			int currentVertexIdx = (*it).v[i];
-			float x = vertices[currentVertexIdx].x;
-			float y = vertices[currentVertexIdx].y;
-			float z = vertices[currentVertexIdx].z;
-			vertexPositions[i] = glm::vec3(x, y, z);
+			int currentVertexIdx = faces.v[i];
+			float x = vertices[currentVertexIdx - 1].x;
+			float y = vertices[currentVertexIdx - 1].y;
+			float z = vertices[currentVertexIdx - 1].z;
+			vertexPositions[posIdx++] = glm::vec3(x, y, z);
 		}
 	}
 }

@@ -21,6 +21,17 @@ Renderer::~Renderer()
 	delete[] colorBuffer;
 }
 
+void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, const vector<glm::vec3>* normals)
+{
+	glm::vec3 color((0.0f, 1.0f, 0.0f));
+	for (vector<glm::vec3>::const_iterator it = vertices->begin(); it != vertices->end(); it += 3)
+	{
+		DrawLine(glm::vec2((*it).x, (*it).y), glm::vec2((*(it + 1)).x, (*(it + 1)).y), color);
+		DrawLine(glm::vec2((*(it + 1)).x, (*(it + 1)).y), glm::vec2((*(it + 2)).x, (*(it + 2)).y), color);
+		DrawLine(glm::vec2((*(it + 2)).x, (*(it + 2)).y), glm::vec2((*it).x, (*it).y), color);
+	}
+}
+
 void Renderer::putPixel(int i, int j, const glm::vec3& color)
 {
 	if (i < 0) return; if (i >= width) return;
@@ -28,6 +39,56 @@ void Renderer::putPixel(int i, int j, const glm::vec3& color)
 	colorBuffer[INDEX(width, i, j, 0)] = color.x;
 	colorBuffer[INDEX(width, i, j, 1)] = color.y;
 	colorBuffer[INDEX(width, i, j, 2)] = color.z;
+}
+
+void Renderer::DrawLine(const glm::vec2 & p1, const glm::vec2 & p2, const glm::vec3& color)
+{
+	float x1 = p1.x;
+	float x2 = p2.x;
+	float y1 = p1.y;
+	float y2 = p2.y;
+	// taken from internet:
+		// Bresenham's line algorithm
+		const bool steep = (fabs(y2 - y1) > fabs(x2 - x1));
+		if (steep)
+		{
+			std::swap(x1, y1);
+			std::swap(x2, y2);
+		}
+
+		if (x1 > x2)
+		{
+			std::swap(x1, x2);
+			std::swap(y1, y2);
+		}
+
+		const float dx = x2 - x1;
+		const float dy = fabs(y2 - y1);
+
+		float error = dx / 2.0f;
+		const int ystep = (y1 < y2) ? 1 : -1;
+		int y = (int)y1;
+
+		const int maxX = (int)x2;
+
+		for (int x = (int)x1; x<maxX; x++)
+		{
+			if (steep)
+			{
+				putPixel(y, x, color);
+			}
+			else
+			{
+				putPixel(x, y, color);
+			}
+
+			error -= dy;
+			if (error < 0)
+			{
+				y += ystep;
+				error += dx;
+			}
+		}
 }
 
 void Renderer::createBuffers(int w, int h)
