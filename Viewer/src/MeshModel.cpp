@@ -7,6 +7,7 @@
 #define FACE_ELEMENTS 3
 
 
+typedef Model* PModel;
 using namespace std;
 
 // A struct for processing a single line in a wafefront obj file:
@@ -73,40 +74,47 @@ glm::vec2 vec2fFromStream(std::istream& issLine)
 	return glm::vec2(x, y);
 }
 
-MeshModel::MeshModel(const string& fileName) : worldTransform({ {1,0,0,0},{ 0,1,0,0 },{ 0,0,1,0 },{ 0,0,0,1 } }), 
-											   normalTransform({ { 1,0,0,0 },{ 0,1,0,0 },{ 0,0,1,0 },{ 0,0,0,1 } })
+MeshModel::MeshModel(const string& fileName) : m_worldTransform({ {1,0,0,0},{ 0,1,0,0 },{ 0,0,1,0 },{ 0,0,0,1 } }), 
+											   m_normalTransform({ { 1,0,0,0 },{ 0,1,0,0 },{ 0,0,1,0 },{ 0,0,0,1 } })
 {
 	LoadFile(fileName);
 }
 
 MeshModel::~MeshModel()
 {
-	delete[] vertexPositions;
+	delete[] m_vertexPositions;
 }
 
 void MeshModel::SetWorldTransform(glm::mat4x4 & transformation)
 {
-	worldTransform = transformation;
+	m_worldTransform = transformation;
 }
 
 const glm::mat4x4& MeshModel::GetWorldTransform()
 {
-	return worldTransform;
+	return m_worldTransform;
 }
 
 void MeshModel::SetNormalTransform(glm::mat4x4 & transformation)
 {
-	normalTransform = transformation;
+	m_normalTransform = transformation;
 }
 
 const glm::mat4x4 & MeshModel::GetNormalTransform()
 {
-	return normalTransform;
+	return m_normalTransform;
 }
 
 void MeshModel::LoadFile(const string& fileName)
 {
 	ifstream ifile(fileName.c_str());
+
+	if (ifile.fail())
+	{
+		printf("Opening file %s failed, good by cruel world!!!", fileName.c_str());
+		exit(IO_ERROR);
+	}
+
 	vector<FaceIdx> faces;
 	vector<glm::vec3> vertices;
 	// while not end of file
@@ -147,8 +155,8 @@ void MeshModel::LoadFile(const string& fileName)
 	//Then vertexPositions should contain:
 	//vertexPositions={v1,v2,v3,v1,v3,v4}
 
-	vertexPosSize = faces.size()*FACE_ELEMENTS;
-	vertexPositions = new glm::vec3[vertexPosSize];
+	m_vertexPosSize = faces.size()*FACE_ELEMENTS;
+	m_vertexPositions = new glm::vec3[m_vertexPosSize];
 
 	// iterate through all stored faces and create triangles
 	size_t posIdx = 0;
@@ -160,7 +168,7 @@ void MeshModel::LoadFile(const string& fileName)
 			float x = vertices[currentVertexIdx - 1].x;
 			float y = vertices[currentVertexIdx - 1].y;
 			float z = vertices[currentVertexIdx - 1].z;
-			vertexPositions[posIdx++] = glm::vec3(x, y, z);
+			m_vertexPositions[posIdx++] = glm::vec3(x, y, z);
 		}
 	}
 }
@@ -168,9 +176,9 @@ void MeshModel::LoadFile(const string& fileName)
 const vector<glm::vec3>* MeshModel::Draw()
 {
 	vector<glm::vec3>* meshModelVertices = new vector<glm::vec3>();
-	for (size_t i = 0; i < vertexPosSize; i++)
+	for (size_t i = 0; i < m_vertexPosSize; i++)
 	{
-		glm::vec3 vertex = vertexPositions[i];
+		glm::vec3 vertex = m_vertexPositions[i];
 //		applyWorldTransform(vertex);
 //		applyNormalTransform(vertex);
 		meshModelVertices->push_back(vertex);

@@ -14,6 +14,7 @@
 #include "Renderer.h"
 #include "Scene.h"
 #include "ImguiMenus.h"
+#include "MeshModel.h" //TODO_AVIAD: remove after creating a global definitions h file
 
 
 // Callback for the error state of glfw
@@ -42,7 +43,7 @@ int main(int argc, char **argv)
     // Setup Dear ImGui binding
 	ImGuiIO& io = SetupDearImgui(window);
     // Main loop - the famous "Game Loop" in video games :)
-	scene.LoadOBJModel("C:\\Users\\KY\\Desktop\\test.obj");
+	scene.LoadOBJModel("../ObjFiles/test.obj");
     while (!glfwWindowShouldClose(window))
     {
         // Poll and handle events (inputs, window resize, etc.)
@@ -63,7 +64,7 @@ int main(int argc, char **argv)
     }
     // Cleanup
 	Cleanup(window);
-    return 0;
+    return NORMAL_EXIT;
 }
 
 // Callback for the error state of glfw
