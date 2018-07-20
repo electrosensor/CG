@@ -33,4 +33,12 @@ public:
 	glm::mat4x4 Perspective( const float fovy, const float aspect,
 		const float zNear, const float zFar);
 
+	glm::mat4x4 GetTransformation() 
+	{
+		return cTransform;
+	}
+	glm::mat4x4 GetProjection()
+	{
+		return projection;
+	}
 };

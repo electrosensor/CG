@@ -35,6 +35,12 @@ private:
 	void createOpenGLBuffer();
 	void initOpenGLRendering();
 	//##############################
+
+	glm::mat4x4 cameraTransform;
+	glm::mat4x4 cameraProjection;
+	glm::mat4x4 objectWorldTransform;
+	glm::mat4x4 objectNormalTransform;
+
 public:
 	Renderer();
 	Renderer(int w, int h);

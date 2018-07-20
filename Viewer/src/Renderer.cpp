@@ -23,12 +23,16 @@ Renderer::~Renderer()
 
 void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, const vector<glm::vec3>* normals)
 {
-	glm::vec3 color((0.0f, 1.0f, 0.0f));
+	glm::vec3 color((1.0f, 1.0f, 1.0f));
 	for (vector<glm::vec3>::const_iterator it = vertices->begin(); it != vertices->end(); it += 3)
 	{
-		DrawLine(glm::vec2((*it).x, (*it).y), glm::vec2((*(it + 1)).x, (*(it + 1)).y), color);
-		DrawLine(glm::vec2((*(it + 1)).x, (*(it + 1)).y), glm::vec2((*(it + 2)).x, (*(it + 2)).y), color);
-		DrawLine(glm::vec2((*(it + 2)).x, (*(it + 2)).y), glm::vec2((*it).x, (*it).y), color);
+		glm::vec3 p1 = *it;
+		glm::vec3 p2 = *(it + 1);
+		glm::vec3 p3 = *(it + 2);
+
+		DrawLine(glm::vec2(p1.x, p1.y), glm::vec2(p2.x, p2.y), color);
+		DrawLine(glm::vec2(p2.x, p2.y), glm::vec2(p3.x, p3.y), color);
+		DrawLine(glm::vec2(p3.x, p3.y), glm::vec2(p1.x, p1.y), color);
 	}
 }
 

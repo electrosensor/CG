@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     // Setup Dear ImGui binding
 	ImGuiIO& io = SetupDearImgui(window);
     // Main loop - the famous "Game Loop" in video games :)
-	scene.LoadOBJModel("C:\\Users\\KY\\Desktop\\teapot.obj");
+	scene.LoadOBJModel("C:\\Users\\KY\\Desktop\\test.obj");
     while (!glfwWindowShouldClose(window))
     {
         // Poll and handle events (inputs, window resize, etc.)

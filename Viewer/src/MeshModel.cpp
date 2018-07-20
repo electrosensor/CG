@@ -73,7 +73,8 @@ glm::vec2 vec2fFromStream(std::istream& issLine)
 	return glm::vec2(x, y);
 }
 
-MeshModel::MeshModel(const string& fileName)
+MeshModel::MeshModel(const string& fileName) : worldTransform({ {1,0,0,0},{ 0,1,0,0 },{ 0,0,1,0 },{ 0,0,0,1 } }), 
+											   normalTransform({ { 1,0,0,0 },{ 0,1,0,0 },{ 0,0,1,0 },{ 0,0,0,1 } })
 {
 	LoadFile(fileName);
 }
@@ -166,10 +167,13 @@ void MeshModel::LoadFile(const string& fileName)
 
 const vector<glm::vec3>* MeshModel::Draw()
 {
-	vector<glm::vec3>* meshModel = new vector<glm::vec3>();
+	vector<glm::vec3>* meshModelVertices = new vector<glm::vec3>();
 	for (size_t i = 0; i < vertexPosSize; i++)
 	{
-		meshModel->push_back(vertexPositions[i]);
+		glm::vec3 vertex = vertexPositions[i];
+//		applyWorldTransform(vertex);
+//		applyNormalTransform(vertex);
+		meshModelVertices->push_back(vertex);
 	}
-	return meshModel;
+	return meshModelVertices;
 }

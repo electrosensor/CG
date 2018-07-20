@@ -13,8 +13,13 @@ void Scene::Draw()
 {
 	// 1. Send the renderer the current camera transform and the projection
 	// 2. Tell all models to draw themselves
+
+	//renderer->SetCameraTransform(cameras[0]->GetTransformation());
+	//renderer->SetProjection(cameras[0]->GetProjection);
+
 	for each (Model* model in models)
 	{
+		//renderer->SetObjectMatrices(model->GetWorldTransform(), model->GetNormalTransform());
 		renderer->DrawTriangles(model->Draw());
 		renderer->SwapBuffers();
 	}
