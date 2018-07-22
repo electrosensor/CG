@@ -111,8 +111,8 @@ void MeshModel::LoadFile(const string& fileName)
 
 	if (ifile.fail())
 	{
-		printf("Opening file %s failed, good by cruel world!!!", fileName.c_str());
-		exit(IO_ERROR);
+		fprintf(stderr,"Opening file %s failed, good by cruel world!!!", fileName.c_str());
+		exit(RC_IO_ERROR);
 	}
 
 	vector<FaceIdx> faces;

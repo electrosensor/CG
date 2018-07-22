@@ -7,11 +7,14 @@ using namespace std;
 
 //TODO_AVIAD: move after creating a global definitions h file
 // Global project definitions:
-typedef enum _retCodes
+typedef enum _RETURN_CODE
 {
-	NORMAL_EXIT = 0,
-	IO_ERROR	= 1
-}retCodes;
+	RC_SUCCESS = 0,
+	RC_FAILURE,
+	RC_UNDEFINED,
+	RC_IO_ERROR
+
+}RETURN_CODE;
 
 
 /*

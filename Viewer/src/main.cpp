@@ -16,7 +16,15 @@
 #include "ImguiMenus.h"
 #include "MeshModel.h" //TODO_AVIAD: remove after creating a global definitions h file
 
+#define PATH_TO_PROGRAM	   1
+#define DEFAULT_HEIGHT     720
+#define DEFAULT_WIDTH      1280
+#define MAX_HEIGHT_4K      2160
+#define MAX_WIDTH_4K       3840
+#define ACCEPTED_ARGC_VALS 4 + PATH_TO_PROGRAM
 
+// Process cmdline args
+RETURN_CODE processCmdLineOptions(PUINT32 height, PUINT32 width, int argCount, char **argVec);
 // Callback for the error state of glfw
 static void GlfwErrorCallback(int error, const char* description);
 // Setups the internal state of glfw, and intializing glad.
@@ -32,9 +40,12 @@ void Cleanup(GLFWwindow* window);
 
 int main(int argc, char **argv)
 {
-    // Setup window
-	int w = 1280, h = 720;
-	GLFWwindow* window = SetupGlfwWindow(w,h,"Mesh Viewer");
+	RETURN_CODE rc;
+	UINT32 w, h;
+
+	rc = processCmdLineOptions(&h, &w, argc, argv);
+
+	GLFWwindow* window = (rc != RC_SUCCESS) ? SetupGlfwWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT, "Mesh Viewer") : SetupGlfwWindow(w, h, "Mesh Viewer");
 	if (!window)
 		return 1;
 	// Setup renderer and scene
@@ -43,7 +54,6 @@ int main(int argc, char **argv)
     // Setup Dear ImGui binding
 	ImGuiIO& io = SetupDearImgui(window);
     // Main loop - the famous "Game Loop" in video games :)
-	scene.LoadOBJModel("../ObjFiles/test.obj");
     while (!glfwWindowShouldClose(window))
     {
         // Poll and handle events (inputs, window resize, etc.)
@@ -64,13 +74,62 @@ int main(int argc, char **argv)
     }
     // Cleanup
 	Cleanup(window);
-    return NORMAL_EXIT;
+    return RC_SUCCESS;
 }
 
 // Callback for the error state of glfw
 static void GlfwErrorCallback(int error, const char* description)
 {
 	fprintf(stderr, "Glfw Error %d: %s\n", error, description);
+}
+
+
+RETURN_CODE processCmdLineOptions(PUINT32 height, PUINT32 width, int argCount, char **argVec)
+{
+	UINT32 tempWidth, tempHeight;
+
+	if (argCount == PATH_TO_PROGRAM)
+	{
+		return RC_UNDEFINED;
+	}
+
+	if (argCount != ACCEPTED_ARGC_VALS)
+	{
+		fprintf(stderr, "argc is %d but must be %d to setup width and height externally\n", argCount, ACCEPTED_ARGC_VALS);
+		return RC_FAILURE;
+	}
+
+	//either argvec[0] and [2] must -w and -h in any order
+	if (!(!memcmp(argVec[1], "-w", 2) && (!memcmp(argVec[3], "-h", 2))) ||
+		 (!memcmp(argVec[1], "-h", 2) && (!memcmp(argVec[3], "-w", 2))))
+	{
+		fprintf(stderr, "bad params\n");
+		return RC_FAILURE;
+	}
+
+	if (!memcmp(argVec[1], "-w", 2))
+	{
+		tempWidth  = atoi(argVec[2]);
+		tempHeight = atoi(argVec[4]);
+	}
+	else
+	{
+		tempWidth  = atoi(argVec[4]);
+		tempHeight = atoi(argVec[2]);
+	}
+
+	//assuming will not be displayed with resolution over 4k
+	if (tempWidth <= 0 || tempWidth > MAX_WIDTH_4K || tempHeight <= 0 || tempHeight > MAX_HEIGHT_4K)
+	{
+		fprintf(stderr, "height and/or width exceed 4k resolution\n");
+		return RC_FAILURE;
+	}
+
+	*width  = tempWidth;
+	*height = tempHeight;
+
+	return RC_SUCCESS;
+
 }
 
 // Setups the internal state of glfw, and intializing glad.

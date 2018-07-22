@@ -72,6 +72,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 					nfdresult_t result = NFD_OpenDialog("obj;png,jpg", NULL, &outPath);
 					if (result == NFD_OKAY) {
 						ImGui::Text("Hello from another window!");
+						scene->LoadOBJModel(outPath);
 						free(outPath);
 					}
 					else if (result == NFD_CANCEL) {
