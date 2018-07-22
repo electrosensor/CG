@@ -21,18 +21,36 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 	// 1. Show a simple window.
 	// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets automatically appears in a window called "Debug".
 	{
-		ImGui::Begin("Test Menu");
-		static float f = 0.0f;
+		ImGui::Begin("Main menu");
+
+
+		static float f = 1.0f;
 		static int counter = 0;
 		ImGui::Text("Hello, world!");                           // Display some text (you can use a format string too)
-		ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
-		ImGui::ColorEdit3("clear color", (float*)&clearColor); // Edit 3 floats representing a color
-
-		ImGui::Checkbox("Demo Window", &showDemoWindow);      // Edit bools storing our windows open/close state
+		ImGui::SliderFloat("float", &f, -100.0f, 100.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
+		{
+		}
+			ImGui::Checkbox("Demo Window", &showDemoWindow);      // Edit bools storing our windows open/close state
 		ImGui::Checkbox("Another Window", &showAnotherWindow);
 
-		if (ImGui::Button("Button"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
-			counter++;
+		ImGui::ColorEdit3("clear color", (float*)&clearColor); // Edit 3 floats representing a color
+
+		int scaling = 1;
+		if (ImGui::Button("Scaling x2"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+		{
+			scene->ScaleActiveModel((float)(scaling++ << 2));
+		}
+		
+		ImGui::Text("For more precise scailing please use mouse wheel");
+		if (io.MouseWheel > 0)
+		{
+			scene->ScaleActiveModel(io.MouseWheel);
+		}
+		if (io.MouseWheel < 0)
+		{
+			scene->ScaleActiveModel(1.0f/io.MouseWheel);
+		}
+
 		ImGui::SameLine();
 		ImGui::Text("counter = %d", counter);
 

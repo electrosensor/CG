@@ -41,7 +41,7 @@ void Cleanup(GLFWwindow* window);
 int main(int argc, char **argv)
 {
 	RETURN_CODE rc;
-	UINT32 w, h;
+	UINT32 w = DEFAULT_WIDTH, h = DEFAULT_HEIGHT;
 
 	rc = processCmdLineOptions(&h, &w, argc, argv);
 

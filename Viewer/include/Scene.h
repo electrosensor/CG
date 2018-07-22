@@ -11,16 +11,26 @@
 
 using namespace std;
 
+//YURI: move after creating a global definitions h file
+// Global project definitions:
+
+#define	NOT_ACTIVE -1
+
+
 class Scene {
 private:
-	vector<Model*> models;
-	vector<Light*> lights;
-	vector<Camera*> cameras;
+	vector<Model*> m_models;
+	vector<Light*> m_lights;
+	vector<Camera*> m_cameras;
 	Renderer *renderer;
+
+	int m_activeModel;
+	int m_activeLight;
+	int m_activeCamera;
 
 public:
 	Scene() {};
-	Scene(Renderer *renderer) : renderer(renderer) {};
+	Scene(Renderer *renderer) : renderer(renderer), m_activeModel(NOT_ACTIVE), m_activeLight(NOT_ACTIVE), m_activeCamera(NOT_ACTIVE) { ; }
 
 	// Loads an obj file into the scene.
 	void LoadOBJModel(string fileName);
@@ -28,10 +38,13 @@ public:
 	// Draws the current scene.
 	void Draw();
 
+	void ScaleActiveModel(float modifier);
+
+	void SetActiveCamera(unsigned int cameraIdx);
+	void SetActiveModel(unsigned int modelIdx);
+//	void SetActiveLight(size_t lightIdx); // to remember add this in the next homework
+
 	// Draws an example.
 	void DrawDemo();
 	
-	int ActiveModel;
-	int ActiveLight;
-	int ActiveCamera;
 };

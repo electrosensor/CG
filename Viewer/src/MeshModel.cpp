@@ -172,6 +172,16 @@ void MeshModel::LoadFile(const string& fileName)
 		}
 	}
 }
+//TODO_YURI: Enable access from other classes
+const glm::vec4 toHomogenicForm(const glm::vec3& normalForm)
+{
+	return glm::vec4(normalForm.x, normalForm.y, normalForm.z, 1);
+}
+
+const glm::vec3 toNormalForm(const glm::vec4& homogenicForm)
+{
+	return glm::vec3(homogenicForm.x / homogenicForm[3], homogenicForm.y / homogenicForm[3], homogenicForm.z / homogenicForm[3]);
+}
 
 const vector<glm::vec3>* MeshModel::Draw()
 {
@@ -179,8 +189,7 @@ const vector<glm::vec3>* MeshModel::Draw()
 	for (size_t i = 0; i < m_vertexPosSize; i++)
 	{
 		glm::vec3 vertex = m_vertexPositions[i];
-//		applyWorldTransform(vertex);
-//		applyNormalTransform(vertex);
+		vertex = toNormalForm(m_normalTransform * m_worldTransform * toHomogenicForm(vertex)); //TODO_YURI: check the order of transformations
 		meshModelVertices->push_back(vertex);
 	}
 	return meshModelVertices;

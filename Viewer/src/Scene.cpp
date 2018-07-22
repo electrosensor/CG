@@ -6,22 +6,58 @@ using namespace std;
 void Scene::LoadOBJModel(string fileName)
 {
 	MeshModel *model = new MeshModel(fileName);
-	models.push_back(model);
+//TODO: check for OUT_OF_MEMORY
+	m_models.push_back(model);
+	if (m_activeModel == NOT_ACTIVE)
+	{
+		m_activeModel = 0;
+	}
 }
 
 void Scene::Draw()
 {
 	// 1. Send the renderer the current camera transform and the projection
 	// 2. Tell all models to draw themselves
-
-	//renderer->SetCameraTransform(cameras[0]->GetTransformation());
-	//renderer->SetProjection(cameras[0]->GetProjection);
-
-	for each (Model* model in models)
+	if (m_activeCamera != NOT_ACTIVE)
 	{
-		//renderer->SetObjectMatrices(model->GetWorldTransform(), model->GetNormalTransform());
-		renderer->DrawTriangles(model->Draw());
+//		renderer->SetCameraTransform(m_cameras[m_activeCamera]->GetTransformation());
+//		renderer->SetProjection(m_cameras[m_activeCamera]->GetProjection());
+	}
+
+	for each (Model* model in m_models)
+	{
+		const vector<glm::vec3>* modelVertices = model->Draw();
+		renderer->DrawTriangles(modelVertices);
 		renderer->SwapBuffers();
+		delete modelVertices;
+	}
+}
+
+void Scene::ScaleActiveModel(float modifier)
+{
+	if (m_activeModel != NOT_ACTIVE)
+	{
+		Model* activeModel = m_models[m_activeModel];
+		glm::mat4x4 currTransf = activeModel->GetNormalTransform();
+		glm::mat4x4 scaleTransform({ { modifier,0,0,0 },{ 0,modifier,0,0 },{ 0,0,modifier,0 },{ 0,0,0,1 } });
+		activeModel->SetNormalTransform(scaleTransform * currTransf);
+	}
+}
+
+
+void Scene::SetActiveCamera(unsigned int cameraIdx)
+{
+	if (m_cameras.size() > cameraIdx)
+	{
+		m_activeCamera = cameraIdx;
+	}
+}
+
+void Scene::SetActiveModel(unsigned int modelIdx)
+{
+	if (m_models.size() > modelIdx)
+	{
+		m_activeModel = modelIdx;
 	}
 }
 
