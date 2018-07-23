@@ -44,8 +44,12 @@ int main(int argc, char **argv)
 	UINT32 w = DEFAULT_WIDTH, h = DEFAULT_HEIGHT;
 
 	rc = processCmdLineOptions(&h, &w, argc, argv);
+	if (rc == RC_SUCCESS)
+	{
+		fprintf(stdout, "Height = %d and width = %d were configured by runtime parameters", h, w);
+	}
 
-	GLFWwindow* window = (rc != RC_SUCCESS) ? SetupGlfwWindow(DEFAULT_WIDTH, DEFAULT_HEIGHT, "Mesh Viewer") : SetupGlfwWindow(w, h, "Mesh Viewer");
+	GLFWwindow* window = SetupGlfwWindow(w, h, "Mesh Viewer");
 	if (!window)
 		return 1;
 	// Setup renderer and scene
