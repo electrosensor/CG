@@ -34,7 +34,6 @@ public:
 	// Draws the current scene.
 	void Draw();
 
-	void ScaleActiveModel(float modifier);
 
 	void SetActiveCamera(unsigned int cameraIdx);
 	void SetActiveModel(unsigned int modelIdx);
@@ -43,4 +42,10 @@ public:
 	// Draws an example.
 	void DrawDemo();
 	
+	//GUI API:
+	void TranslateActiveCameraLeft(float value);
+	void TranslateActiveCameraRight(float value);
+	void TranslateActiveCameraUp(float value);
+	void TranslateActiveCameraDown(float value);
+	void ScaleActiveCamera(float value);
 };

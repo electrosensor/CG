@@ -13,25 +13,25 @@ using namespace std;
  */
 class MeshModel : public Model
 {
-protected :
+	protected :
 
-	glm::vec3 *m_vertexPositions;
-	size_t m_vertexPosSize;
-	// Add more attributes.
-	glm::mat4x4 m_worldTransform;
-	glm::mat4x4 m_normalTransform;
+		glm::vec3 *m_vertexPositions;
+		size_t m_vertexPosSize;
+		// Add more attributes.
+		glm::mat4x4 m_worldTransformation;
+		glm::mat4x4 m_normalTransformation;
 
-public:
-	MeshModel(const string& fileName);
-	~MeshModel();
+	public:
+		MeshModel(const string& fileName);
+		~MeshModel();
 
-	const glm::mat4x4& GetWorldTransform();
-	const glm::mat4x4& GetNormalTransform();
+		const glm::mat4x4& GetWorldTransformation();
+		const glm::mat4x4& GetNormalTransformation();
 
-	void SetWorldTransform(glm::mat4x4& transformation);
-	void SetNormalTransform(glm::mat4x4& transformation);
+		void SetWorldTransformation(glm::mat4x4& transformation);
+		void SetNormalTransformation(glm::mat4x4& transformation);
 
-	void LoadFile(const string& fileName);
-	const vector<glm::vec3>* Draw();
+		void LoadFile(const string& fileName);
+		const vector<glm::vec3>* Draw();
 
 };

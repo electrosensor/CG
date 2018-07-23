@@ -36,10 +36,10 @@ private:
 	void initOpenGLRendering();
 	//##############################
 
-	glm::mat4x4 cameraTransform;
-	glm::mat4x4 cameraProjection;
-	glm::mat4x4 objectWorldTransform;
-	glm::mat4x4 objectNormalTransform;
+	glm::mat4x4 m_cameraTransform;
+	glm::mat4x4 m_cameraProjection;
+	glm::mat4x4 m_objectTransform;
+	glm::mat4x4 m_normalTransform;
 
 public:
 	Renderer();

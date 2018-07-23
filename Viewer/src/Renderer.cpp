@@ -1,13 +1,15 @@
 #include "Renderer.h"
 #include "InitShader.h"
 #include <imgui/imgui.h>
+#include "Util.h"
+#include "Defs.h"
 
 #define INDEX(width,x,y,c) ((x)+(y)*(width))*3+(c)
 
-Renderer::Renderer() : width(1280), height(720)
+Renderer::Renderer() : width(DEFAULT_WIDTH), height(DEFAULT_HEIGHT)
 {
 	initOpenGLRendering();
-	createBuffers(1280,720);
+	createBuffers(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 }
 
 Renderer::Renderer(int w, int h) : width(w), height(h)
@@ -23,17 +25,37 @@ Renderer::~Renderer()
 
 void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, const vector<glm::vec3>* normals)
 {
-	glm::vec3 color((1.0f, 1.0f, 1.0f));
+	glm::vec3 color(WHITE_COLOR);
 	for (vector<glm::vec3>::const_iterator it = vertices->begin(); it != vertices->end(); it += 3)
 	{
 		glm::vec3 p1 = *it;
 		glm::vec3 p2 = *(it + 1);
 		glm::vec3 p3 = *(it + 2);
 
+		p1 = Util::toNormalForm(m_cameraTransform * Util::toHomogenicForm(p1));
+		p2 = Util::toNormalForm(m_cameraTransform * Util::toHomogenicForm(p2));
+		p3 = Util::toNormalForm(m_cameraTransform * Util::toHomogenicForm(p3));
+
 		DrawLine(glm::vec2(p1.x, p1.y), glm::vec2(p2.x, p2.y), color);
 		DrawLine(glm::vec2(p2.x, p2.y), glm::vec2(p3.x, p3.y), color);
 		DrawLine(glm::vec2(p3.x, p3.y), glm::vec2(p1.x, p1.y), color);
 	}
+}
+
+void Renderer::SetCameraTransform(const glm::mat4x4 & cTransform)
+{
+	m_cameraTransform = cTransform;
+}
+
+void Renderer::SetProjection(const glm::mat4x4 & projection)
+{
+	m_cameraProjection = projection;
+}
+
+void Renderer::SetObjectMatrices(const glm::mat4x4 & oTransform, const glm::mat4x4 & nTransform)
+{
+	m_objectTransform = oTransform;
+	m_normalTransform = nTransform;
 }
 
 void Renderer::putPixel(int i, int j, const glm::vec3& color)

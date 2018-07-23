@@ -23,38 +23,58 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 	{
 		ImGui::Begin("Main menu");
 
-
-		static float f = 1.0f;
-		static int counter = 0;
-		ImGui::Text("Hello, world!");                           // Display some text (you can use a format string too)
-		ImGui::SliderFloat("float", &f, -100.0f, 100.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
+		if (ImGui::Button("Scaling camera x2"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
 		{
+			scene->ScaleActiveCamera(2.0f);
 		}
-			ImGui::Checkbox("Demo Window", &showDemoWindow);      // Edit bools storing our windows open/close state
-		ImGui::Checkbox("Another Window", &showAnotherWindow);
-
-		ImGui::ColorEdit3("clear color", (float*)&clearColor); // Edit 3 floats representing a color
-
-		int scaling = 1;
-		if (ImGui::Button("Scaling x2"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+		if (ImGui::Button("Scaling camera x1/2"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
 		{
-			scene->ScaleActiveModel((float)(scaling++ << 2));
+			scene->ScaleActiveCamera(1.0f / 2.0f);
 		}
-		
 		ImGui::Text("For more precise scailing please use mouse wheel");
 		if (io.MouseWheel > 0)
 		{
-			scene->ScaleActiveModel(io.MouseWheel);
+			scene->ScaleActiveCamera(io.MouseWheel);
 		}
 		if (io.MouseWheel < 0)
 		{
-			scene->ScaleActiveModel(1.0f/io.MouseWheel);
+			scene->ScaleActiveCamera(1.0f / io.MouseWheel);
+		}
+		ImGui::Text("-------------- Camera movements --------------");
+		if (ImGui::Button("Left"))
+		{
+			scene->TranslateActiveCameraLeft(100);
+		}
+		if (ImGui::Button("Right"))
+		{
+			scene->TranslateActiveCameraRight(100);
 		}
 
-		ImGui::SameLine();
-		ImGui::Text("counter = %d", counter);
+		if (ImGui::Button("Up"))
+		{
+			scene->TranslateActiveCameraUp(100);
+		}
+		if (ImGui::Button("Down"))
+		{
+			scene->TranslateActiveCameraDown(100);
+		}
 
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+		//static float f = 1.0f;
+		//static int counter = 0;
+		//ImGui::Text("Hello, world!");                           // Display some text (you can use a format string too)
+		//ImGui::SliderFloat("float", &f, -100.0f, 100.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
+		//{
+		//}
+		//	ImGui::Checkbox("Demo Window", &showDemoWindow);      // Edit bools storing our windows open/close state
+		//ImGui::Checkbox("Another Window", &showAnotherWindow);
+
+		//ImGui::ColorEdit3("clear color", (float*)&clearColor); // Edit 3 floats representing a color
+
+		//ImGui::SameLine();
+		//ImGui::Text("counter = %d", counter);
+
+		//ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		ImGui::End();
 	}
 

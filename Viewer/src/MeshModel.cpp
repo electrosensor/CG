@@ -76,8 +76,8 @@ glm::vec2 vec2fFromStream(std::istream& issLine)
 	return glm::vec2(x, y);
 }
 
-MeshModel::MeshModel(const string& fileName) : m_worldTransform({ {1,0,0,0},{ 0,1,0,0 },{ 0,0,1,0 },{ 0,0,0,1 } }), 
-											   m_normalTransform({ { 1,0,0,0 },{ 0,1,0,0 },{ 0,0,1,0 },{ 0,0,0,1 } })
+MeshModel::MeshModel(const string& fileName) : m_worldTransformation(I_MATRIX), 
+											   m_normalTransformation(I_MATRIX)
 {
 	LoadFile(fileName);
 }
@@ -87,24 +87,24 @@ MeshModel::~MeshModel()
 	delete[] m_vertexPositions;
 }
 
-void MeshModel::SetWorldTransform(glm::mat4x4 & transformation)
+void MeshModel::SetWorldTransformation(glm::mat4x4 & transformation)
 {
-	m_worldTransform = transformation;
+	m_worldTransformation = transformation;
 }
 
-const glm::mat4x4& MeshModel::GetWorldTransform()
+const glm::mat4x4& MeshModel::GetWorldTransformation()
 {
-	return m_worldTransform;
+	return m_worldTransformation;
 }
 
-void MeshModel::SetNormalTransform(glm::mat4x4 & transformation)
+void MeshModel::SetNormalTransformation(glm::mat4x4 & transformation)
 {
-	m_normalTransform = transformation;
+	m_normalTransformation = transformation;
 }
 
-const glm::mat4x4 & MeshModel::GetNormalTransform()
+const glm::mat4x4 & MeshModel::GetNormalTransformation()
 {
-	return m_normalTransform;
+	return m_normalTransformation;
 }
 
 void MeshModel::LoadFile(const string& fileName)
@@ -181,7 +181,7 @@ const vector<glm::vec3>* MeshModel::Draw()
 	for (size_t i = 0; i < m_vertexPosSize; i++)
 	{
 		glm::vec3 vertex = m_vertexPositions[i];
-		vertex = Util::toNormalForm(m_normalTransform * m_worldTransform * Util::toHomogenicForm(vertex)); //TODO_YURI: check the order of transformations
+		vertex = Util::toNormalForm(m_normalTransformation * m_worldTransformation * Util::toHomogenicForm(vertex)); //TODO_YURI: check the order of transformations
 		meshModelVertices->push_back(vertex);
 	}
 	return meshModelVertices;

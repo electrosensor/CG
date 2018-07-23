@@ -7,14 +7,21 @@
 class Camera
 {
 private:
-	glm::mat4x4 cTransform;
-	glm::mat4x4 projection;
+	glm::mat4x4 m_cTransform;
+	glm::mat4x4 m_projection;
+
 public:
 	Camera();
 	~Camera();
 
+	const glm::mat4x4 & GetTransformation();
+
+	const glm::mat4x4 & GetProjection();
+
 	// Sets the camera transformations with relation to world coordinates
-	void SetTransformation(const glm::mat4x4& transform);
+	void SetTransformation(const glm::mat4x4& transformation);
+
+	void SetProjection(const glm::mat4x4 & projection);
 
 	// Creates lookAt transformation.
 	void LookAt(const glm::vec4& eye, const glm::vec4& at, const glm::vec4& up );
@@ -33,12 +40,4 @@ public:
 	glm::mat4x4 Perspective( const float fovy, const float aspect,
 		const float zNear, const float zFar);
 
-	glm::mat4x4 GetTransformation() 
-	{
-		return cTransform;
-	}
-	glm::mat4x4 GetProjection()
-	{
-		return projection;
-	}
 };
