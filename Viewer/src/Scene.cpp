@@ -8,7 +8,7 @@ void Scene::LoadOBJModel(string fileName)
 	MeshModel *model = new MeshModel(fileName);
 //TODO: check for OUT_OF_MEMORY
 	m_models.push_back(model);
-	if (m_activeModel == NOT_ACTIVE)
+	if (m_activeModel == DISABLED)
 	{
 		m_activeModel = 0;
 	}
@@ -18,7 +18,7 @@ void Scene::Draw()
 {
 	// 1. Send the renderer the current camera transform and the projection
 	// 2. Tell all models to draw themselves
-	if (m_activeCamera != NOT_ACTIVE)
+	if (m_activeCamera != DISABLED)
 	{
 //		renderer->SetCameraTransform(m_cameras[m_activeCamera]->GetTransformation());
 //		renderer->SetProjection(m_cameras[m_activeCamera]->GetProjection());
@@ -35,7 +35,7 @@ void Scene::Draw()
 
 void Scene::ScaleActiveModel(float modifier)
 {
-	if (m_activeModel != NOT_ACTIVE)
+	if (m_activeModel != DISABLED)
 	{
 		Model* activeModel = m_models[m_activeModel];
 		glm::mat4x4 currTransf = activeModel->GetNormalTransform();

@@ -14,13 +14,9 @@
 #include "Renderer.h"
 #include "Scene.h"
 #include "ImguiMenus.h"
-#include "MeshModel.h" //TODO_AVIAD: remove after creating a global definitions h file
+#include "Defs.h"
 
 #define PATH_TO_PROGRAM	   1
-#define DEFAULT_HEIGHT     720
-#define DEFAULT_WIDTH      1280
-#define MAX_HEIGHT_4K      2160
-#define MAX_WIDTH_4K       3840
 #define ACCEPTED_ARGC_VALS 4 + PATH_TO_PROGRAM
 
 // Process cmdline args

@@ -8,13 +8,9 @@
 #include "Model.h"
 #include "Light.h"
 #include "Camera.h"
+#include "Defs.h"
 
 using namespace std;
-
-//YURI: move after creating a global definitions h file
-// Global project definitions:
-
-#define	NOT_ACTIVE -1
 
 
 class Scene {
@@ -30,7 +26,7 @@ private:
 
 public:
 	Scene() {};
-	Scene(Renderer *renderer) : renderer(renderer), m_activeModel(NOT_ACTIVE), m_activeLight(NOT_ACTIVE), m_activeCamera(NOT_ACTIVE) { ; }
+	Scene(Renderer *renderer) : renderer(renderer), m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamera(DISABLED) { ; }
 
 	// Loads an obj file into the scene.
 	void LoadOBJModel(string fileName);

@@ -3,18 +3,8 @@
 #include <string>
 #include "Model.h"
 
+
 using namespace std;
-
-//TODO_AVIAD: move after creating a global definitions h file
-// Global project definitions:
-typedef enum _RETURN_CODE
-{
-	RC_SUCCESS = 0,
-	RC_FAILURE,
-	RC_UNDEFINED,
-	RC_IO_ERROR
-
-}RETURN_CODE;
 
 
 /*

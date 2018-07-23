@@ -2,3 +2,4 @@ Build
 build
 Bin/**/*
 x64/**/*
+/MeshViewer.dir/Debug/MeshViewer.log
