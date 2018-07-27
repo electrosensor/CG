@@ -6,6 +6,10 @@ Camera::Camera() : m_cameraTransform(I_MATRIX), m_cameraProjection(I_MATRIX)
 {
 }
 
+Camera::Camera(const glm::vec4& eye, const glm::vec4& at, const glm::vec4& up)
+{
+	LookAt(eye, at, up);
+}
 
 Camera::~Camera()
 {

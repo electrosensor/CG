@@ -35,14 +35,20 @@ public:
 	void Draw();
 
 
+
+
 	void SetActiveCamera(unsigned int cameraIdx);
 	void SetActiveModel(unsigned int modelIdx);
 //	void SetActiveLight(size_t lightIdx); // to remember add this in the next homework
+
 
 	// Draws an example.
 	void DrawDemo();
 	
 	//GUI API:
+	void AddCamera(const glm::vec4 & eye, const glm::vec4 & at, const glm::vec4 & up);
+	void NextCamera();
+	void PreviousCamera();
 	void TranslateActiveCameraLeft(float value);
 	void TranslateActiveCameraRight(float value);
 	void TranslateActiveCameraUp(float value);

@@ -8,10 +8,11 @@ class Camera
 {
 private:
 	glm::mat4x4 m_cameraTransform;
-	glm::mat4x4 m_projection;
+	glm::mat4x4 m_cameraProjection;
 
 public:
 	Camera();
+	Camera(const glm::vec4& eye, const glm::vec4& at, const glm::vec4& up);
 	~Camera();
 
 	const glm::mat4x4 & GetTransformation();

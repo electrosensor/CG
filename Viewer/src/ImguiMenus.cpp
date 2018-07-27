@@ -22,6 +22,24 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 	// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets automatically appears in a window called "Debug".
 	{
 		ImGui::Begin("Main menu");
+		
+		int eye[3];
+		int at[3];
+		ImGui::InputInt3("Look from: (x,y,z)", eye, 3);
+		ImGui::InputInt3("Look at: (x,y,z)", at, 3);
+
+		if (ImGui::Button("Add new camera"))
+		{
+			scene->AddCamera({ eye[0], eye[1], eye[2], 1.0f }, { at[0], at[1], at[2], 1.0f }, { eye[0], eye[1] + 1, eye[2], 1.0f });
+		}
+		if (ImGui::Button("Next camera"))
+		{
+			scene->NextCamera();
+		}
+		if (ImGui::Button("Previous camera"))
+		{
+			scene->PreviousCamera();
+		}
 
 		if (ImGui::IsKeyPressed(GLFW_KEY_PAGE_UP) || ImGui::Button("Scaling camera x3/2"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
 		{

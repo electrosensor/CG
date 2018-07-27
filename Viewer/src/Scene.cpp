@@ -24,6 +24,9 @@ void Scene::Draw()
 		m_cameras.push_back(camera);
 		m_activeCamera = 0;
 	}
+
+	//BUG: Sets right transformation only one (suspected), something owerrwrite it!
+
 	Camera* activeCamera = m_cameras[m_activeCamera];
 	renderer->SetCameraTransform(activeCamera->GetTransformation());
 	renderer->SetProjection(m_cameras[m_activeCamera]->GetProjection());
@@ -92,19 +95,36 @@ void Scene::TranslateActiveCameraDown(float value)
 		activeCamera->SetTransformation(scaleTransform * currTransf);
 	}
 }
+/*
+* eye – The position of the camera
+* at – The position the camera looks at
+* up – The upside(y) direction of the camera
+*/
+void Scene::AddCamera(const glm::vec4& eye, const glm::vec4& at, const glm::vec4& up)
+{
+	Camera* newCamera = new Camera(eye, at, up);
+	m_cameras.push_back(newCamera);
+	if (m_activeCamera != DISABLED)
+	{
+		m_activeCamera = 0;
+	}
+}
 
-//void Scene::AddCamera(float value)
-//{
-//		Camera* activeCamera = m_cameras[m_activeCamera];
-//		glm::mat4x4 currTransf = activeCamera->GetTransformation();
-//		glm::mat4x4 scaleTransform(TRANSLATION_MATRIX(0, value, 0));
-//		activeCamera->SetTransformation(scaleTransform * currTransf);
-//	if (m_activeCamera != DISABLED)
-//	{
-//
-//	}
-//}
+void Scene::NextCamera()
+{
+	if (m_activeCamera != DISABLED)
+	{
+		m_activeCamera = (m_activeCamera + 1) % m_cameras.size();
+	}
+}
 
+void Scene::PreviousCamera()
+{
+	if (m_activeCamera != DISABLED)
+	{
+		m_activeCamera = (m_activeCamera - 1) % m_cameras.size();
+	}
+}
 
 void Scene::SetActiveCamera(unsigned int cameraIdx)
 {
