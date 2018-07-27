@@ -24,18 +24,9 @@ void Scene::Draw()
 		m_cameras.push_back(camera);
 		m_activeCamera = 0;
 	}
-
-	//BUG: Sets right transformation only one (suspected), something owerrwrite it!
-
 	Camera* activeCamera = m_cameras[m_activeCamera];
 	renderer->SetCameraTransform(activeCamera->GetTransformation());
-
-	//renderer->SetCameraTransform(I_MATRIX); This for example works...
-
-
-
-
-	//renderer->SetProjection(m_cameras[m_activeCamera]->GetProjection());
+	renderer->SetProjection(m_cameras[m_activeCamera]->GetProjection());
 
 	for each (Model* model in m_models)
 	{
@@ -101,6 +92,18 @@ void Scene::TranslateActiveCameraDown(float value)
 		activeCamera->SetTransformation(scaleTransform * currTransf);
 	}
 }
+
+//void Scene::AddCamera(float value)
+//{
+//		Camera* activeCamera = m_cameras[m_activeCamera];
+//		glm::mat4x4 currTransf = activeCamera->GetTransformation();
+//		glm::mat4x4 scaleTransform(TRANSLATION_MATRIX(0, value, 0));
+//		activeCamera->SetTransformation(scaleTransform * currTransf);
+//	if (m_activeCamera != DISABLED)
+//	{
+//
+//	}
+//}
 
 
 void Scene::SetActiveCamera(unsigned int cameraIdx)

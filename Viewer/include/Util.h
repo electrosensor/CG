@@ -11,8 +11,8 @@ public:
 	~Util(){}
 
 	//Coor conversion
-	static const glm::vec4 toHomogenicForm(const glm::vec3& normalForm);
-	static const glm::vec3 toNormalForm(const glm::vec4& homogenicForm);
-
+	static glm::vec4 toHomogenicForm(const glm::vec3& normalForm);
+	static glm::vec3 toNormalForm(const glm::vec4& homogenicForm);
+	static glm::vec4 Cross(const glm::vec4 & lVector4, const glm::vec4 & rVector4);
 };
 

@@ -32,9 +32,9 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, const vector<glm
 		glm::vec3 p2 = *(it + 1);
 		glm::vec3 p3 = *(it + 2);
 
-		p1 = Util::toNormalForm(m_cameraTransform * Util::toHomogenicForm(p1));
-		p2 = Util::toNormalForm(m_cameraTransform * Util::toHomogenicForm(p2));
-		p3 = Util::toNormalForm(m_cameraTransform * Util::toHomogenicForm(p3));
+		p1 = Util::toNormalForm(m_cameraProjection * m_cameraTransform * Util::toHomogenicForm(p1));
+		p2 = Util::toNormalForm(m_cameraProjection * m_cameraTransform * Util::toHomogenicForm(p2));
+		p3 = Util::toNormalForm(m_cameraProjection * m_cameraTransform * Util::toHomogenicForm(p3));
 
 		DrawLine(glm::vec2(p1.x, p1.y), glm::vec2(p2.x, p2.y), color);
 		DrawLine(glm::vec2(p2.x, p2.y), glm::vec2(p3.x, p3.y), color);

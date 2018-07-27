@@ -9,6 +9,7 @@
 #define I_MATRIX { {1,0,0,0},{ 0,1,0,0 },{ 0,0,1,0 },{ 0,0,0,1 } }
 #define SCALING_MATRIX(value) { {(value),0,0,0},{ 0,(value),0,0 },{ 0,0,(value),0 },{ 0,0,0,1 } }
 #define TRANSLATION_MATRIX(x, y, z) { {1,0,0,0},{ 0,1,0,0 },{ 0,0,1,0 },{ (x),(y),(z),1 } }
+#define HOMOGENIC_VECTOR4 { 0.0, 0.0, 0.0, 1.0 }
 
 #define WHITE_COLOR (1.0f, 1.0f, 1.0f)
 

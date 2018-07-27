@@ -23,13 +23,13 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 	{
 		ImGui::Begin("Main menu");
 
-		if (ImGui::Button("Scaling camera x2"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+		if (ImGui::IsKeyPressed(GLFW_KEY_PAGE_UP) || ImGui::Button("Scaling camera x3/2"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
 		{
-			scene->ScaleActiveCamera(2.0f);
+			scene->ScaleActiveCamera(1.5f);
 		}
-		if (ImGui::Button("Scaling camera x1/2"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+		if (ImGui::IsKeyPressed(GLFW_KEY_PAGE_DOWN) || ImGui::Button("Scaling camera x2/3"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
 		{
-			scene->ScaleActiveCamera(1.0f / 2.0f);
+			scene->ScaleActiveCamera(1.0f / 1.5f);
 		}
 		ImGui::Text("For more precise scailing please use mouse wheel");
 		if (io.MouseWheel > 0)
@@ -41,22 +41,22 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 			scene->ScaleActiveCamera(1.0f / io.MouseWheel);
 		}
 		ImGui::Text("-------------- Camera movements --------------");
-		if (ImGui::Button("Left"))
+		if (ImGui::IsKeyPressed(GLFW_KEY_LEFT) || ImGui::Button("Left"))
 		{
-			scene->TranslateActiveCameraLeft(100);
+			scene->TranslateActiveCameraLeft(50);
 		}
-		if (ImGui::Button("Right"))
+		if (ImGui::IsKeyPressed(GLFW_KEY_RIGHT) || ImGui::Button("Right"))
 		{
-			scene->TranslateActiveCameraRight(100);
+			scene->TranslateActiveCameraRight(50);
 		}
 
-		if (ImGui::Button("Up"))
+		if (ImGui::IsKeyPressed(GLFW_KEY_UP) || ImGui::Button("Up"))
 		{
-			scene->TranslateActiveCameraUp(100);
+			scene->TranslateActiveCameraUp(50);
 		}
-		if (ImGui::Button("Down"))
+		if (ImGui::IsKeyPressed(GLFW_KEY_DOWN) || ImGui::Button("Down"))
 		{
-			scene->TranslateActiveCameraDown(100);
+			scene->TranslateActiveCameraDown(50);
 		}
 
 
