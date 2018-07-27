@@ -9,6 +9,7 @@ class Camera
 private:
 	glm::mat4x4 m_cameraTransform;
 	glm::mat4x4 m_cameraProjection;
+	int m_cameraIdx;
 
 public:
 	Camera();
@@ -25,7 +26,7 @@ public:
 	void SetProjection(const glm::mat4x4 & projection);
 
 	// Creates lookAt transformation.
-	void LookAt(const glm::vec4& eye, const glm::vec4& at, const glm::vec4& up );
+	void LookAt(const glm::vec3& eye, const glm::vec3& at, const glm::vec3& up );
 
 	// Sets orthographic projection matrix.
 	void Ortho( const float left, const float right,

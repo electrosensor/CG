@@ -37,8 +37,10 @@ public:
 
 
 
-	void SetActiveCamera(unsigned int cameraIdx);
-	void SetActiveModel(unsigned int modelIdx);
+	int  GetActiveCameraIdx();
+	void SetActiveCameraIdx(unsigned int cameraIdx);
+	int  GetActiveModelIdx();
+	void SetActiveModelIdx(unsigned int modelIdx);
 //	void SetActiveLight(size_t lightIdx); // to remember add this in the next homework
 
 
@@ -46,12 +48,19 @@ public:
 	void DrawDemo();
 	
 	//GUI API:
-	void AddCamera(const glm::vec4 & eye, const glm::vec4 & at, const glm::vec4 & up);
+	unsigned int  AddCamera(const glm::vec4 & eye, const glm::vec4 & at, const glm::vec4 & up);
+	glm::mat4x4 GetActiveCameraTransformation();
+	glm::mat4x4 GetActiveCameraProjection();
 	void NextCamera();
-	void PreviousCamera();
 	void TranslateActiveCameraLeft(float value);
 	void TranslateActiveCameraRight(float value);
 	void TranslateActiveCameraUp(float value);
 	void TranslateActiveCameraDown(float value);
+
+	void RotateActiveCameraXAxis(float angle);
+	void RotateActiveCameraYAxis(float angle);
+	void RotateActiveCameraZAxis(float angle);
+	
+	
 	void ScaleActiveCamera(float value);
 };

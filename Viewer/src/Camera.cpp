@@ -8,7 +8,8 @@ Camera::Camera() : m_cameraTransform(I_MATRIX), m_cameraProjection(I_MATRIX)
 
 Camera::Camera(const glm::vec4& eye, const glm::vec4& at, const glm::vec4& up)
 {
-	LookAt(eye, at, up);
+	LookAt(eye, at, {0, 1, 0});
+	Ortho(at.x - 10, at.x + 11, at.y - 10, at.y + 11, at.z - 11, at.z + 10);
 }
 
 Camera::~Camera()
@@ -25,17 +26,20 @@ const glm::mat4x4& Camera::GetProjection()
 	return m_cameraProjection;
 }
 
-void Camera::LookAt(const glm::vec4 & eye, const glm::vec4 & at, const glm::vec4 & up)
+void Camera::LookAt(const glm::vec3 & eye, const glm::vec3 & at, const glm::vec3 & up)
 {
-	glm::vec4 eyeAtDirection = glm::normalize(eye - at);
-	glm::vec4 fromUpAlongCameraTop = Util::Cross(up, eyeAtDirection);
-	glm::vec4 fromUpAlongCameraTopDirection = glm::normalize(fromUpAlongCameraTop);
-	glm::vec4 cameraView = Util::Cross(eyeAtDirection, fromUpAlongCameraTopDirection);	
-	glm::vec4 cameraViewDirection = glm::normalize(cameraView);
+	glm::vec3 eyeAtDirection = glm::normalize(eye - at);
+	glm::vec3 fromUpAlongCameraTop = glm::cross(up, eyeAtDirection);
+	glm::vec3 fromUpAlongCameraTopDirection = glm::normalize(fromUpAlongCameraTop);
+	glm::vec3 cameraView = glm::cross(eyeAtDirection, fromUpAlongCameraTopDirection);
+	glm::vec3 cameraViewDirection = glm::normalize(cameraView);
 	glm::vec4 homogenicComponent = glm::vec4(HOMOGENIC_VECTOR4);
-	glm::mat4x4 cameraViewTransformation = glm::mat4x4(fromUpAlongCameraTopDirection, cameraViewDirection, eyeAtDirection, homogenicComponent);
-
-	m_cameraTransform = cameraViewTransformation/* * Translate(-eye)*/;
+	glm::mat4x4 cameraViewTransformation = glm::mat4x4(	Util::expandToVec4(fromUpAlongCameraTopDirection),
+														Util::expandToVec4(cameraViewDirection),
+														Util::expandToVec4(eyeAtDirection),
+														homogenicComponent);
+	glm::mat4x4 translatedEye(TRANSLATION_MATRIX(-eye.x, -eye.y, -eye.z));
+	m_cameraTransform = cameraViewTransformation * translatedEye;
 }
 
 void Camera::SetTransformation(const glm::mat4x4 & transform)
@@ -61,10 +65,10 @@ void Camera::Ortho(const float left, const float right, const float bottom, cons
 				2.0f / (zNear - zFar));*/
 
 	//m_cameraProjection = ST:
-	m_cameraProjection = glm::mat4x4( { { 2.0f / (right - left), 0, 0, 0},
-								{ 0, 2.0f / (top - bottom), 0, 0},
-								{ 0, 0, 2.0f / (zNear - zFar), 0 },
-								{ -(right + left) / (right - left), -(bottom + top) / (top - bottom), (zFar + zNear) / (zFar - zNear), 1 } } );
+	m_cameraProjection = glm::mat4x4( { { 2.0f / (right - left), 0, 0, 0 },
+										{ 0, 2.0f / (top - bottom), 0, 0 },
+										{ 0, 0, 2.0f / (zNear - zFar), 0 },
+										{ -(right + left) / (right - left), -(bottom + top) / (top - bottom), (zFar + zNear) / (zFar - zNear), 1 } } );
 }
 
 void Camera::Frustum(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar)

@@ -23,60 +23,121 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 	{
 		ImGui::Begin("Main menu");
 		
-		int eye[3];
-		int at[3];
-		ImGui::InputInt3("Look from: (x,y,z)", eye, 3);
-		ImGui::InputInt3("Look at: (x,y,z)", at, 3);
-
+		static int eye[3] = { 0,0,0 };
+		static int at[3] = { 0,0,0 };
+		ImGui::InputInt3("Look from: (x,y,z)", eye);
+		ImGui::InputInt3("Look at: (x,y,z)", at);
+		ImGui::Text("Look from: (%d, %d, %d)", eye[0], eye[1], eye[2]);
+		ImGui::Text("Look at: (%d, %d, %d)", at[0], at[1], at[2]);
 		if (ImGui::Button("Add new camera"))
 		{
-			scene->AddCamera({ eye[0], eye[1], eye[2], 1.0f }, { at[0], at[1], at[2], 1.0f }, { eye[0], eye[1] + 1, eye[2], 1.0f });
+			int idx = scene->AddCamera({ eye[0], eye[1], eye[2], 1.0f }, { at[0], at[1], at[2], 1.0f }, { 0, 1, 0, 1.0f });
+			scene->SetActiveCameraIdx(idx);
 		}
+
 		if (ImGui::Button("Next camera"))
 		{
 			scene->NextCamera();
 		}
-		if (ImGui::Button("Previous camera"))
+		
+		ImGui::Text("Active camera: %d", scene->GetActiveCameraIdx());
+
+		static glm::mat4x4 activeCameraTransformation = glm::mat4x4(0);
+		activeCameraTransformation = scene->GetActiveCameraTransformation();
+		string sCameraTransform = "";
+		for (int i = 0; i < 4; i++)
 		{
-			scene->PreviousCamera();
+			for (int j = 0; j < 4; j++) 
+			{
+				sCameraTransform.append(std::to_string(activeCameraTransformation[i][j]) + " ");
+			}
+			sCameraTransform.append("\n");
 		}
 
-		if (ImGui::IsKeyPressed(GLFW_KEY_PAGE_UP) || ImGui::Button("Scaling camera x3/2"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+		ImGui::Text("Camera transformation:\n");
+		ImGui::Text(sCameraTransform.c_str());
+
+
+		static glm::mat4x4 activeCameraProjection = glm::mat4x4(0);
+		activeCameraProjection = scene->GetActiveCameraProjection();
+		string sCameraProjection = "";
+		for (int i = 0; i < 4; i++)
 		{
-			scene->ScaleActiveCamera(1.5f);
+			for (int j = 0; j < 4; j++) 
+			{
+				sCameraProjection.append(std::to_string(activeCameraProjection[i][j]) + " ");
+			}
+			sCameraProjection.append("\n");
 		}
-		if (ImGui::IsKeyPressed(GLFW_KEY_PAGE_DOWN) || ImGui::Button("Scaling camera x2/3"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+
+		ImGui::Text("Camera Projection:\n");
+		ImGui::Text(sCameraProjection.c_str());
+
+		static int scaleFactor;
+		ImGui::InputInt("scaling factor: ", &scaleFactor);
+		if (ImGui::IsKeyPressed(GLFW_KEY_PAGE_UP) || ImGui::Button("Zoom in"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
 		{
-			scene->ScaleActiveCamera(1.0f / 1.5f);
+			scene->ScaleActiveCamera(scaleFactor);
 		}
-		ImGui::Text("For more precise scailing please use mouse wheel");
+		if (ImGui::IsKeyPressed(GLFW_KEY_PAGE_DOWN) || ImGui::Button("Zoom out"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+		{
+			scene->ScaleActiveCamera(1.0f / scaleFactor);
+		}
+
 		if (io.MouseWheel > 0)
 		{
-			scene->ScaleActiveCamera(io.MouseWheel);
+			scene->ScaleActiveCamera(2);
 		}
 		if (io.MouseWheel < 0)
 		{
-			scene->ScaleActiveCamera(1.0f / io.MouseWheel);
+			scene->ScaleActiveCamera(1/2);
 		}
+
 		ImGui::Text("-------------- Camera movements --------------");
+		static int moveFactor = 1;
+		ImGui::InputInt("move factor: ", &moveFactor);
 		if (ImGui::IsKeyPressed(GLFW_KEY_LEFT) || ImGui::Button("Left"))
 		{
-			scene->TranslateActiveCameraLeft(50);
+			scene->TranslateActiveCameraLeft(moveFactor);
 		}
 		if (ImGui::IsKeyPressed(GLFW_KEY_RIGHT) || ImGui::Button("Right"))
 		{
-			scene->TranslateActiveCameraRight(50);
+			scene->TranslateActiveCameraRight(moveFactor);
 		}
-
 		if (ImGui::IsKeyPressed(GLFW_KEY_UP) || ImGui::Button("Up"))
 		{
-			scene->TranslateActiveCameraUp(50);
+			scene->TranslateActiveCameraUp(moveFactor);
 		}
 		if (ImGui::IsKeyPressed(GLFW_KEY_DOWN) || ImGui::Button("Down"))
 		{
-			scene->TranslateActiveCameraDown(50);
+			scene->TranslateActiveCameraDown(moveFactor);
 		}
-
+		static int angle;
+		ImGui::InputInt("rotation angle: ", &angle);
+		if (ImGui::IsKeyPressed('A') || ImGui::Button("+X Axis"))
+		{
+			scene->RotateActiveCameraXAxis(angle);
+		}
+		if (ImGui::IsKeyPressed('D') || ImGui::Button("-X Axis"))
+		{
+			scene->RotateActiveCameraXAxis(-angle);
+		}
+		if (ImGui::IsKeyPressed('W') || ImGui::Button("+Y Axis"))
+		{
+			scene->RotateActiveCameraYAxis(angle);
+		}
+		if (ImGui::IsKeyPressed('S') || ImGui::Button("-Y Axis"))
+		{
+			scene->RotateActiveCameraYAxis(-angle);
+		}
+		if (ImGui::IsKeyPressed('Q') || ImGui::Button("+Z Axis"))
+		{
+			scene->RotateActiveCameraZAxis(angle);
+		}
+		if (ImGui::IsKeyPressed('E') || ImGui::Button("-Z Axis"))
+		{
+			scene->RotateActiveCameraZAxis(-angle);
+		}
 
 		//static float f = 1.0f;
 		//static int counter = 0;

@@ -26,11 +26,12 @@ Renderer::~Renderer()
 void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, const vector<glm::vec3>* normals)
 {
 	glm::vec3 color(WHITE_COLOR);
-	for (vector<glm::vec3>::const_iterator it = vertices->begin(); it != vertices->end(); it += 3)
+	vector<glm::vec3>::const_iterator it = vertices->begin();
+	while (it != vertices->end())
 	{
-		glm::vec3 p1 = *it;
-		glm::vec3 p2 = *(it + 1);
-		glm::vec3 p3 = *(it + 2);
+		glm::vec3 p1 = *(it++);
+		glm::vec3 p2 = *(it++);
+		glm::vec3 p3 = *(it++);
 
 		p1 = Util::toNormalForm(m_cameraProjection * m_cameraTransform * Util::toHomogenicForm(p1));
 		p2 = Util::toNormalForm(m_cameraProjection * m_cameraTransform * Util::toHomogenicForm(p2));

@@ -24,9 +24,6 @@ void Scene::Draw()
 		m_cameras.push_back(camera);
 		m_activeCamera = 0;
 	}
-
-	//BUG: Sets right transformation only one (suspected), something owerrwrite it!
-
 	Camera* activeCamera = m_cameras[m_activeCamera];
 	renderer->SetCameraTransform(activeCamera->GetTransformation());
 	renderer->SetProjection(m_cameras[m_activeCamera]->GetProjection());
@@ -95,18 +92,73 @@ void Scene::TranslateActiveCameraDown(float value)
 		activeCamera->SetTransformation(scaleTransform * currTransf);
 	}
 }
+void Scene::RotateActiveCameraXAxis(float angle)
+{
+	if (m_activeCamera != DISABLED)
+	{
+		Camera* activeCamera = m_cameras[m_activeCamera];
+		glm::mat4x4 currTransf = activeCamera->GetTransformation();
+		glm::mat4x4 rotateTransform(ROTATING_MATRIX_X_AXIS(angle));
+		activeCamera->SetTransformation(rotateTransform * currTransf);
+	}
+}
+void Scene::RotateActiveCameraYAxis(float angle)
+{
+	if (m_activeCamera != DISABLED)
+	{
+		Camera* activeCamera = m_cameras[m_activeCamera];
+		glm::mat4x4 currTransf = activeCamera->GetTransformation();
+		glm::mat4x4 rotateTransform(ROTATING_MATRIX_Y_AXIS(angle));
+		activeCamera->SetTransformation(rotateTransform * currTransf);
+	}
+}
+void Scene::RotateActiveCameraZAxis(float angle)
+{
+	if (m_activeCamera != DISABLED)
+	{
+		Camera* activeCamera = m_cameras[m_activeCamera];
+		glm::mat4x4 currTransf = activeCamera->GetTransformation();
+		glm::mat4x4 rotateTransform(ROTATING_MATRIX_Z_AXIS(angle));
+		activeCamera->SetTransformation(rotateTransform * currTransf);
+	}
+}
 /*
+* Adds camera to vector of scene cameras.
 * eye – The position of the camera
 * at – The position the camera looks at
 * up – The upside(y) direction of the camera
+* returns: current index of added camera.
 */
-void Scene::AddCamera(const glm::vec4& eye, const glm::vec4& at, const glm::vec4& up)
+unsigned int Scene::AddCamera(const glm::vec4& eye, const glm::vec4& at, const glm::vec4& up)
 {
 	Camera* newCamera = new Camera(eye, at, up);
 	m_cameras.push_back(newCamera);
+	return m_cameras.size() - 1;
+}
+
+glm::mat4x4 Scene::GetActiveCameraTransformation()
+{
 	if (m_activeCamera != DISABLED)
 	{
-		m_activeCamera = 0;
+		Camera* activeCamera = m_cameras[m_activeCamera];
+		return  activeCamera->GetTransformation();
+	}
+	else
+	{
+		return ZERO_MATRIX;
+	}
+}
+
+glm::mat4x4 Scene::GetActiveCameraProjection()
+{
+	if (m_activeCamera != DISABLED)
+	{
+		Camera* activeCamera = m_cameras[m_activeCamera];
+		return  activeCamera->GetProjection();
+	}
+	else
+	{
+		return ZERO_MATRIX;
 	}
 }
 
@@ -118,15 +170,12 @@ void Scene::NextCamera()
 	}
 }
 
-void Scene::PreviousCamera()
+int Scene::GetActiveCameraIdx()
 {
-	if (m_activeCamera != DISABLED)
-	{
-		m_activeCamera = (m_activeCamera - 1) % m_cameras.size();
-	}
+	return m_activeCamera;
 }
 
-void Scene::SetActiveCamera(unsigned int cameraIdx)
+void Scene::SetActiveCameraIdx(unsigned int cameraIdx)
 {
 	if (m_cameras.size() > cameraIdx)
 	{
@@ -134,7 +183,12 @@ void Scene::SetActiveCamera(unsigned int cameraIdx)
 	}
 }
 
-void Scene::SetActiveModel(unsigned int modelIdx)
+int Scene::GetActiveModelIdx()
+{
+	return m_activeModel;
+}
+
+void Scene::SetActiveModelIdx(unsigned int modelIdx)
 {
 	if (m_models.size() > modelIdx)
 	{
