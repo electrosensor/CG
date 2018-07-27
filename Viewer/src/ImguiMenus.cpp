@@ -6,7 +6,7 @@
 #include <nfd.h>
 
 bool showDemoWindow = false;
-bool showAnotherWindow = false;
+bool modelControlWindow = false;
 bool showFile = false;
 glm::vec4 clearColor = glm::vec4(0.4f, 0.55f, 0.60f, 1.00f);
 
@@ -22,7 +22,8 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 	// Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets automatically appears in a window called "Debug".
 	{
 		ImGui::Begin("Main menu");
-		
+
+		ImGui::Text("-------------- Cameras Control: --------------");
 		static int eye[3] = { 0,0,0 };
 		static int at[3] = { 0,0,0 };
 		ImGui::InputInt3("Look from: (x,y,z)", eye);
@@ -58,7 +59,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 		ImGui::Text(sCameraTransform.c_str());
 
 
-		static glm::mat4x4 activeCameraProjection = glm::mat4x4(0);
+		static glm::mat4x4 activeCameraProjection;
 		activeCameraProjection = scene->GetActiveCameraProjection();
 		string sCameraProjection = "";
 		for (int i = 0; i < 4; i++)
@@ -73,15 +74,16 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 		ImGui::Text("Camera Projection:\n");
 		ImGui::Text(sCameraProjection.c_str());
 
-		static int scaleFactor;
-		ImGui::InputInt("scaling factor: ", &scaleFactor);
+		//Camera sacaling:
+		static int camScaleFactor = 2;
+		ImGui::InputInt("scaling factor: ", &camScaleFactor);
 		if (ImGui::IsKeyPressed(GLFW_KEY_PAGE_UP) || ImGui::Button("Zoom in"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
 		{
-			scene->ScaleActiveCamera(scaleFactor);
+			scene->ScaleActiveCamera(camScaleFactor);
 		}
 		if (ImGui::IsKeyPressed(GLFW_KEY_PAGE_DOWN) || ImGui::Button("Zoom out"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
 		{
-			scene->ScaleActiveCamera(1.0f / scaleFactor);
+			scene->ScaleActiveCamera(1.0f / camScaleFactor);
 		}
 
 		if (io.MouseWheel > 0)
@@ -93,51 +95,66 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 			scene->ScaleActiveCamera(1/2);
 		}
 
-		ImGui::Text("-------------- Camera movements --------------");
-		static int moveFactor = 1;
-		ImGui::InputInt("move factor: ", &moveFactor);
+		//Camera moves:
+		
+		static int camMoveFactor = 1;
+		ImGui::InputInt("move factor: ", &camMoveFactor);
 		if (ImGui::IsKeyPressed(GLFW_KEY_LEFT) || ImGui::Button("Left"))
 		{
-			scene->TranslateActiveCameraLeft(moveFactor);
+			scene->TranslateActiveCameraXAxis(-camMoveFactor);
 		}
 		if (ImGui::IsKeyPressed(GLFW_KEY_RIGHT) || ImGui::Button("Right"))
 		{
-			scene->TranslateActiveCameraRight(moveFactor);
+			scene->TranslateActiveCameraXAxis(camMoveFactor);
 		}
 		if (ImGui::IsKeyPressed(GLFW_KEY_UP) || ImGui::Button("Up"))
 		{
-			scene->TranslateActiveCameraUp(moveFactor);
+			scene->TranslateActiveCameraYAxis(camMoveFactor);
 		}
 		if (ImGui::IsKeyPressed(GLFW_KEY_DOWN) || ImGui::Button("Down"))
 		{
-			scene->TranslateActiveCameraDown(moveFactor);
+			scene->TranslateActiveCameraYAxis(-camMoveFactor);
 		}
-		static int angle;
-		ImGui::InputInt("rotation angle: ", &angle);
+		if (ImGui::IsKeyPressed('F') || ImGui::Button("Forward"))
+		{
+			scene->TranslateActiveCameraZAxis(camMoveFactor);
+		}
+		if (ImGui::IsKeyPressed('B') || ImGui::Button("Back"))
+		{
+			scene->TranslateActiveCameraZAxis(-camMoveFactor);
+		}
+
+		//Camera rotation:
+
+		static int cameraAngle = 1;
+		ImGui::InputInt("rotation angle: ", &cameraAngle);
 		if (ImGui::IsKeyPressed('A') || ImGui::Button("+X Axis"))
 		{
-			scene->RotateActiveCameraXAxis(angle);
+			scene->RotateActiveCameraXAxis(cameraAngle);
 		}
 		if (ImGui::IsKeyPressed('D') || ImGui::Button("-X Axis"))
 		{
-			scene->RotateActiveCameraXAxis(-angle);
+			scene->RotateActiveCameraXAxis(-cameraAngle);
 		}
 		if (ImGui::IsKeyPressed('W') || ImGui::Button("+Y Axis"))
 		{
-			scene->RotateActiveCameraYAxis(angle);
+			scene->RotateActiveCameraYAxis(cameraAngle);
 		}
 		if (ImGui::IsKeyPressed('S') || ImGui::Button("-Y Axis"))
 		{
-			scene->RotateActiveCameraYAxis(-angle);
+			scene->RotateActiveCameraYAxis(-cameraAngle);
 		}
 		if (ImGui::IsKeyPressed('Q') || ImGui::Button("+Z Axis"))
 		{
-			scene->RotateActiveCameraZAxis(angle);
+			scene->RotateActiveCameraZAxis(cameraAngle);
 		}
 		if (ImGui::IsKeyPressed('E') || ImGui::Button("-Z Axis"))
 		{
-			scene->RotateActiveCameraZAxis(-angle);
+			scene->RotateActiveCameraZAxis(-cameraAngle);
 		}
+
+
+	
 
 		//static float f = 1.0f;
 		//static int counter = 0;
@@ -146,7 +163,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 		//{
 		//}
 		//	ImGui::Checkbox("Demo Window", &showDemoWindow);      // Edit bools storing our windows open/close state
-		//ImGui::Checkbox("Another Window", &showAnotherWindow);
+		//ImGui::Checkbox("Another Window", &modelControlWindow);
 
 		//ImGui::ColorEdit3("clear color", (float*)&clearColor); // Edit 3 floats representing a color
 
@@ -158,15 +175,127 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 	}
 
 	// 2. Show another simple window. In most cases you will use an explicit Begin/End pair to name your windows.
-	if (showAnotherWindow)
+	if (modelControlWindow)
 	{
-		int val[2]; val[0] = io.MousePos.x; val[1] = io.MousePos.y;
-		ImGui::Begin("Another Window", &showAnotherWindow);
-		ImGui::InputInt2("(x,y)", val, 3);
-		ImGui::Text("Hello from another window!");
-		if (ImGui::Button("Close Me"))
-			showAnotherWindow = false;
-		ImGui::End();
+		ImGui::Text("-------------- Models Control: --------------");
+
+		static int world[3] = { 0,0,0 };
+		ImGui::InputInt3("World transformation: (x,y,z)", world);
+		ImGui::Text("World transformation:: (%d, %d, %d)", world[0], world[1], world[2]);
+
+		if (ImGui::Button("Add sphere:"))
+		{
+			int idx = scene->AddPrimitiveModel(PM_SPHERE);
+			scene->SetActiveModelIdx(idx);
+		}
+		if (ImGui::Button("Add box:"))
+		{
+			int idx = scene->AddPrimitiveModel(PM_BOX);
+			scene->SetActiveModelIdx(idx);
+		}
+
+		if (ImGui::Button("Next model"))
+		{
+			scene->NextModel();
+		}
+
+		ImGui::Text("Active model: %d", scene->GetActiveModelIdx());
+
+		static glm::mat4x4 activeModelWorldTransformation;
+		activeModelWorldTransformation = scene->GetActiveModelWorldTransformation();
+		string sModelTransform = "";
+		for (int i = 0; i < 4; i++)
+		{
+			for (int j = 0; j < 4; j++)
+			{
+				sModelTransform.append(std::to_string(activeModelWorldTransformation[i][j]) + " ");
+			}
+			sModelTransform.append("\n");
+		}
+
+		ImGui::Text("Model world transformation:\n");
+		ImGui::Text(sModelTransform.c_str());
+
+		//Model sacaling:
+		static int modelScaleFactor = 2;
+		ImGui::InputInt("scaling factor: ", &modelScaleFactor);
+		if (ImGui::Button("Zoom in"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+		{
+			scene->ScaleActiveModel(modelScaleFactor);
+		}
+		if (ImGui::Button("Zoom out"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+		{
+			scene->ScaleActiveModel(1.0f / modelScaleFactor);
+		}
+
+		//Model moves:
+
+		static int modelMoveFactor = 1;
+		ImGui::InputInt("move factor: ", &modelMoveFactor);
+		if (ImGui::Button("Left"))
+		{
+			scene->TranslateActiveModelXAxis(-modelMoveFactor);
+		}
+		if (ImGui::Button("Right"))
+		{
+			scene->TranslateActiveModelXAxis(modelMoveFactor);
+		}
+		if (ImGui::Button("Up"))
+		{
+			scene->TranslateActiveModelYAxis(modelMoveFactor);
+		}
+		if (ImGui::Button("Down"))
+		{
+			scene->TranslateActiveModelYAxis(-modelMoveFactor);
+		}
+		if (ImGui::Button("Forward"))
+		{
+			scene->TranslateActiveModelZAxis(modelMoveFactor);
+		}
+		if (ImGui::Button("Back"))
+		{
+			scene->TranslateActiveModelZAxis(-modelMoveFactor);
+		}
+
+		//Model rotation:
+
+		static int modelAngle = 1;
+		ImGui::InputInt("rotation angle: ", &modelAngle);
+		if (ImGui::Button("+X Axis"))
+		{
+			scene->RotateActiveModelXAxis(modelAngle);
+		}
+		if (ImGui::Button("-X Axis"))
+		{
+			scene->RotateActiveModelXAxis(-modelAngle);
+		}
+		if (ImGui::Button("+Y Axis"))
+		{
+			scene->RotateActiveModelYAxis(modelAngle);
+		}
+		if (ImGui::Button("-Y Axis"))
+		{
+			scene->RotateActiveModelYAxis(-modelAngle);
+		}
+		if (ImGui::Button("+Z Axis"))
+		{
+			scene->RotateActiveModelZAxis(modelAngle);
+		}
+		if (ImGui::Button("-Z Axis"))
+		{
+			scene->RotateActiveModelZAxis(-modelAngle);
+		}
+
+
+
+
+		//int val[2]; val[0] = io.MousePos.x; val[1] = io.MousePos.y;
+		//ImGui::Begin("Another Window", &modelControlWindow);
+		//ImGui::InputInt2("(x,y)", val, 3);
+		//ImGui::Text("Hello from another window!");
+		//if (ImGui::Button("Close Me"))
+		//	modelControlWindow = false;
+		//ImGui::End();
 	}
 
 	// 3. Show the ImGui demo window. Most of the sample code is in ImGui::ShowDemoWindow(). Read its code to learn more about Dear ImGui!
@@ -191,6 +320,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 						ImGui::Text("Hello from another window!");
 						scene->LoadOBJModel(outPath);
 						free(outPath);
+						modelControlWindow = true;
 					}
 					else if (result == NFD_CANCEL) {
 					}

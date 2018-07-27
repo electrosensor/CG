@@ -79,6 +79,11 @@ glm::vec2 vec2fFromStream(std::istream& issLine)
 MeshModel::MeshModel(const string& fileName) : m_worldTransformation(I_MATRIX), 
 											   m_normalTransformation(I_MATRIX)
 {
+
+	glm::mat4x4 scale = SCALING_MATRIX(10);
+	glm::mat4x4 center = TRANSLATION_MATRIX(100, 50, 0);
+	m_worldTransformation = scale * center;
+
 	LoadFile(fileName);
 }
 
@@ -180,7 +185,7 @@ const vector<glm::vec3>* MeshModel::Draw()
 	vector<glm::vec3>* meshModelVertices = new vector<glm::vec3>();
 	for (size_t i = 0; i < m_vertexPosSize; i++)
 	{
-		glm::vec3 vertex = 30.0f * m_vertexPositions[i];
+		glm::vec3 vertex = m_vertexPositions[i];
 		vertex = Util::toNormalForm(m_normalTransformation * m_worldTransformation * Util::toHomogenicForm(vertex)); //TODO_YURI: check the order of transformations
 		meshModelVertices->push_back(vertex);
 	}
