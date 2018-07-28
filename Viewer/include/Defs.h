@@ -8,7 +8,7 @@
 #define	DISABLED						 -1
 
 #define PI								 3.141592653589793238462643383279502884
-
+#define INDEX(width,x,y,c)				 ((x)+(y)*(width))*3+(c)
 #define FACE_ELEMENTS 3
 #define TO_RADIAN(angle)				 ((angle)*2.0f*PI / 360.0f)
 #define ZERO_MATRIX						 { {0,0,0,0},{ 0,0,0,0 },{ 0,0,0,0 },{ 0,0,0,0 } }

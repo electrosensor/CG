@@ -4,6 +4,9 @@
 
 Camera::Camera() : m_cameraTransform(I_MATRIX), m_cameraProjection(I_MATRIX)
 {
+	glm::mat4x4 toCenter(TRANSLATION_MATRIX(DEFAULT_WIDTH / 2, DEFAULT_HEIGHT / 2, 0));
+
+	m_cameraTransform =  m_cameraTransform * toCenter;
 }
 
 Camera::Camera(const glm::vec4& eye, const glm::vec4& at, const glm::vec4& up)

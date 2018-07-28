@@ -79,9 +79,8 @@ MeshModel::MeshModel(const string& fileName) : m_worldTransformation(I_MATRIX),
 											   m_normalTransformation(I_MATRIX)
 {
 
-	glm::mat4x4 scale = SCALING_MATRIX(10);
-	glm::mat4x4 center = TRANSLATION_MATRIX(100, 50, 0);
-	m_worldTransformation = scale * center;
+	glm::mat4x4 scale = SCALING_MATRIX(7);
+	m_worldTransformation = m_worldTransformation * scale;
 
 	LoadFile(fileName);
 }

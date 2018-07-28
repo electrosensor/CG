@@ -4,7 +4,6 @@
 #include "Util.h"
 #include "Defs.h"
 
-#define INDEX(width,x,y,c) ((x)+(y)*(width))*3+(c)
 
 Renderer::Renderer() : width(DEFAULT_WIDTH), height(DEFAULT_HEIGHT)
 {

@@ -113,8 +113,8 @@ void Scene::TranslateActiveCameraXAxis(float value)
 	{
 		Camera* activeCamera = m_cameras[m_activeCamera];
 		glm::mat4x4 currTransf = activeCamera->GetTransformation();
-		glm::mat4x4 scaleTransform(TRANSLATION_MATRIX(value, 0, 0));
-		activeCamera->SetTransformation(scaleTransform * currTransf);
+		glm::mat4x4 translateTransform(TRANSLATION_MATRIX(value, 0, 0));
+		activeCamera->SetTransformation(translateTransform * currTransf);
 	}
 }
 
@@ -124,8 +124,8 @@ void Scene::TranslateActiveCameraYAxis(float value)
 	{
 		Camera* activeCamera = m_cameras[m_activeCamera];
 		glm::mat4x4 currTransf = activeCamera->GetTransformation();
-		glm::mat4x4 scaleTransform(TRANSLATION_MATRIX(0, value, 0));
-		activeCamera->SetTransformation(scaleTransform * currTransf);
+		glm::mat4x4 translateTransform(TRANSLATION_MATRIX(0, value, 0));
+		activeCamera->SetTransformation(translateTransform * currTransf);
 	}
 }
 
@@ -135,8 +135,8 @@ void Scene::TranslateActiveCameraZAxis(float value)
 	{
 		Camera* activeCamera = m_cameras[m_activeCamera];
 		glm::mat4x4 currTransf = activeCamera->GetTransformation();
-		glm::mat4x4 scaleTransform(TRANSLATION_MATRIX(0, 0, value));
-		activeCamera->SetTransformation(scaleTransform * currTransf);
+		glm::mat4x4 translateTransform(TRANSLATION_MATRIX(0, 0, value));
+		activeCamera->SetTransformation(translateTransform * currTransf);
 	}
 }
 
@@ -185,8 +185,8 @@ void Scene::TranslateActiveModelXAxis(float value)
 	{
 		Model* activeModel = m_models[m_activeModel];
 		glm::mat4x4 currTransf = activeModel->GetWorldTransformation();
-		glm::mat4x4 scaleTransform(TRANSLATION_MATRIX(value, 0, 0));
-		activeModel->SetWorldTransformation(scaleTransform * currTransf);
+		glm::mat4x4 translateTransform(TRANSLATION_MATRIX(value, 0, 0));
+		activeModel->SetWorldTransformation(translateTransform * currTransf);
 	}
 }
 
@@ -196,8 +196,8 @@ void Scene::TranslateActiveModelYAxis(float value)
 	{
 		Model* activeModel = m_models[m_activeModel];
 		glm::mat4x4 currTransf = activeModel->GetWorldTransformation();
-		glm::mat4x4 scaleTransform(TRANSLATION_MATRIX(0, value, 0));
-		activeModel->SetWorldTransformation(scaleTransform * currTransf);
+		glm::mat4x4 translateTransform(TRANSLATION_MATRIX(0, value, 0));
+		activeModel->SetWorldTransformation(translateTransform * currTransf);
 	}
 }
 
@@ -207,8 +207,8 @@ void Scene::TranslateActiveModelZAxis(float value)
 	{
 		Model* activeModel = m_models[m_activeModel];
 		glm::mat4x4 currTransf = activeModel->GetWorldTransformation();
-		glm::mat4x4 scaleTransform(TRANSLATION_MATRIX(0, 0, value));
-		activeModel->SetWorldTransformation(scaleTransform * currTransf);
+		glm::mat4x4 translateTransform(TRANSLATION_MATRIX(0, 0, value));
+		activeModel->SetWorldTransformation(translateTransform * currTransf);
 	}
 }
 
@@ -219,7 +219,7 @@ void Scene::ScaleActiveModel(float value)
 		Model* activeCamera = m_models[m_activeModel];
 		glm::mat4x4 currTransf = activeCamera->GetWorldTransformation();
 		glm::mat4x4 scaleTransform(SCALING_MATRIX(value));
-		activeCamera->SetWorldTransformation(scaleTransform * currTransf);
+		activeCamera->SetWorldTransformation(currTransf * scaleTransform);
 	}
 }
 
