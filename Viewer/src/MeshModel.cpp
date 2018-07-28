@@ -6,7 +6,6 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-#define FACE_ELEMENTS 3
 
 
 typedef Model* PModel;
@@ -155,12 +154,6 @@ void MeshModel::LoadFile(const string& fileName)
 			cout << "Found unknown line Type \"" << lineType << "\"";
 		}
 	}
-	//Vertex_positions is an array of vec3. Every three elements define a triangle in 3D.
-	//If the face part of the obj is
-	//f 1 2 3
-	//f 1 3 4
-	//Then vertexPositions should contain:
-	//vertexPositions={v1,v2,v3,v1,v3,v4}
 
 	m_vertexPosSize = faces.size()*FACE_ELEMENTS;
 	m_vertexPositions = new glm::vec3[m_vertexPosSize];

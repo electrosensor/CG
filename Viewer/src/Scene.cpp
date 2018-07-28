@@ -147,8 +147,10 @@ void Scene::RotateActiveCameraXAxis(float angle)
 	{
 		Camera* activeCamera = m_cameras[m_activeCamera];
 		glm::mat4x4 currTransf = activeCamera->GetTransformation();
+		glm::mat4x4 toOrigin(TRANSLATION_MATRIX(-currTransf[3][0], -currTransf[3][1], -currTransf[3][2]));
+		glm::mat4x4 toPlace(TRANSLATION_MATRIX(currTransf[3][0], currTransf[3][1], currTransf[3][2]));
 		glm::mat4x4 rotateTransform(ROTATING_MATRIX_X_AXIS(angle));
-		activeCamera->SetTransformation(rotateTransform * currTransf);
+		activeCamera->SetTransformation(toPlace * rotateTransform * toOrigin * currTransf);
 	}
 }
 
@@ -158,8 +160,10 @@ void Scene::RotateActiveCameraYAxis(float angle)
 	{
 		Camera* activeCamera = m_cameras[m_activeCamera];
 		glm::mat4x4 currTransf = activeCamera->GetTransformation();
+		glm::mat4x4 toOrigin(TRANSLATION_MATRIX(-currTransf[3][0], -currTransf[3][1], -currTransf[3][2]));
+		glm::mat4x4 toPlace(TRANSLATION_MATRIX(currTransf[3][0], currTransf[3][1], currTransf[3][2]));
 		glm::mat4x4 rotateTransform(ROTATING_MATRIX_Y_AXIS(angle));
-		activeCamera->SetTransformation(rotateTransform * currTransf);
+		activeCamera->SetTransformation(toPlace * rotateTransform * toOrigin * currTransf);
 	}
 }
 
@@ -169,8 +173,10 @@ void Scene::RotateActiveCameraZAxis(float angle)
 	{
 		Camera* activeCamera = m_cameras[m_activeCamera];
 		glm::mat4x4 currTransf = activeCamera->GetTransformation();
+		glm::mat4x4 toOrigin(TRANSLATION_MATRIX(-currTransf[3][0], -currTransf[3][1], -currTransf[3][2]));
+		glm::mat4x4 toPlace(TRANSLATION_MATRIX(currTransf[3][0], currTransf[3][1], currTransf[3][2]));
 		glm::mat4x4 rotateTransform(ROTATING_MATRIX_Z_AXIS(angle));
-		activeCamera->SetTransformation(rotateTransform * currTransf);
+		activeCamera->SetTransformation(toPlace * rotateTransform * toOrigin * currTransf);
 	}
 }
 //////////////////// Model ////////////////////////
@@ -224,8 +230,10 @@ void Scene::RotateActiveModelXAxis(float angle)
 	{
 		Model* activeModel = m_models[m_activeModel];
 		glm::mat4x4 currTransf = activeModel->GetWorldTransformation();
+		glm::mat4x4 toOrigin (TRANSLATION_MATRIX(-currTransf[3][0], -currTransf[3][1], -currTransf[3][2]));
+		glm::mat4x4 toPlace(TRANSLATION_MATRIX(currTransf[3][0], currTransf[3][1], currTransf[3][2]));
 		glm::mat4x4 rotateTransform(ROTATING_MATRIX_X_AXIS(angle));
-		activeModel->SetWorldTransformation(rotateTransform * currTransf);
+		activeModel->SetWorldTransformation(toPlace * rotateTransform * toOrigin * currTransf);
 	}
 }
 
@@ -235,8 +243,10 @@ void Scene::RotateActiveModelYAxis(float angle)
 	{
 		Model* activeModel = m_models[m_activeModel];
 		glm::mat4x4 currTransf = activeModel->GetWorldTransformation();
+		glm::mat4x4 toOrigin(TRANSLATION_MATRIX(-currTransf[3][0], -currTransf[3][1], -currTransf[3][2]));
+		glm::mat4x4 toPlace(TRANSLATION_MATRIX(currTransf[3][0], currTransf[3][1], currTransf[3][2]));
 		glm::mat4x4 rotateTransform(ROTATING_MATRIX_Y_AXIS(angle));
-		activeModel->SetWorldTransformation(rotateTransform * currTransf);
+		activeModel->SetWorldTransformation(toPlace * rotateTransform * toOrigin * currTransf);
 	}
 }
 
@@ -246,8 +256,10 @@ void Scene::RotateActiveModelZAxis(float angle)
 	{
 		Model* activeModel = m_models[m_activeModel];
 		glm::mat4x4 currTransf = activeModel->GetWorldTransformation();
+		glm::mat4x4 toOrigin(TRANSLATION_MATRIX(-currTransf[3][0], -currTransf[3][1], -currTransf[3][2]));
+		glm::mat4x4 toPlace(TRANSLATION_MATRIX(currTransf[3][0], currTransf[3][1], currTransf[3][2]));
 		glm::mat4x4 rotateTransform(ROTATING_MATRIX_Z_AXIS(angle));
-		activeModel->SetWorldTransformation(rotateTransform * currTransf);
+		activeModel->SetWorldTransformation(toPlace * rotateTransform * toOrigin * currTransf);
 	}
 }
 

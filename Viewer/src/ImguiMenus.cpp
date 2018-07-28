@@ -128,7 +128,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 
 		static int cameraAngle = 1;
 		ImGui::InputInt("rotation angle: ", &cameraAngle);
-		if (ImGui::IsKeyPressed('A') || ImGui::Button("+X Axis"))
+		if (ImGui::IsKeyPressed('X') || ImGui::Button("+X Axis"))
 		{
 			scene->RotateActiveCameraXAxis(cameraAngle);
 		}
@@ -217,8 +217,8 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 		ImGui::Text(sModelTransform.c_str());
 
 		//Model sacaling:
-		static int modelScaleFactor = 2;
-		ImGui::InputInt("scaling factor: ", &modelScaleFactor);
+		static float modelScaleFactor = 2;
+		ImGui::InputFloat("scaling factor: ", &modelScaleFactor);
 		if (ImGui::Button("Zoom in"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
 		{
 			scene->ScaleActiveModel(modelScaleFactor);
@@ -261,27 +261,27 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 
 		static int modelAngle = 1;
 		ImGui::InputInt("rotation angle: ", &modelAngle);
-		if (ImGui::Button("+X Axis"))
+		if ((io.MouseDown[0] && io.MouseDelta.y > 0) || ImGui::Button("+X Axis"))
 		{
 			scene->RotateActiveModelXAxis(modelAngle);
 		}
-		if (ImGui::Button("-X Axis"))
+		if ((io.MouseDown[0] && io.MouseDelta.y < 0) || ImGui::Button("-X Axis"))
 		{
 			scene->RotateActiveModelXAxis(-modelAngle);
 		}
-		if (ImGui::Button("+Y Axis"))
+		if ((io.MouseDown[0] && io.MouseDelta.x > 0) || ImGui::Button("+Y Axis"))
 		{
 			scene->RotateActiveModelYAxis(modelAngle);
 		}
-		if (ImGui::Button("-Y Axis"))
+		if ((io.MouseDown[0] && io.MouseDelta.x < 0) || ImGui::Button("-Y Axis"))
 		{
 			scene->RotateActiveModelYAxis(-modelAngle);
 		}
-		if (ImGui::Button("+Z Axis"))
+		if ((io.MouseDown[1] && io.MouseDelta.x > 0) || ImGui::Button("+Z Axis"))
 		{
 			scene->RotateActiveModelZAxis(modelAngle);
 		}
-		if (ImGui::Button("-Z Axis"))
+		if ((io.MouseDown[1] && io.MouseDelta.x < 0) || ImGui::Button("-Z Axis"))
 		{
 			scene->RotateActiveModelZAxis(-modelAngle);
 		}
