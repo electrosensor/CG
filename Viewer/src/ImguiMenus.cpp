@@ -35,6 +35,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 			int idx = scene->AddCamera({ eye[0], eye[1], eye[2], 1.0f }, { at[0], at[1], at[2], 1.0f }, { 0, 1, 0, 1.0f });
 			scene->SetActiveCameraIdx(idx);
 		}
+		ImGui::SameLine();
 
 		if (ImGui::Button("Next camera"))
 		{
@@ -81,6 +82,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 		{
 			scene->ScaleActiveCamera(camScaleFactor);
 		}
+		ImGui::SameLine();
 		if (ImGui::IsKeyPressed(GLFW_KEY_PAGE_DOWN) || ImGui::Button("Zoom out"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
 		{
 			scene->ScaleActiveCamera(1.0f / camScaleFactor);
@@ -99,19 +101,21 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 		
 		static int camMoveFactor = 1;
 		ImGui::InputInt("move factor: ", &camMoveFactor);
-		if (ImGui::IsKeyPressed(GLFW_KEY_LEFT) || ImGui::Button("Left"))
+		if (ImGui::IsKeyPressed(GLFW_KEY_LEFT) || ImGui::Button("  Left  "))
 		{
 			scene->TranslateActiveCameraXAxis(-camMoveFactor);
 		}
-		if (ImGui::IsKeyPressed(GLFW_KEY_RIGHT) || ImGui::Button("Right"))
+		ImGui::SameLine();
+		if (ImGui::IsKeyPressed(GLFW_KEY_RIGHT) || ImGui::Button("  Right "))
 		{
 			scene->TranslateActiveCameraXAxis(camMoveFactor);
 		}
-		if (ImGui::IsKeyPressed(GLFW_KEY_UP) || ImGui::Button("Up"))
+		if (ImGui::IsKeyPressed(GLFW_KEY_UP) || ImGui::Button("  Up  "))
 		{
 			scene->TranslateActiveCameraYAxis(camMoveFactor);
 		}
-		if (ImGui::IsKeyPressed(GLFW_KEY_DOWN) || ImGui::Button("Down"))
+		ImGui::SameLine();
+		if (ImGui::IsKeyPressed(GLFW_KEY_DOWN) || ImGui::Button("  Down  "))
 		{
 			scene->TranslateActiveCameraYAxis(-camMoveFactor);
 		}
@@ -119,7 +123,8 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 		{
 			scene->TranslateActiveCameraZAxis(camMoveFactor);
 		}
-		if (ImGui::IsKeyPressed('B') || ImGui::Button("Back"))
+		ImGui::SameLine();
+		if (ImGui::IsKeyPressed('B') || ImGui::Button("  Back "))
 		{
 			scene->TranslateActiveCameraZAxis(-camMoveFactor);
 		}
@@ -132,6 +137,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 		{
 			scene->RotateActiveCameraXAxis(cameraAngle);
 		}
+		ImGui::SameLine();
 		if (ImGui::IsKeyPressed('D') || ImGui::Button("-X Axis"))
 		{
 			scene->RotateActiveCameraXAxis(-cameraAngle);
@@ -140,6 +146,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 		{
 			scene->RotateActiveCameraYAxis(cameraAngle);
 		}
+		ImGui::SameLine();
 		if (ImGui::IsKeyPressed('S') || ImGui::Button("-Y Axis"))
 		{
 			scene->RotateActiveCameraYAxis(-cameraAngle);
@@ -148,6 +155,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 		{
 			scene->RotateActiveCameraZAxis(cameraAngle);
 		}
+		ImGui::SameLine();
 		if (ImGui::IsKeyPressed('E') || ImGui::Button("-Z Axis"))
 		{
 			scene->RotateActiveCameraZAxis(-cameraAngle);

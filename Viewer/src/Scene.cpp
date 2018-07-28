@@ -1,6 +1,5 @@
 #include "Scene.h"
 #include "MeshModel.h"
-#include "Defs.h"
 #include <string>
 
 using namespace std;
@@ -265,8 +264,8 @@ void Scene::RotateActiveModelZAxis(float angle)
 
 unsigned int Scene::AddPrimitiveModel(PRIM_MODEL primitiveModel)
 {
-//	Model* newModel = new PrimModel(primitiveModel);
-//	m_models.push_back(newModel);
+	Model* newModel = new PrimMeshModel(primitiveModel);
+	m_models.push_back(newModel);
 	return m_models.size() - 1;
 }
 

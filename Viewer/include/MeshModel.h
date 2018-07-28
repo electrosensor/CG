@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include <string>
 #include "Model.h"
+#include "Defs.h"
 
 
 using namespace std;
@@ -35,3 +36,23 @@ class MeshModel : public Model
 		const vector<glm::vec3>* Draw();
 
 };
+
+class PrimMeshModel : public MeshModel
+{
+public:
+	PrimMeshModel(PRIM_MODEL primModel) : MeshModel(*setPrimModelFilePath(primModel))
+	{
+		if (m_pPrimModelString)
+		{
+			delete m_pPrimModelString;
+			m_pPrimModelString = nullptr;
+		}
+	}
+
+
+private:
+	string* setPrimModelFilePath(PRIM_MODEL primModel);
+
+	string* m_pPrimModelString;
+};
+

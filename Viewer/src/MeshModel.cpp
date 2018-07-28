@@ -117,7 +117,7 @@ void MeshModel::LoadFile(const string& fileName)
 
 	if (ifile.fail())
 	{
-		fprintf(stderr,"Opening file %s failed, good by cruel world!!!", fileName.c_str());
+		fprintf(stderr, "Opening file %s failed, goodbye cruel world - harakiri!!!", fileName.c_str());
 		exit(RC_IO_ERROR);
 	}
 
@@ -183,4 +183,21 @@ const vector<glm::vec3>* MeshModel::Draw()
 		meshModelVertices->push_back(vertex);
 	}
 	return meshModelVertices;
+}
+
+string* PrimMeshModel::setPrimModelFilePath(PRIM_MODEL primModel)
+{
+	switch (primModel)
+	{
+	case PM_SPHERE:
+		m_pPrimModelString = new string("../ObjFiles/teddy.obj");
+		break;
+	case PM_BOX:
+		m_pPrimModelString = new string("../ObjFiles/cow-nonormals.obj");
+		break;
+	default:
+		m_pPrimModelString = new string("NULL");
+		break;
+	}
+	return m_pPrimModelString;
 }
