@@ -30,15 +30,12 @@ public:
 	void LookAt(const glm::vec3& eye, const glm::vec3& at, const glm::vec3& up );
 
 	// Sets orthographic projection matrix.
-	void Camera::Ortho( PROJ_PARAMS projParams );
+	void Ortho(const PROJ_PARAMS projParams );
 
 	// Sets frustum view volume for clipping stage.
-	void Frustum( const float left, const float right,
-		const float bottom, const float top,
-		const float zNear, const float zFar );
+	void Frustum(const PROJ_PARAMS projParams);
 
 	// Sets perspective projection matrix.
-	void Perspective( const float fovy, const float aspect,
-		const float zNear, const float zFar);
+	void Perspective(const PERSPECTIVE_PARAMS perspectiveParams);
 
 };

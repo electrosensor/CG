@@ -80,12 +80,12 @@ void Camera::Ortho(const PROJ_PARAMS projParams)
 										{ -(right + left) / (right - left), -(bottom + top) / (top - bottom), (zFar + zNear) / (zFar - zNear), 1 } } );
 }
 
-void Camera::Frustum(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar)
+void Camera::Frustum(const PROJ_PARAMS projParams)
 {
 	//
 }
 
-void Camera::Perspective(const float fovy, const float aspect, const float zNear, const float zFar)
+void Camera::Perspective(const PERSPECTIVE_PARAMS perspectiveParams)
 {
 	//m_cameraProjection = 
 }

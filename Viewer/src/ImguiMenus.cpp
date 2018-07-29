@@ -29,7 +29,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 			scene->SetActiveModelIdx(idx);
 			modelControlWindow = true;
 		}
-		if (ImGui::Button("Add box model"))
+		if (ImGui::Button("Add cube model"))
 		{
 			int idx = scene->AddPrimitiveModel(PM_CUBE);
 			scene->SetActiveModelIdx(idx);
