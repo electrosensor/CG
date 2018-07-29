@@ -191,8 +191,8 @@ string* PrimMeshModel::setPrimModelFilePath(PRIM_MODEL primModel)
 	case PM_SPHERE:
 		m_pPrimModelString = new string("ObjFiles/teddy.obj");
 		break;
-	case PM_BOX:
-		m_pPrimModelString = new string("ObjFiles/cow-nonormals.obj");
+	case PM_CUBE:
+		m_pPrimModelString = new string("ObjFiles/Cube.obj");
 		break;
 	default:
 		m_pPrimModelString = new string("NULL");

@@ -31,7 +31,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 		}
 		if (ImGui::Button("Add box model"))
 		{
-			int idx = scene->AddPrimitiveModel(PM_BOX);
+			int idx = scene->AddPrimitiveModel(PM_CUBE);
 			scene->SetActiveModelIdx(idx);
 			modelControlWindow = true;
 		}
@@ -124,11 +124,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 
 		if (io.MouseWheel > 0)
 		{
-			scene->ScaleActiveCamera(2);
+			scene->ScaleActiveCamera(2.0f);
 		}
 		if (io.MouseWheel < 0)
 		{
-			scene->ScaleActiveCamera(1/2);
+			scene->ScaleActiveCamera(1.0f/2.0f);
 		}
 
 		//Camera moves:
