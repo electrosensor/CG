@@ -57,6 +57,26 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 		
 		ImGui::Text("Active camera: %d", scene->GetActiveCameraIdx());
 
+
+		PROJ_PARAMS projParams = { 0 };
+// 		void Camera::Ortho(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar)
+		ImGui::InputFloat("Left",  &projParams.left);
+		ImGui::InputFloat("Right", &projParams.right);
+		ImGui::InputFloat("Bottom",&projParams.bottom);
+		ImGui::InputFloat("Top",   &projParams.top);
+		ImGui::InputFloat("zNear", &projParams.zNear);
+		ImGui::InputFloat("zFar",  &projParams.zFar);
+		if (ImGui::Button("Orthographic Projection"))
+		{
+			scene->setOrthoProjection(projParams);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Frustum"))
+		{
+			scene->setFrustum(projParams);
+		}
+
+
 		static glm::mat4x4 activeCameraTransformation = glm::mat4x4(0);
 		activeCameraTransformation = scene->GetActiveCameraTransformation();
 		string sCameraTransform = "";

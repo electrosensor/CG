@@ -124,6 +124,8 @@ add_custom_command(
 		VERBATIM
 )
 
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ObjFiles DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
 # If we use visual studio, makes MeshViewer the startup project.
 if (MSVC)
   set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})

@@ -1,5 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
+#include "Defs.h"
 
 /*
  * Camera class. This class takes care of all the camera transformations and manipulations.
@@ -29,9 +30,7 @@ public:
 	void LookAt(const glm::vec3& eye, const glm::vec3& at, const glm::vec3& up );
 
 	// Sets orthographic projection matrix.
-	void Ortho( const float left, const float right,
-		const float bottom, const float top,
-		const float zNear, const float zFar );
+	void Camera::Ortho( PROJ_PARAMS projParams );
 
 	// Sets frustum view volume for clipping stage.
 	void Frustum( const float left, const float right,

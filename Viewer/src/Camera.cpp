@@ -12,7 +12,6 @@ Camera::Camera() : m_cameraTransform(I_MATRIX), m_cameraProjection(I_MATRIX)
 Camera::Camera(const glm::vec4& eye, const glm::vec4& at, const glm::vec4& up)
 {
 	LookAt(eye, at, {0, 1, 0});
-	Ortho(at.x - 10, at.x + 11, at.y - 10, at.y + 11, at.z - 11, at.z + 10);
 }
 
 Camera::~Camera()
@@ -55,8 +54,15 @@ void Camera::SetProjection(const glm::mat4x4 & projection)
 	m_cameraProjection = projection;
 }
 
-void Camera::Ortho(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar)
+void Camera::Ortho(const PROJ_PARAMS projParams)
 {
+	
+	float right		= projParams.right;
+	float left		= projParams.left;
+	float top		= projParams.top;
+	float bottom		= projParams.bottom;
+	float zNear		= projParams.zNear;
+	float zFar		= projParams.zFar;
 	// Moves center to the origin:
 	/*glm::vec3 T( -(right + left) / 2.0f,
 				-(bottom + top) / 2.0f,

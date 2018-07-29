@@ -178,7 +178,7 @@ const vector<glm::vec3>* MeshModel::Draw()
 	for (size_t i = 0; i < m_vertexPosSize; i++)
 	{
 		glm::vec3 vertex = m_vertexPositions[i];
-		vertex = Util::toNormalForm(m_normalTransformation * m_worldTransformation * Util::toHomogenicForm(vertex)); //TODO_YURI: check the order of transformations
+		vertex = Util::toNormalForm(m_normalTransformation * m_worldTransformation * Util::toHomogeniousForm(vertex)); //TODO_YURI: check the order of transformations
 		meshModelVertices->push_back(vertex);
 	}
 	return meshModelVertices;
@@ -189,10 +189,10 @@ string* PrimMeshModel::setPrimModelFilePath(PRIM_MODEL primModel)
 	switch (primModel)
 	{
 	case PM_SPHERE:
-		m_pPrimModelString = new string("../ObjFiles/teddy.obj");
+		m_pPrimModelString = new string("ObjFiles/teddy.obj");
 		break;
 	case PM_BOX:
-		m_pPrimModelString = new string("../ObjFiles/cow-nonormals.obj");
+		m_pPrimModelString = new string("ObjFiles/cow-nonormals.obj");
 		break;
 	default:
 		m_pPrimModelString = new string("NULL");

@@ -49,6 +49,20 @@ unsigned int Scene::AddCamera(const glm::vec4& eye, const glm::vec4& at, const g
 	return m_cameras.size() - 1;
 }
 
+void Scene::setOrthoProjection(PROJ_PARAMS projParams)
+{
+	if (m_activeCamera != DISABLED)
+	{
+		Camera* activeCamera = m_cameras[m_activeCamera];
+		return  activeCamera->Ortho(projParams);
+	}
+}
+
+void Scene::setFrustum(PROJ_PARAMS projParams)
+{
+	throw std::logic_error("The method or operation is not implemented.");
+}
+
 glm::mat4x4 Scene::GetActiveCameraTransformation()
 {
 	if (m_activeCamera != DISABLED)
@@ -261,6 +275,7 @@ void Scene::RotateActiveModelZAxis(float angle)
 		activeModel->SetWorldTransformation(toPlace * rotateTransform * toOrigin * currTransf);
 	}
 }
+
 
 unsigned int Scene::AddPrimitiveModel(PRIM_MODEL primitiveModel)
 {
