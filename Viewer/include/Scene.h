@@ -80,5 +80,5 @@ public:
 	void RotateActiveModelZAxis(float angle);
 	
 	void setOrthoProjection(PROJ_PARAMS projParams);
-	void setFrustum(PROJ_PARAMS projParams);
+    void setFrustum(PROJ_PARAMS projParams);
 };

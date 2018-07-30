@@ -35,16 +35,16 @@ const glm::mat4x4& Camera::GetFrustum()
 
 void Camera::LookAt(const glm::vec3 & eye, const glm::vec3 & at, const glm::vec3 & up)
 {
-    glm::vec3 eyeAtDirection = glm::normalize(eye - at);
-    glm::vec3 fromUpAlongCameraTop = glm::cross(up, eyeAtDirection);
-    glm::vec3 fromUpAlongCameraTopDirection = glm::normalize(fromUpAlongCameraTop);
-    glm::vec3 cameraView = glm::cross(eyeAtDirection, fromUpAlongCameraTopDirection);
-    glm::vec3 cameraViewDirection = glm::normalize(cameraView);
-    glm::vec4 homogenicComponent = glm::vec4(HOMOGENIC_VECTOR4);
-    glm::mat4x4 cameraViewTransformation = glm::mat4x4(	Util::expandToVec4(fromUpAlongCameraTopDirection),
-                                                        Util::expandToVec4(cameraViewDirection),
-                                                        Util::expandToVec4(eyeAtDirection),
-                                                        homogenicComponent);
+    glm::vec3   eyeAtDirection                  = glm::normalize(eye - at);
+    glm::vec3   fromUpAlongCameraTop            = glm::cross(up, eyeAtDirection);
+    glm::vec3   fromUpAlongCameraTopDirection   = glm::normalize(fromUpAlongCameraTop);
+    glm::vec3   cameraView                      = glm::cross(eyeAtDirection, fromUpAlongCameraTopDirection);
+    glm::vec3   cameraViewDirection             = glm::normalize(cameraView);
+    glm::vec4   homogenousComponent             = glm::vec4(HOMOGENIC_VECTOR4);
+    glm::mat4x4 cameraViewTransformation        = glm::mat4x4(Util::expandToVec4(fromUpAlongCameraTopDirection),
+                                                              Util::expandToVec4(cameraViewDirection),
+                                                              Util::expandToVec4(eyeAtDirection),
+                                                              homogenousComponent);
     glm::mat4x4 translatedEye(TRANSLATION_MATRIX(-eye.x, -eye.y, -eye.z));
     m_cameraTransform = cameraViewTransformation * translatedEye;
 }

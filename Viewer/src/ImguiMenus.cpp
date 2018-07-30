@@ -58,7 +58,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 		ImGui::Text("Active camera: %d", scene->GetActiveCameraIdx());
 
 
-		PROJ_PARAMS projParams = { 0 };
+		static PROJ_PARAMS projParams = { 0 };
 // 		void Camera::Ortho(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar)
 		ImGui::InputFloat("Left",  &projParams.left);
 		ImGui::InputFloat("Right", &projParams.right);

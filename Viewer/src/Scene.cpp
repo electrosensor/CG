@@ -23,6 +23,7 @@ void Scene::Draw()
 	Camera* activeCamera = m_cameras[m_activeCamera];
 	renderer->SetCameraTransform(activeCamera->GetTransformation());
 	renderer->SetProjection(m_cameras[m_activeCamera]->GetProjection());
+    renderer->SetFrustum(m_cameras[m_activeCamera]->GetFrustum());
 
 	for each (Model* model in m_models)
 	{
@@ -54,13 +55,17 @@ void Scene::setOrthoProjection(PROJ_PARAMS projParams)
 	if (m_activeCamera != DISABLED)
 	{
 		Camera* activeCamera = m_cameras[m_activeCamera];
-		return  activeCamera->Ortho(projParams);
+		activeCamera->Ortho(projParams);
 	}
 }
 
 void Scene::setFrustum(PROJ_PARAMS projParams)
 {
-	throw std::logic_error("The method or operation is not implemented.");
+    if (m_activeCamera != DISABLED)
+    {
+        Camera* activeCamera = m_cameras[m_activeCamera];
+        activeCamera->Frustum(projParams);
+    }
 }
 
 glm::mat4x4 Scene::GetActiveCameraTransformation()

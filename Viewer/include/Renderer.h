@@ -38,6 +38,7 @@ private:
 
 	glm::mat4x4 m_cameraTransform;
 	glm::mat4x4 m_cameraProjection;
+    glm::mat4x4 m_cameraFrustum;
 	glm::mat4x4 m_objectTransform;
 	glm::mat4x4 m_normalTransform;
 
@@ -56,6 +57,9 @@ public:
 
 	// Sets the camera projection (perspective, orthographic etc...)
 	void SetProjection(const glm::mat4x4& projection);
+
+    // Sets the camera frustum
+    void SetFrustum(const glm::mat4x4& frustum);
 
 	// Sets the transformations for model and normals. The object transformations 
 	// decide the spacial relations of the object with respect to the world.

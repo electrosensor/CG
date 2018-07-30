@@ -32,9 +32,9 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, const vector<glm
 		glm::vec3 p2 = *(it++);
 		glm::vec3 p3 = *(it++);
 
-		p1 = Util::toNormalForm(m_cameraProjection * m_cameraTransform * Util::toHomogeniousForm(p1));
-		p2 = Util::toNormalForm(m_cameraProjection * m_cameraTransform * Util::toHomogeniousForm(p2));
-		p3 = Util::toNormalForm(m_cameraProjection * m_cameraTransform * Util::toHomogeniousForm(p3));
+		p1 = Util::toNormalForm(m_cameraProjection * m_cameraFrustum * m_cameraTransform * Util::toHomogeniousForm(p1));
+		p2 = Util::toNormalForm(m_cameraProjection * m_cameraFrustum * m_cameraTransform * Util::toHomogeniousForm(p2));
+		p3 = Util::toNormalForm(m_cameraProjection * m_cameraFrustum * m_cameraTransform * Util::toHomogeniousForm(p3));
 
 		DrawLine(glm::vec2(p1.x, p1.y), glm::vec2(p2.x, p2.y), color);
 		DrawLine(glm::vec2(p2.x, p2.y), glm::vec2(p3.x, p3.y), color);
@@ -50,6 +50,11 @@ void Renderer::SetCameraTransform(const glm::mat4x4 & cTransform)
 void Renderer::SetProjection(const glm::mat4x4 & projection)
 {
 	m_cameraProjection = projection;
+}
+
+void Renderer::SetFrustum(const glm::mat4x4 & frustum)
+{
+    m_cameraFrustum = frustum;
 }
 
 void Renderer::SetObjectMatrices(const glm::mat4x4 & oTransform, const glm::mat4x4 & nTransform)
