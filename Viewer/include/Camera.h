@@ -10,6 +10,7 @@ class Camera
 private:
 	glm::mat4x4 m_cameraTransform;
 	glm::mat4x4 m_cameraProjection;
+	glm::mat4x4 m_frustum;
 	int m_cameraIdx;
 
 public:
@@ -21,7 +22,8 @@ public:
 
 	const glm::mat4x4 & GetProjection();
 
-	// Sets the camera transformations with relation to world coordinates
+    const glm::mat4x4 & GetFrustum();
+    // Sets the camera transformations with relation to world coordinates
 	void SetTransformation(const glm::mat4x4& transformation);
 
 	void SetProjection(const glm::mat4x4 & projection);
