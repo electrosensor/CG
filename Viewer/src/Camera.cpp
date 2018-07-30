@@ -88,9 +88,42 @@ void Camera::Frustum(const PROJ_PARAMS projParams)
 
     });
 
+    m_frustumParams = projParams;
 }
 
 void Camera::Perspective(const PERSPECTIVE_PARAMS perspectiveParams)
 {
-    //m_cameraProjection = 
+    //SET_PERSP_PARAMS(perspectiveParams);
+    SET_PROJ_PARAMS(m_frustumParams);
+
+    glm::mat4x4 H = glm::mat4x4(
+    {
+        {           1           ,           0           , (right + left) / -2.0f*zNear  ,           0           },
+        {           0           ,           1           , (top + bottom) / -2.0f*zNear  ,           0           },
+        {           0           ,           0           ,                1              ,           0           },
+        {           0           ,           0           ,                0              ,           1           }
+    });
+
+    glm::mat4x4 S = glm::mat4x4(
+    {
+        { -2.0f*zNear / (right - left),             0               ,                0              ,           0           },
+        {               0             , -2.0f*zNear / (top - bottom),                0              ,           0           },
+        {               0             ,             0               ,                1              ,           0           },
+        {               0             ,             0               ,                0              ,           1           }
+    });
+
+    zNear = -1;
+    zFar = 1;
+    float alpha = (zNear + zFar) / (zNear - zFar);
+    float beta  = (2.0f * zNear * zFar) / (zNear - zFar);
+
+    glm::mat4x4 N = glm::mat4x4(
+    {
+        {                   1             ,             0               ,                0              ,           0       },
+        {                   0             ,             1               ,                0              ,           0       },
+        {                   0             ,             0               ,              alpha            ,          beta     },
+        {                   0             ,             0               ,               -1              ,           0       }
+    });
+    
+    m_cameraProjection = N * S * H;
 }

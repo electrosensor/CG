@@ -11,6 +11,7 @@ private:
 	glm::mat4x4 m_cameraTransform;
 	glm::mat4x4 m_cameraProjection;
 	glm::mat4x4 m_frustum;
+    PROJ_PARAMS m_frustumParams;
 	int m_cameraIdx;
 
 public:
