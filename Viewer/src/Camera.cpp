@@ -81,10 +81,10 @@ void Camera::Frustum(const PROJ_PARAMS projParams)
     m_frustum = glm::mat4x4(
     {
 
-        {2.0f / (right - left),           0          , (right + left) / (right - left),             0             },
-        {           0         , 2.0f / (top - bottom), (top + bottom) / (top - bottom),             0             },
-        {           0         ,           0          ,-(zNear + zFar) / (zNear - zFar), -2.0f*zNear / (zFar-zNear)},
-        {           0         ,           0          ,                -1              ,             0             }
+        {2.0f*zNear / (right - left),              0             , (right + left) / (right - left),                  0              },
+        {              0            , 2.0f*zNear / (top - bottom), (top + bottom) / (top - bottom),                  0              },
+        {              0            ,              0             ,-(zFar + zNear) / (zFar - zNear), -2.0f*zFar*zNear / (zFar-zNear) },
+        {              0            ,              0             ,                -1              ,                  0              }
 
     });
 
