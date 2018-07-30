@@ -124,7 +124,7 @@ add_custom_command(
 		VERBATIM
 )
 
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/ObjFiles DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/PrimModels DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # If we use visual studio, makes MeshViewer the startup project.
 if (MSVC)

@@ -189,10 +189,10 @@ string* PrimMeshModel::setPrimModelFilePath(PRIM_MODEL primModel)
 	switch (primModel)
 	{
 	case PM_SPHERE:
-		m_pPrimModelString = new string("ObjFiles/teddy.obj");
+		m_pPrimModelString = new string("PrimModels/teddy.obj");
 		break;
 	case PM_CUBE:
-		m_pPrimModelString = new string("ObjFiles/Cube.obj");
+		m_pPrimModelString = new string("PrimModels/Cube.obj");
 		break;
 	default:
 		m_pPrimModelString = new string("NULL");
