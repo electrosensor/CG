@@ -18,6 +18,8 @@ class MeshModel : public Model
 
 		glm::vec3 *m_vertexPositions;
 		size_t m_vertexPosSize;
+        glm::vec3 *m_vertexNormals;
+
 		// Add more attributes.
         glm::mat4x4 m_modelTransformation;
 		glm::mat4x4 m_worldTransformation;
@@ -36,7 +38,7 @@ class MeshModel : public Model
 		void SetNormalTransformation(glm::mat4x4& transformation);
 
 		void LoadFile(const string& fileName);
-		const vector<glm::vec3>* Draw();
+		const pair<vector<glm::vec3>, vector<glm::vec3>>* Draw();
 
 };
 

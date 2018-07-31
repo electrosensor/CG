@@ -45,18 +45,21 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 
         //scene->updateCurrentDims((int) ImGui::GetWindowHeight(), (int) ImGui::GetWindowWidth());
         ImGui::Text("-------------- Primitives Models: --------------");
-        if (ImGui::Button("Add sphere model"))
-        {
-            int idx = scene->AddPrimitiveModel(PM_SPHERE);
-            scene->SetActiveModelIdx(idx);
-            modelControlWindow = true;
-        }
-        if (ImGui::Button("Add cube model"))
+        
+        if (ImGui::Button("Add Cube model"))
         {
             int idx = scene->AddPrimitiveModel(PM_CUBE);
             scene->SetActiveModelIdx(idx);
             modelControlWindow = true;
         }
+
+        if (ImGui::Button("Add Teapot model"))
+        {
+            int idx = scene->AddPrimitiveModel(PM_TEAPOT);
+            scene->SetActiveModelIdx(idx);
+            modelControlWindow = true;
+        }
+
 
         ImGui::Text("------------------- Cameras: -------------------");
 
@@ -77,11 +80,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         {
             scene->NextCamera();
         }
-        ImGui::SameLine();
-        if (ImGui::Button("Apply to camera (todo)"))
-        {
-            
-        }
+//         ImGui::SameLine();
+//         if (ImGui::Button("Apply to camera (todo)"))
+//         {
+//             
+//         }
 
         ImGui::Text("Active camera: %d", scene->GetActiveCameraIdx());
         
@@ -347,6 +350,16 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         {
             scene->ScaleActiveModel(1.0f / modelScaleFactor);
         }
+
+        static bool bShowVertNorms = false;
+        static bool bShowFaceNorms = false;
+
+
+        ImGui::Checkbox("Show vertices normals", &bShowVertNorms);
+//         ImGui::Checkbox("Show face normals", &bShowFaceNorms);
+       
+        scene->showVerticesNormals(bShowVertNorms);
+        scene->showFacesNormals(bShowFaceNorms);
 
         //Model moves:
 

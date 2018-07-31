@@ -75,7 +75,7 @@ glm::vec2 vec2fFromStream(std::istream& issLine)
 	return glm::vec2(x, y);
 }
 
-MeshModel::MeshModel(const string& fileName) : m_modelTransformation(SCALING_MATRIX(7)),
+MeshModel::MeshModel(const string& fileName) : m_modelTransformation(SCALING_MATRIX4(7)),
 											   m_normalTransformation(I_MATRIX),
                                                m_worldTransformation(I_MATRIX)
 {
@@ -86,6 +86,7 @@ MeshModel::MeshModel(const string& fileName) : m_modelTransformation(SCALING_MAT
 MeshModel::~MeshModel()
 {
 	delete[] m_vertexPositions;
+    delete[] m_vertexNormals;
 }
 
 void MeshModel::SetWorldTransformation(glm::mat4x4 & transformation)
@@ -130,6 +131,7 @@ void MeshModel::LoadFile(const string& fileName)
 
 	vector<FaceIdx> faces;
 	vector<glm::vec3> vertices;
+    vector<glm::vec3> normals;
 	// while not end of file
 	while (!ifile.eof())
 	{
@@ -148,6 +150,10 @@ void MeshModel::LoadFile(const string& fileName)
 		{
 			vertices.push_back(vec3fFromStream(issLine));
 		}
+        else if (lineType == "vn")
+        {
+            normals.push_back(vec3fFromStream(issLine));
+        }
 		else if (lineType == "f")
 		{
 			faces.push_back(issLine);
@@ -162,42 +168,74 @@ void MeshModel::LoadFile(const string& fileName)
 		}
 	}
 
-	m_vertexPosSize = faces.size()*FACE_ELEMENTS;
+	m_vertexPosSize   = faces.size()*FACE_ELEMENTS;
 	m_vertexPositions = new glm::vec3[m_vertexPosSize];
-
+    m_vertexNormals   = new glm::vec3[m_vertexPosSize];
 	// iterate through all stored faces and create triangles
 	size_t posIdx = 0;
-	for each (FaceIdx faces in faces)
+	for each (FaceIdx face in faces)
 	{
 		for (int i = 0; i < FACE_ELEMENTS; i++)
 		{
-			int currentVertexIdx = faces.v[i];
+			int currentVertexIdx = face.v[i];
 			float x = vertices[currentVertexIdx - 1].x;
 			float y = vertices[currentVertexIdx - 1].y;
 			float z = vertices[currentVertexIdx - 1].z;
 			m_vertexPositions[posIdx++] = glm::vec3(x, y, z);
 		}
 	}
+
+    posIdx = 0;
+    if (!normals.empty())
+    {
+        for each (FaceIdx face in faces)
+        {
+            for (int i = 0; i < FACE_ELEMENTS; i++)
+            {
+                int currentNormalIdx = face.v[i];
+                float x = normals[currentNormalIdx - 1].x;
+                float y = normals[currentNormalIdx - 1].y;
+                float z = normals[currentNormalIdx - 1].z;
+                m_vertexNormals[posIdx++] = glm::vec3(x, y, z);
+            }
+        }
+    }
+
 }
 
-const vector<glm::vec3>* MeshModel::Draw()
+const pair<vector<glm::vec3>, vector<glm::vec3> >* MeshModel::Draw()
 {
-	vector<glm::vec3>* meshModelVertices = new vector<glm::vec3>();
+    pair<vector<glm::vec3>, vector<glm::vec3> >* verticesData = new pair<vector<glm::vec3>, vector<glm::vec3>>();
+	vector<glm::vec3> meshModelVertices;
+    vector<glm::vec3> meshModelVerticesNormals;
+
+
 	for (size_t i = 0; i < m_vertexPosSize; i++)
 	{
 		glm::vec3 vertex = m_vertexPositions[i];
 		vertex = Util::toNormalForm(m_normalTransformation * m_worldTransformation * m_modelTransformation * Util::toHomogeneousForm(vertex)); //TODO_YURI: check the order of transformations
-		meshModelVertices->push_back(vertex);
+		meshModelVertices.push_back(vertex);
 	}
-	return meshModelVertices;
+
+    for (size_t i = 0; i < m_vertexPosSize; i++)
+    {
+        glm::vec3 normal = m_vertexNormals[i];
+        normal = Util::toNormalForm(m_normalTransformation * m_worldTransformation * m_modelTransformation * Util::toHomogeneousForm(normal)); //TODO_YURI: check the order of transformations
+        meshModelVerticesNormals.push_back(normal);
+    }
+
+    verticesData->first  = meshModelVertices;
+    verticesData->second = meshModelVerticesNormals;
+
+	return verticesData;
 }
 
 string* PrimMeshModel::setPrimModelFilePath(PRIM_MODEL primModel)
 {
 	switch (primModel)
 	{
-	case PM_SPHERE:
-		m_pPrimModelString = new string("PrimModels/teddy.obj");
+	case PM_TEAPOT:
+		m_pPrimModelString = new string("PrimModels/teapot.obj");
 		break;
 	case PM_CUBE:
 		m_pPrimModelString = new string("PrimModels/Cube.obj");

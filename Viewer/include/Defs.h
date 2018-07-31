@@ -15,7 +15,7 @@
 #define ZERO_MATRIX                      { {0,0,0,0},{ 0,0,0,0 },{ 0,0,0,0 },{ 0,0,0,0 } }
 #define FLATTEN_MATRIX                   { {1,0,0,0},{ 0,1,0,0 },{ 0,0,0,0 },{ 0,0,0,1 } }
 #define I_MATRIX                         { {1,0,0,0},{ 0,1,0,0 },{ 0,0,1,0 },{ 0,0,0,1 } }
-#define SCALING_MATRIX(value)            { {(value),0,0,0},{ 0,(value),0,0 },{ 0,0,(value),0 },{ 0,0,0,1 } }
+#define SCALING_MATRIX4(value)           { {(value),0,0,0},{ 0,(value),0,0 },{ 0,0,(value),0 },{ 0,0,0,1 } }
 #define TRANSLATION_MATRIX(x, y, z)      { {1,0,0,0},{ 0,1,0,0 },{ 0,0,1,0 },{ (x),(y),(z),1 } }
 #define HOMOGENEOUS_VECTOR4              { 0.0f, 0.0f, 0.0f, 1.0f }
 #define HOMOGENEOUS_MATRIX4(x, y, z, w)  { {(x),0,0,0},{ 0,(y),0,0 },{ 0,0,(z),0 },{ 0,0,0,(w) } }
@@ -52,7 +52,7 @@ typedef enum _RETURN_CODE
 
 typedef enum _PRIM_MODEL
 {
-    PM_SPHERE = 0,
+    PM_TEAPOT = 0,
     PM_CUBE,
 
 }PRIM_MODEL;

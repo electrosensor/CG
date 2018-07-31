@@ -54,8 +54,9 @@ public:
     // Draws a line by Bresenham algorithm: 
     void DrawLine(const glm::vec2& p1, const glm::vec2& p2, const glm::vec3& color);
 
+    void drawVerticesNormals(vector<glm::vec3> vertices, vector<glm::vec3> normals);
     // Draws wireframe triangles to the color buffer
-    void DrawTriangles(const vector<glm::vec3>* vertices, const vector<glm::vec3>* normals=NULL);
+    void DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNormals = false, UINT32 normScaleRate = 1, const vector<glm::vec3>* normals=NULL);
 
     // Sets the camera transformations with relation to world coordinates
     void SetCameraTransform(const glm::mat4x4& cTransform);

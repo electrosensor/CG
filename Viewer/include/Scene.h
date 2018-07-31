@@ -25,9 +25,13 @@ private:
     int m_activeCamera;
     glm::mat4x4 m_worldTransformation;
 
+    bool m_bDrawVecNormal;
+    bool m_bDrawFaceNormal;
+
+
 public:
     Scene() {};
-    Scene(Renderer *renderer) : renderer(renderer), m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamera(DISABLED), m_worldTransformation(I_MATRIX) { ; }
+    Scene(Renderer *renderer) : renderer(renderer), m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamera(DISABLED), m_worldTransformation(I_MATRIX), m_bDrawVecNormal(false) { ; }
 
     // Loads an obj file into the scene.
     void LoadOBJModel(string fileName);
@@ -86,4 +90,7 @@ public:
     void RotateActiveModelYAxis(float angle);
     void RotateActiveModelZAxis(float angle);
     
+    void showFacesNormals(bool bDrawFaceNormal) { m_bDrawFaceNormal = bDrawFaceNormal; }
+    void showVerticesNormals(bool bDrawVecNormal) { m_bDrawVecNormal = bDrawVecNormal; }
+
 };

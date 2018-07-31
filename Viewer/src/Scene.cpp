@@ -33,9 +33,14 @@ void Scene::Draw()
     for each (Model* model in m_models)
     {
         model->SetWorldTransformation(m_worldTransformation);
-        const vector<glm::vec3>* modelVertices = model->Draw();
+        const pair<vector<glm::vec3>, vector<glm::vec3> >* modelVertices = model->Draw();
         //renderer->SetObjectMatrices();
-        renderer->DrawTriangles(modelVertices);
+        renderer->DrawTriangles(&modelVertices->first, m_bDrawFaceNormal, 1);
+        if (m_bDrawVecNormal && !modelVertices->second.empty())
+        {
+            renderer->drawVerticesNormals(modelVertices->first ,modelVertices->second);
+        }
+
         renderer->SwapBuffers();
         delete modelVertices;
     }
@@ -151,7 +156,7 @@ void Scene::ScaleActiveCamera(float value)
     {
         Camera* activeCamera = m_cameras[m_activeCamera];
         glm::mat4x4 currTransf = activeCamera->GetTransformation();
-        glm::mat4x4 scaleTransform(SCALING_MATRIX(value));
+        glm::mat4x4 scaleTransform(SCALING_MATRIX4(value));
         activeCamera->SetTransformation(scaleTransform * currTransf);
     }
 }
@@ -267,7 +272,7 @@ void Scene::ScaleActiveModel(float value)
     {
         Model* activeModel = m_models[m_activeModel];
         glm::mat4x4 currTransf = activeModel->GetModelTransformation();
-        glm::mat4x4 scaleTransform(SCALING_MATRIX(value));
+        glm::mat4x4 scaleTransform(SCALING_MATRIX4(value));
         activeModel->SetModelTransformation(scaleTransform * currTransf);
     }
 }

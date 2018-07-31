@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "Renderer.h"
 #include "InitShader.h"
 #include <imgui/imgui.h>
@@ -22,7 +23,7 @@ Renderer::~Renderer()
     delete[] colorBuffer;
 }
 
-void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, const vector<glm::vec3>* normals)
+void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNormals /*= false*/, UINT32 normScaleRate /*= 1*/, const vector<glm::vec3>* normals/*=NULL*/)
 {
     glm::vec3 color(WHITE_COLOR);
     vector<glm::vec3>::const_iterator it = vertices->begin();
@@ -32,13 +33,33 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, const vector<glm
         glm::vec3 p2 = *(it++);
         glm::vec3 p3 = *(it++);
 
-        p1 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p1));
-        p2 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p2));
-        p3 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p3));
+        glm::vec3 nrm1     = p1;
+            glm::vec3 nrm2 = p2;
+            glm::vec3 nrm3 = p3;
+        p1                 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p1));
+        p2                 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p2));
+        p3                 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p3));
 
         DrawLine(glm::vec2(p1.x, p1.y), glm::vec2(p2.x, p2.y), color);
         DrawLine(glm::vec2(p2.x, p2.y), glm::vec2(p3.x, p3.y), color);
         DrawLine(glm::vec2(p3.x, p3.y), glm::vec2(p1.x, p1.y), color);
+
+        if (bDrawFaceNormals)
+        {
+            glm::vec3 subs1       = nrm1 - nrm3;
+            glm::vec3 subs2       = nrm2 - nrm3;
+            glm::vec3 faceNormal = glm::cross(subs1, subs2); /* /sqrt(pow(faceNormal.x, 2) + pow(faceNormal.y, 2) + pow(faceNormal.z, 2))*/;
+            
+
+            glm::vec3 nrm2 = /*faceNormal / */{ faceNormal.x / sqrt(pow(faceNormal.x, 2) + pow(faceNormal.y, 2) + pow(faceNormal.z, 2)),
+                                                 faceNormal.y / sqrt(pow(faceNormal.x, 2) + pow(faceNormal.y, 2) + pow(faceNormal.z, 2)),
+                                                 faceNormal.z / sqrt(pow(faceNormal.x, 2) + pow(faceNormal.y, 2) + pow(faceNormal.z, 2)) };
+            glm::vec3 nP1 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * glm::mat4x4(SCALING_MATRIX4(1000.0f)) * Util::toHomogeneousForm(nrm1));
+            glm::vec3 nP2 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * glm::mat4x4(SCALING_MATRIX4(1000.0f)) * Util::toHomogeneousForm(nrm1 + nrm2));
+
+
+            DrawLine(nP1, nP2, { 0,0,1.0f });
+        }
     }
 }
 
@@ -115,6 +136,21 @@ void Renderer::DrawLine(const glm::vec2 & p1, const glm::vec2 & p2, const glm::v
                 error += dx;
             }
         }
+}
+
+
+void Renderer::drawVerticesNormals(vector<glm::vec3> vertices, vector<glm::vec3> normals)
+{
+    for (int i = 0; i < normals.size(); i++)
+    {
+        glm::vec3 p1 = vertices[i];
+        glm::vec3 p2 = normals[i];
+
+        glm::vec3 nP1 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p1));
+        glm::vec3 nP2 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p1 + p2));
+
+        DrawLine(nP1, nP2, { 1.0f,0,0 });
+    }
 }
 
 void Renderer::createBuffers(int w, int h)

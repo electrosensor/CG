@@ -19,3 +19,8 @@ glm::vec4 Util::Cross(const glm::vec4 & lVector4, const glm::vec4 & rVector4)
 {
 	return toHomogeneousForm(glm::cross(toNormalForm(lVector4), toNormalForm(rVector4))); // TODO_YURI: check
 }
+
+glm::vec3 Util::findCentralVec(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3)
+{
+    return 0.5f*(p2 + p3) - p1;  
+}
