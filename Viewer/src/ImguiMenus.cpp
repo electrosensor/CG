@@ -22,18 +22,29 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
     // Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets automatically appears in a window called "Debug".
     {
         ImGui::Begin("Main menu");
+        static int world[3] = { 1,1,1 };
+        ImGui::InputInt3("World transformation: (x,y,z)", world);
+        ImGui::Text("World transformation: (%d, %d, %d)", world[0], world[1], world[2]);
+        if (ImGui::Button("Set world transformation"))
+        {
+            scene->SetWorldTransformation(HOMOGENEOUS_MATRIX4(world[0], world[1], world[2], 1.0f));
+        }
+        static glm::mat4x4 worldTransformation = glm::mat4x4(0);
+        worldTransformation = scene->GetWorldTransformation();
+        string sWorldTransform = "";
+        for (int i = 0; i < 4; i++)
+        {
+            for (int j = 0; j < 4; j++)
+            {
+                sWorldTransform.append(std::to_string(worldTransformation[j][i]) + " ");
+            }
+            sWorldTransform.append("\n");
+        }
+        ImGui::Text("World transformation:\n");
+        ImGui::Text(sWorldTransform.c_str());
 
-        //         static string sExc = "";
-        //         ImGui::Text("%s", sExc.c_str());
-        // 
-        //         try {
-        //             throw string("Hello");
-        //         }
-        //         catch (string s) {
-        //             sExc = s;
-        //         }
-
-
+        //scene->updateCurrentDims((int) ImGui::GetWindowHeight(), (int) ImGui::GetWindowWidth());
+        ImGui::Text("-------------- Primitives Models: --------------");
         if (ImGui::Button("Add sphere model"))
         {
             int idx = scene->AddPrimitiveModel(PM_SPHERE);
@@ -47,11 +58,12 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             modelControlWindow = true;
         }
 
-        ImGui::Text("-------------- Cameras Control: --------------");
+        ImGui::Text("------------------- Cameras: -------------------");
+
         static int eye[3] = { 0,0,0 };
         static int at[3] = { 0,0,0 };
-        ImGui::InputInt3("Look from: (x,y,z)", eye);
-        ImGui::InputInt3("Look at: (x,y,z)", at);
+        ImGui::SliderInt3("Look from: (x,y,z)", eye, -1000, 1000);
+        ImGui::SliderInt3("Look at: (x,y,z)", at, -1000, 1000);
         ImGui::Text("Look from: (%d, %d, %d)", eye[0], eye[1], eye[2]);
         ImGui::Text("Look at: (%d, %d, %d)", at[0], at[1], at[2]);
         if (ImGui::Button("Add new camera"))
@@ -65,18 +77,31 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         {
             scene->NextCamera();
         }
+        ImGui::SameLine();
+        if (ImGui::Button("Apply to camera (todo)"))
+        {
+            
+        }
 
         ImGui::Text("Active camera: %d", scene->GetActiveCameraIdx());
         
 
 
-        static PROJ_PARAMS projParams = { 0 };
-        ImGui::InputFloat("Left", &projParams.left);
-        ImGui::InputFloat("Right", &projParams.right);
-        ImGui::InputFloat("Bottom", &projParams.bottom);
-        ImGui::InputFloat("Top", &projParams.top);
-        ImGui::InputFloat("zNear", &projParams.zNear);
-        ImGui::InputFloat("zFar", &projParams.zFar);
+        static PROJ_PARAMS projParams = 
+        {
+            projParams.left = -10,
+            projParams.right = 10,
+            projParams.bottom = -10,
+            projParams.top = 10,
+            projParams.zNear = 5,
+            projParams.zFar = 25,
+        };
+        ImGui::SliderFloat("Left",   &projParams.left,   -1000, 1000);
+        ImGui::SliderFloat("Right",  &projParams.right,  -1000, 1000);
+        ImGui::SliderFloat("Bottom", &projParams.bottom, -1000, 1000);
+        ImGui::SliderFloat("Top",    &projParams.top,    -1000, 1000);
+        ImGui::SliderFloat("zNear",  &projParams.zNear,  -1000, 1000);
+        ImGui::SliderFloat("zFar",   &projParams.zFar,   -1000, 1000);
 
         static bool bIsProjError = false;
         static bool bIsPersError = false;
@@ -86,14 +111,14 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         {
             if (ImGui::Button("Orthographic Projection"))
             {
-                scene->setOrthoProjection(projParams);
+                scene->SetOrthoProjection(projParams);
             }
 
             ImGui::SameLine();
 
             if (ImGui::Button("Frustum"))
             {
-                scene->setFrustum(projParams);
+                scene->SetFrustum(projParams);
             }
         }
         catch (bool thrownErrorState)
@@ -110,17 +135,22 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         }
 
 
-        static PERSPECTIVE_PARAMS perspParam = { 0 };
-        ImGui::InputFloat("Fovy", &perspParam.fovy);
-        ImGui::InputFloat("Near", &perspParam.zNear);
-        ImGui::InputFloat("Far", &perspParam.zFar);
-        perspParam.aspect = DEFAULT_WIDTH / DEFAULT_HEIGHT;
+        static PERSPECTIVE_PARAMS perspParam = 
+        {
+            perspParam.fovy = PI/3,
+            perspParam.aspect = ImGui::GetWindowWidth() / ImGui::GetWindowHeight(),
+            perspParam.zNear = 5,
+            perspParam.zFar = 20
+        };
+        ImGui::SliderAngle("Fovy", &perspParam.fovy, 1);
+        ImGui::SliderFloat("Near", &perspParam.zNear, 1, 10000);
+        ImGui::SliderFloat("Far",  &perspParam.zFar, 2, 10000);
 
         try
         {
             if (ImGui::Button("Perspective Projection"))
             {
-                scene->setPerspectiveProjection(perspParam);
+                scene->SetPerspectiveProjection(perspParam);
             }
         }
         catch (bool thrownErrorState)
@@ -166,93 +196,94 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         ImGui::Text("Camera Projection:\n");
         ImGui::Text(sCameraProjection.c_str());
 
-        //Camera sacaling:            
+        ImGui::Text("---------------- Camera Control: ----------------");
+        //Camera scaling:            
         static float camScaleFactor = 1.5f;
-        ImGui::SliderFloat("scaling factor:", &camScaleFactor, 1.0f, 10.0f);
+        ImGui::SliderFloat("scaling factor", &camScaleFactor, 1.0f, 10.0f);
 
-        if (ImGui::IsKeyPressed(GLFW_KEY_PAGE_UP) || ImGui::Button("Zoom in"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
-        {
-            scene->ScaleActiveCamera(camScaleFactor);
-        }
-        ImGui::SameLine();
-        if (ImGui::IsKeyPressed(GLFW_KEY_PAGE_DOWN) || ImGui::Button("Zoom out"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+        if (ImGui::IsKeyPressed(GLFW_KEY_PAGE_UP) || ImGui::Button("   Zoom in   "))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
         {
             scene->ScaleActiveCamera(1.0f / camScaleFactor);
+        }
+        ImGui::SameLine();
+        if (ImGui::IsKeyPressed(GLFW_KEY_PAGE_DOWN) || ImGui::Button("   Zoom out   "))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+        {
+            scene->ScaleActiveCamera(camScaleFactor);
         }
 
         if (io.MouseWheel > 0)
         {
-            scene->ScaleActiveCamera(2.0f);
+            scene->ScaleActiveCamera(1.0f / 2.0f);
         }
         if (io.MouseWheel < 0)
         {
-            scene->ScaleActiveCamera(1.0f / 2.0f);
+            scene->ScaleActiveCamera(2.0f);
         }
 
         //Camera moves:
 
         static float camMoveFactor = 10.0f;
-        ImGui::SliderFloat("move factor:", &camMoveFactor, 1.0f, 300.0f);
+        ImGui::SliderFloat("move factor", &camMoveFactor, 1.0f, 300.0f);
 
         if (ImGui::IsKeyPressed(GLFW_KEY_LEFT) || ImGui::Button("  Left  "))
         {
-            scene->TranslateActiveCameraXAxis(camMoveFactor);
+            scene->TranslateActiveCameraXAxis(-camMoveFactor);
         }
         ImGui::SameLine();
         if (ImGui::IsKeyPressed(GLFW_KEY_RIGHT) || ImGui::Button("  Right "))
         {
-            scene->TranslateActiveCameraXAxis(-camMoveFactor);
+            scene->TranslateActiveCameraXAxis(camMoveFactor);
         }
-        if (ImGui::IsKeyPressed(GLFW_KEY_UP) || ImGui::Button("  Up  "))
+        if (ImGui::IsKeyPressed(GLFW_KEY_UP) || ImGui::Button("   Up   "))
         {
-            scene->TranslateActiveCameraYAxis(-camMoveFactor);
+            scene->TranslateActiveCameraYAxis(camMoveFactor);
         }
         ImGui::SameLine();
         if (ImGui::IsKeyPressed(GLFW_KEY_DOWN) || ImGui::Button("  Down  "))
         {
-            scene->TranslateActiveCameraYAxis(camMoveFactor);
+            scene->TranslateActiveCameraYAxis(-camMoveFactor);
         }
-        if (ImGui::IsKeyPressed('F') || ImGui::Button("Forward"))
-        {
-            scene->TranslateActiveCameraZAxis(-camMoveFactor);
-        }
-        ImGui::SameLine();
-        if (ImGui::IsKeyPressed('B') || ImGui::Button("  Back "))
+        if (ImGui::IsKeyPressed('F') || ImGui::Button(" Forward"))
         {
             scene->TranslateActiveCameraZAxis(camMoveFactor);
+        }
+        ImGui::SameLine();
+        if (ImGui::IsKeyPressed('B') || ImGui::Button("  Back  "))
+        {
+            scene->TranslateActiveCameraZAxis(-camMoveFactor);
         }
 
         //Camera rotation:
 
-        static float cameraAngle = 5.0f;
-        ImGui::SliderFloat("rotation angle:", &cameraAngle, 1.0f, 90.0f);
+        static float cameraAngle = PI / 9.0f;
+        ImGui::SliderAngle("rotation angle", &cameraAngle, 1.0f, 180.0f);
 
-        if (ImGui::IsKeyPressed('X') || ImGui::Button("+X Axis"))
-        {
-            scene->RotateActiveCameraXAxis(cameraAngle);
-        }
-        ImGui::SameLine();
-        if (ImGui::IsKeyPressed('D') || ImGui::Button("-X Axis"))
+        if (ImGui::IsKeyPressed('A') || ImGui::Button("+X Axis 'A'"))
         {
             scene->RotateActiveCameraXAxis(-cameraAngle);
         }
-        if (ImGui::IsKeyPressed('W') || ImGui::Button("+Y Axis"))
-        {
-            scene->RotateActiveCameraYAxis(cameraAngle);
-        }
         ImGui::SameLine();
-        if (ImGui::IsKeyPressed('S') || ImGui::Button("-Y Axis"))
+        if (ImGui::IsKeyPressed('D') || ImGui::Button("-X Axis 'D'"))
+        {
+            scene->RotateActiveCameraXAxis(cameraAngle);
+        }
+        if (ImGui::IsKeyPressed('W') || ImGui::Button("+Y Axis 'W'"))
         {
             scene->RotateActiveCameraYAxis(-cameraAngle);
         }
-        if (ImGui::IsKeyPressed('Q') || ImGui::Button("+Z Axis"))
-        {
-            scene->RotateActiveCameraZAxis(cameraAngle);
-        }
         ImGui::SameLine();
-        if (ImGui::IsKeyPressed('E') || ImGui::Button("-Z Axis"))
+        if (ImGui::IsKeyPressed('S') || ImGui::Button("-Y Axis 'S'"))
+        {
+            scene->RotateActiveCameraYAxis(cameraAngle);
+        }
+        if (ImGui::IsKeyPressed('Q') || ImGui::Button("+Z Axis 'Q'"))
         {
             scene->RotateActiveCameraZAxis(-cameraAngle);
+        }
+        ImGui::SameLine();
+        if (ImGui::IsKeyPressed('E') || ImGui::Button("-Z Axis 'E'"))
+        {
+            scene->RotateActiveCameraZAxis(cameraAngle);
         }
 
 
@@ -281,10 +312,6 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
     {
         ImGui::Text("-------------- Models Control: --------------");
 
-        static int world[3] = { 0,0,0 };
-        ImGui::InputInt3("World transformation: (x,y,z)", world);
-        ImGui::Text("World transformation:: (%d, %d, %d)", world[0], world[1], world[2]);
-
         if (ImGui::Button("Next model"))
         {
             scene->NextModel();
@@ -293,7 +320,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         ImGui::Text("Active model: %d", scene->GetActiveModelIdx());
 
         static glm::mat4x4 activeModelWorldTransformation;
-        activeModelWorldTransformation = scene->GetActiveModelWorldTransformation();
+        activeModelWorldTransformation = scene->GetActiveModelTransformation();
         string sModelTransform = "";
         for (int i = 0; i < 4; i++)
         {
@@ -304,17 +331,18 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             sModelTransform.append("\n");
         }
 
-        ImGui::Text("Model world transformation:\n");
+        ImGui::Text("Model transformation:\n");
         ImGui::Text(sModelTransform.c_str());
 
-        //Model sacaling:
+        //Model scaling:
         static float modelScaleFactor = 1.5f;
-        ImGui::SliderFloat("scaling factor:", &modelScaleFactor, 1.0f, 10.0f);
+        ImGui::SliderFloat("scaling factor", &modelScaleFactor, 1.0f, 10.0f);
 
         if (ImGui::Button("Bigger"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
         {
             scene->ScaleActiveModel(modelScaleFactor);
         }
+        ImGui::SameLine();
         if (ImGui::Button("Smaller"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
         {
             scene->ScaleActiveModel(1.0f / modelScaleFactor);
@@ -323,59 +351,65 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         //Model moves:
 
         static float modelMoveFactor = 10.0f;
-        ImGui::SliderFloat("move factor:", &modelMoveFactor, 1.0f, 300.0f);
+        ImGui::SliderFloat("move factor", &modelMoveFactor, 1.0f, 300.0f);
 
-        if (ImGui::Button("Left"))
+        if (ImGui::Button("   Left  "))
         {
             scene->TranslateActiveModelXAxis(-modelMoveFactor);
         }
-        if (ImGui::Button("Right"))
+        ImGui::SameLine();
+        if (ImGui::Button("  Right  "))
         {
             scene->TranslateActiveModelXAxis(modelMoveFactor);
         }
-        if (ImGui::Button("Up"))
+        if (ImGui::Button("    Up   "))
         {
             scene->TranslateActiveModelYAxis(modelMoveFactor);
         }
-        if (ImGui::Button("Down"))
+        ImGui::SameLine();
+        if (ImGui::Button("   Down  "))
         {
             scene->TranslateActiveModelYAxis(-modelMoveFactor);
         }
-        if (ImGui::Button("Forward"))
+        if (ImGui::Button(" Forward "))
         {
             scene->TranslateActiveModelZAxis(modelMoveFactor);
         }
-        if (ImGui::Button("Back"))
+        ImGui::SameLine();
+        if (ImGui::Button("   Back  "))
         {
             scene->TranslateActiveModelZAxis(-modelMoveFactor);
         }
 
         //Model rotation:
 
-        static float modelAngle = 5.0f;
-        ImGui::SliderFloat("rotation angle:", &modelAngle, 1.0f, 90.0f);
+        static float modelAngle = PI/18.0f;
+        ImGui::SliderAngle("rotation angle", &modelAngle, 1.0f, 180.0f);
 
-        if ((io.MouseDown[0] && io.MouseDelta.y > 0) || ImGui::Button("+X Axis"))
+        if ((io.MouseDown[0] && io.MouseDelta.y > 0 && !ImGui::IsMouseHoveringAnyWindow()) || ImGui::Button(" +X Axis "))
         {
             scene->RotateActiveModelXAxis(modelAngle);
         }
-        if ((io.MouseDown[0] && io.MouseDelta.y < 0) || ImGui::Button("-X Axis"))
+        ImGui::SameLine();
+        if ((io.MouseDown[0] && io.MouseDelta.y < 0 && !ImGui::IsMouseHoveringAnyWindow()) || ImGui::Button(" -X Axis "))
         {
             scene->RotateActiveModelXAxis(-modelAngle);
         }
-        if ((io.MouseDown[0] && io.MouseDelta.x > 0) || ImGui::Button("+Y Axis"))
+        if ((io.MouseDown[0] && io.MouseDelta.x > 0 && !ImGui::IsMouseHoveringAnyWindow()) || ImGui::Button(" +Y Axis "))
         {
             scene->RotateActiveModelYAxis(modelAngle);
         }
-        if ((io.MouseDown[0] && io.MouseDelta.x < 0) || ImGui::Button("-Y Axis"))
+        ImGui::SameLine();
+        if ((io.MouseDown[0] && io.MouseDelta.x < 0 && !ImGui::IsMouseHoveringAnyWindow()) || ImGui::Button(" -Y Axis "))
         {
             scene->RotateActiveModelYAxis(-modelAngle);
         }
-        if ((io.MouseDown[1] && io.MouseDelta.x > 0) || ImGui::Button("+Z Axis"))
+        if ((io.MouseDown[1] && io.MouseDelta.x > 0 && !ImGui::IsMouseHoveringAnyWindow()) || ImGui::Button(" +Z Axis "))
         {
             scene->RotateActiveModelZAxis(modelAngle);
         }
-        if ((io.MouseDown[1] && io.MouseDelta.x < 0) || ImGui::Button("-Z Axis"))
+        ImGui::SameLine();
+        if ((io.MouseDown[1] && io.MouseDelta.x < 0 && !ImGui::IsMouseHoveringAnyWindow()) || ImGui::Button(" -Z Axis "))
         {
             scene->RotateActiveModelZAxis(-modelAngle);
         }

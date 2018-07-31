@@ -5,13 +5,13 @@
 #include "Defs.h"
 
 
-Renderer::Renderer() : width(DEFAULT_WIDTH), height(DEFAULT_HEIGHT)
+Renderer::Renderer() : width(DEFAULT_WIDTH), height(DEFAULT_HEIGHT), m_viewPort(I_MATRIX)
 {
     initOpenGLRendering();
     createBuffers(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 }
 
-Renderer::Renderer(int w, int h) : width(w), height(h)
+Renderer::Renderer(int w, int h) : width(w), height(h), m_viewPort(I_MATRIX)
 {
     initOpenGLRendering();
     createBuffers(w,h);
@@ -32,9 +32,9 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, const vector<glm
         glm::vec3 p2 = *(it++);
         glm::vec3 p3 = *(it++);
 
-        p1 = Util::toNormalForm(m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p1));
-        p2 = Util::toNormalForm(m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p2));
-        p3 = Util::toNormalForm(m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p3));
+        p1 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p1));
+        p2 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p2));
+        p3 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p3));
 
         DrawLine(glm::vec2(p1.x, p1.y), glm::vec2(p2.x, p2.y), color);
         DrawLine(glm::vec2(p2.x, p2.y), glm::vec2(p3.x, p3.y), color);
@@ -154,6 +154,12 @@ void Renderer::SetDemoBuffer()
         }
 
     }
+}
+
+void Renderer::setCurrentDims(int currentHeight, int currentWidth)
+{
+    m_currentHeight = currentHeight;
+    m_currentWidth  = currentWidth;
 }
 
 //##############################

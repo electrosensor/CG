@@ -18,9 +18,10 @@
 #define SCALING_MATRIX(value)            { {(value),0,0,0},{ 0,(value),0,0 },{ 0,0,(value),0 },{ 0,0,0,1 } }
 #define TRANSLATION_MATRIX(x, y, z)      { {1,0,0,0},{ 0,1,0,0 },{ 0,0,1,0 },{ (x),(y),(z),1 } }
 #define HOMOGENEOUS_VECTOR4              { 0.0f, 0.0f, 0.0f, 1.0f }
-#define ROTATING_MATRIX_X_AXIS(angle)    { {1,0,0,0},{ 0,cos(TO_RADIAN(angle)),sin(TO_RADIAN(angle)),0 },{ 0,-sin(TO_RADIAN(angle)),cos(TO_RADIAN(angle)),0 },{ 0,0,0,1 } }
-#define ROTATING_MATRIX_Y_AXIS(angle)    { {cos(TO_RADIAN(angle)),0,-sin(TO_RADIAN(angle)),0},{ 0,1,0,0 },{ sin(TO_RADIAN(angle)),0,cos(TO_RADIAN(angle)),0 },{ 0,0,0,1 } }
-#define ROTATING_MATRIX_Z_AXIS(angle)    { {cos(TO_RADIAN(angle)),sin(TO_RADIAN(angle)),0,0},{ -sin(TO_RADIAN(angle)),cos(TO_RADIAN(angle)),0,0 },{ 0,0,1,0 },{ 0,0,0,1 } }
+#define HOMOGENEOUS_MATRIX4(x, y, z, w)  { {(x),0,0,0},{ 0,(y),0,0 },{ 0,0,(z),0 },{ 0,0,0,(w) } }
+#define ROTATING_MATRIX_X_AXIS(angle)    { {1,0,0,0},{ 0,cos(angle),sin(angle),0 },{ 0,-sin(angle),cos(angle),0 },{ 0,0,0,1 } }
+#define ROTATING_MATRIX_Y_AXIS(angle)    { {cos(angle),0,-sin(angle),0},{ 0,1,0,0 },{ sin(angle),0,cos(angle),0 },{ 0,0,0,1 } }
+#define ROTATING_MATRIX_Z_AXIS(angle)    { {cos(angle),sin(angle),0,0},{ -sin(angle),cos(angle),0,0 },{ 0,0,1,0 },{ 0,0,0,1 } }
 #define PERSPECTIVE_MATRIX(d)            { {1,0,0,0},{ 0,1,0,0 },{ 0,0,1,1.0f/(d) },{ 0,0,0,0 } }
 
 #define WHITE_COLOR                      (1.0f, 1.0f, 1.0f)

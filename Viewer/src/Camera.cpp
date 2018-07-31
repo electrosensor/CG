@@ -4,14 +4,14 @@ using namespace std;
 
 Camera::Camera() : m_cameraTransform(I_MATRIX), m_cameraProjection(I_MATRIX)
 {
-    glm::mat4x4 toCenter(TRANSLATION_MATRIX(DEFAULT_WIDTH / 2, DEFAULT_HEIGHT / 2, 0));
+   // glm::mat4x4 toCenter(TRANSLATION_MATRIX(DEFAULT_WIDTH / 2, DEFAULT_HEIGHT / 2, 0));
 
-    m_cameraTransform =  m_cameraTransform * toCenter;
+   // m_cameraTransform =  m_cameraTransform/* * toCenter*/;
 }
 
 Camera::Camera(const glm::vec4& eye, const glm::vec4& at, const glm::vec4& up) : m_cameraTransform(I_MATRIX), m_cameraProjection(I_MATRIX)
 {
-    LookAt(eye, at, {0, 1, 0});
+    LookAt(eye, at, up);
 }
 
 Camera::~Camera()
@@ -41,13 +41,13 @@ void Camera::LookAt(const glm::vec3 & eye, const glm::vec3 & at, const glm::vec3
                                                                          Util::expandToVec4(eyeAtDirection),
                                                                          homogenousComponent);
 
-    cameraViewTransformation[0][3] = -fromUpAlongCameraTopDirection.x * eye.x
+    cameraViewTransformation[3][0] = -fromUpAlongCameraTopDirection.x * eye.x
                                      -fromUpAlongCameraTopDirection.y * eye.y
                                      -fromUpAlongCameraTopDirection.z * eye.z;
-    cameraViewTransformation[1][3] = -cameraViewDirection.x * eye.x
+    cameraViewTransformation[3][1] = -cameraViewDirection.x * eye.x
                                      -cameraViewDirection.y * eye.y
                                      -cameraViewDirection.z * eye.z;
-    cameraViewTransformation[2][3] = -eyeAtDirection.x * eye.x
+    cameraViewTransformation[3][2] = -eyeAtDirection.x * eye.x
                                      -eyeAtDirection.y * eye.y
                                      -eyeAtDirection.z * eye.z;
 
@@ -136,7 +136,7 @@ void Camera::Perspective(const PERSPECTIVE_PARAMS perspectiveParams)
    // SET_PERSP_PARAMS(perspectiveParams);
 
     PROJ_PARAMS projParams  = { 0 };
-    float       height      = perspectiveParams.zNear * tan(TO_RADIAN(perspectiveParams.fovy / 2.0f));
+    float       height      = perspectiveParams.zNear * tan(TO_RADIAN(perspectiveParams.fovy) / 2.0f);
     float       width       = height * perspectiveParams.aspect;
 
     
@@ -148,9 +148,6 @@ void Camera::Perspective(const PERSPECTIVE_PARAMS perspectiveParams)
     projParams.zFar         = perspectiveParams.zFar;
 
 
-    
-
-    
 
   SET_PROJ_PARAMS(m_frustumParams);
 

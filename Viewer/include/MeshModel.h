@@ -19,6 +19,7 @@ class MeshModel : public Model
 		glm::vec3 *m_vertexPositions;
 		size_t m_vertexPosSize;
 		// Add more attributes.
+        glm::mat4x4 m_modelTransformation;
 		glm::mat4x4 m_worldTransformation;
 		glm::mat4x4 m_normalTransformation;
 
@@ -26,9 +27,11 @@ class MeshModel : public Model
 		MeshModel(const string& fileName);
 		~MeshModel();
 
+        const glm::mat4x4& GetModelTransformation();
 		const glm::mat4x4& GetWorldTransformation();
 		const glm::mat4x4& GetNormalTransformation();
 
+        void SetModelTransformation(glm::mat4x4& transformation);
 		void SetWorldTransformation(glm::mat4x4& transformation);
 		void SetNormalTransformation(glm::mat4x4& transformation);
 

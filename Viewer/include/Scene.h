@@ -23,10 +23,11 @@ private:
     int m_activeModel;
     int m_activeLight;
     int m_activeCamera;
+    glm::mat4x4 m_worldTransformation;
 
 public:
     Scene() {};
-    Scene(Renderer *renderer) : renderer(renderer), m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamera(DISABLED) { ; }
+    Scene(Renderer *renderer) : renderer(renderer), m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamera(DISABLED), m_worldTransformation(I_MATRIX) { ; }
 
     // Loads an obj file into the scene.
     void LoadOBJModel(string fileName);
@@ -34,8 +35,10 @@ public:
     // Draws the current scene.
     void Draw();
 
-//	void SetActiveLight(size_t lightIdx); // to remember add this in the next homework
+    glm::mat4x4 GetWorldTransformation();
+    void SetWorldTransformation(const glm::mat4x4 world);
 
+    void UpdateCurrentDims(int currWindowHeight, int currWindowWidth);
 
     //Cameras API:
 
@@ -43,8 +46,11 @@ public:
     void SetActiveCameraIdx(unsigned int cameraIdx);
 
     unsigned int  AddCamera(const glm::vec4 & eye, const glm::vec4 & at, const glm::vec4 & up);
-    void setPerspectiveProjection(PERSPECTIVE_PARAMS projParams);
     void NextCamera();
+
+    void SetPerspectiveProjection(PERSPECTIVE_PARAMS projParams);
+    void SetOrthoProjection(PROJ_PARAMS projParams);
+    void SetFrustum(PROJ_PARAMS projParams);
 
     glm::mat4x4 GetActiveCameraTransformation();
     glm::mat4x4 GetActiveCameraProjection();
@@ -68,7 +74,7 @@ public:
     unsigned int  AddPrimitiveModel(PRIM_MODEL primitiveModel); //TO_DO develop good API
     void NextModel();
 
-    glm::mat4x4 GetActiveModelWorldTransformation();
+    glm::mat4x4 GetActiveModelTransformation();
     
     void TranslateActiveModelXAxis(float value);
     void TranslateActiveModelYAxis(float value);
@@ -80,6 +86,4 @@ public:
     void RotateActiveModelYAxis(float angle);
     void RotateActiveModelZAxis(float angle);
     
-    void setOrthoProjection(PROJ_PARAMS projParams);
-    void setFrustum(PROJ_PARAMS projParams);
 };

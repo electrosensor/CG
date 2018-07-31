@@ -23,8 +23,6 @@ private:
 
     // Draws a pixel in location p with color color
     void putPixel(int i, int j, const glm::vec3& color );
-    // Draws a line by Bresenham algorithm: 
-    void DrawLine(const glm::vec2& p1, const glm::vec2& p2, const glm::vec3& color);
     // creates float array of dimension [3,w,h]
     void createBuffers(int w, int h);
     //##############################
@@ -41,6 +39,10 @@ private:
     glm::mat4x4 m_cameraFrustum;
     glm::mat4x4 m_objectTransform;
     glm::mat4x4 m_normalTransform;
+    glm::mat4x4 m_viewPort;
+
+    int m_currentWidth;
+    int m_currentHeight;
 
 public:
     Renderer();
@@ -48,6 +50,9 @@ public:
     ~Renderer();
     // Local initializations of your implementation
     void Init();
+
+    // Draws a line by Bresenham algorithm: 
+    void DrawLine(const glm::vec2& p1, const glm::vec2& p2, const glm::vec3& color);
 
     // Draws wireframe triangles to the color buffer
     void DrawTriangles(const vector<glm::vec3>* vertices, const vector<glm::vec3>* normals=NULL);
@@ -77,4 +82,6 @@ public:
 
     // Draw wide vertical and horizontal lines on the screen
     void SetDemoBuffer();
+
+    void setCurrentDims(int currentHeight, int currentWidth);
 };

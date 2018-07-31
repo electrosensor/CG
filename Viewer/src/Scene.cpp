@@ -14,6 +14,12 @@ void Scene::Draw()
 {
     // 1. Send the renderer the current camera transform and the projection
     // 2. Tell all models to draw themselves
+
+//     glm::mat4x4({{},{},{},{}})
+//     renderer->DrawLine(glm::vec2(0,0), glm::vec2(10000, 0),
+//     renderer->DrawLine(glm::vec2(0, 0),
+//     renderer->DrawLine(glm::vec2(0, 0),
+
     if (m_activeCamera == DISABLED)
     {
         Camera* camera = new Camera();
@@ -21,17 +27,28 @@ void Scene::Draw()
         m_activeCamera = 0;
     }
     Camera* activeCamera = m_cameras[m_activeCamera];
-    renderer->SetCameraTransform(activeCamera->GetTransformation());
+    renderer->SetCameraTransform(inverse(activeCamera->GetTransformation()));
     renderer->SetProjection(m_cameras[m_activeCamera]->GetProjection());
 
     for each (Model* model in m_models)
     {
+        model->SetWorldTransformation(m_worldTransformation);
         const vector<glm::vec3>* modelVertices = model->Draw();
         //renderer->SetObjectMatrices();
         renderer->DrawTriangles(modelVertices);
         renderer->SwapBuffers();
         delete modelVertices;
     }
+}
+
+glm::mat4x4 Scene::GetWorldTransformation()
+{
+    return m_worldTransformation;
+}
+
+void Scene::SetWorldTransformation(const glm::mat4x4 world)
+{
+    m_worldTransformation = world;
 }
 
 //////////////////// Camera ////////////////////////
@@ -49,7 +66,7 @@ unsigned int Scene::AddCamera(const glm::vec4& eye, const glm::vec4& at, const g
     return m_cameras.size() - 1;
 }
 
-void Scene::setPerspectiveProjection(PERSPECTIVE_PARAMS projParams)
+void Scene::SetPerspectiveProjection(PERSPECTIVE_PARAMS projParams)
 {
     if (m_activeCamera != DISABLED)
     {
@@ -58,7 +75,7 @@ void Scene::setPerspectiveProjection(PERSPECTIVE_PARAMS projParams)
     }
 }
 
-void Scene::setOrthoProjection(PROJ_PARAMS projParams)
+void Scene::SetOrthoProjection(PROJ_PARAMS projParams)
 {
     if (m_activeCamera != DISABLED)
     {
@@ -67,13 +84,18 @@ void Scene::setOrthoProjection(PROJ_PARAMS projParams)
     }
 }
 
-void Scene::setFrustum(PROJ_PARAMS projParams)
+void Scene::SetFrustum(PROJ_PARAMS projParams)
 {
     if (m_activeCamera != DISABLED)
     {
         Camera* activeCamera = m_cameras[m_activeCamera];
         activeCamera->Frustum(projParams);
     }
+}
+
+void Scene::UpdateCurrentDims(int currWindowHeight, int currWindowWidth)
+{
+    renderer->setCurrentDims(currWindowHeight, currWindowWidth);
 }
 
 glm::mat4x4 Scene::GetActiveCameraTransformation()
@@ -211,9 +233,9 @@ void Scene::TranslateActiveModelXAxis(float value)
     if (m_activeModel != DISABLED)
     {
         Model* activeModel = m_models[m_activeModel];
-        glm::mat4x4 currTransf = activeModel->GetWorldTransformation();
+        glm::mat4x4 currTransf = activeModel->GetModelTransformation();
         glm::mat4x4 translateTransform(TRANSLATION_MATRIX(value, 0, 0));
-        activeModel->SetWorldTransformation(translateTransform * currTransf);
+        activeModel->SetModelTransformation(translateTransform * currTransf);
     }
 }
 
@@ -222,9 +244,9 @@ void Scene::TranslateActiveModelYAxis(float value)
     if (m_activeModel != DISABLED)
     {
         Model* activeModel = m_models[m_activeModel];
-        glm::mat4x4 currTransf = activeModel->GetWorldTransformation();
+        glm::mat4x4 currTransf = activeModel->GetModelTransformation();
         glm::mat4x4 translateTransform(TRANSLATION_MATRIX(0, value, 0));
-        activeModel->SetWorldTransformation(translateTransform * currTransf);
+        activeModel->SetModelTransformation(translateTransform * currTransf);
     }
 }
 
@@ -233,9 +255,9 @@ void Scene::TranslateActiveModelZAxis(float value)
     if (m_activeModel != DISABLED)
     {
         Model* activeModel = m_models[m_activeModel];
-        glm::mat4x4 currTransf = activeModel->GetWorldTransformation();
+        glm::mat4x4 currTransf = activeModel->GetModelTransformation();
         glm::mat4x4 translateTransform(TRANSLATION_MATRIX(0, 0, value));
-        activeModel->SetWorldTransformation(translateTransform * currTransf);
+        activeModel->SetModelTransformation(translateTransform * currTransf);
     }
 }
 
@@ -243,10 +265,10 @@ void Scene::ScaleActiveModel(float value)
 {
     if (m_activeModel != DISABLED)
     {
-        Model* activeCamera = m_models[m_activeModel];
-        glm::mat4x4 currTransf = activeCamera->GetWorldTransformation();
+        Model* activeModel = m_models[m_activeModel];
+        glm::mat4x4 currTransf = activeModel->GetModelTransformation();
         glm::mat4x4 scaleTransform(SCALING_MATRIX(value));
-        activeCamera->SetWorldTransformation(currTransf * scaleTransform);
+        activeModel->SetModelTransformation(scaleTransform * currTransf);
     }
 }
 
@@ -255,11 +277,11 @@ void Scene::RotateActiveModelXAxis(float angle)
     if (m_activeModel != DISABLED)
     {
         Model* activeModel = m_models[m_activeModel];
-        glm::mat4x4 currTransf = activeModel->GetWorldTransformation();
+        glm::mat4x4 currTransf = activeModel->GetModelTransformation(); /* activeModel->GetWorldTransformation();*/
         glm::mat4x4 toOrigin (TRANSLATION_MATRIX(-currTransf[3][0], -currTransf[3][1], -currTransf[3][2]));
         glm::mat4x4 toPlace(TRANSLATION_MATRIX(currTransf[3][0], currTransf[3][1], currTransf[3][2]));
-        glm::mat4x4 rotateTransform(ROTATING_MATRIX_X_AXIS(angle));
-        activeModel->SetWorldTransformation(toPlace * rotateTransform * toOrigin * currTransf);
+        glm::mat4x4 rotateTransform(ROTATING_MATRIX_X_AXIS(angle)); // come in radian
+        activeModel->SetModelTransformation(toPlace * rotateTransform * toOrigin * currTransf);
     }
 }
 
@@ -268,11 +290,11 @@ void Scene::RotateActiveModelYAxis(float angle)
     if (m_activeModel != DISABLED)
     {
         Model* activeModel = m_models[m_activeModel];
-        glm::mat4x4 currTransf = activeModel->GetWorldTransformation();
+        glm::mat4x4 currTransf = activeModel->GetModelTransformation();
         glm::mat4x4 toOrigin(TRANSLATION_MATRIX(-currTransf[3][0], -currTransf[3][1], -currTransf[3][2]));
         glm::mat4x4 toPlace(TRANSLATION_MATRIX(currTransf[3][0], currTransf[3][1], currTransf[3][2]));
         glm::mat4x4 rotateTransform(ROTATING_MATRIX_Y_AXIS(angle));
-        activeModel->SetWorldTransformation(toPlace * rotateTransform * toOrigin * currTransf);
+        activeModel->SetModelTransformation(toPlace * rotateTransform * toOrigin * currTransf);
     }
 }
 
@@ -281,11 +303,11 @@ void Scene::RotateActiveModelZAxis(float angle)
     if (m_activeModel != DISABLED)
     {
         Model* activeModel = m_models[m_activeModel];
-        glm::mat4x4 currTransf = activeModel->GetWorldTransformation();
+        glm::mat4x4 currTransf = activeModel->GetModelTransformation(); /* activeModel->GetWorldTransformation();*/
         glm::mat4x4 toOrigin(TRANSLATION_MATRIX(-currTransf[3][0], -currTransf[3][1], -currTransf[3][2]));
         glm::mat4x4 toPlace(TRANSLATION_MATRIX(currTransf[3][0], currTransf[3][1], currTransf[3][2]));
         glm::mat4x4 rotateTransform(ROTATING_MATRIX_Z_AXIS(angle));
-        activeModel->SetWorldTransformation(toPlace * rotateTransform * toOrigin * currTransf);
+        activeModel->SetModelTransformation(toPlace * rotateTransform * toOrigin * currTransf);
     }
 }
 
@@ -305,12 +327,12 @@ void Scene::NextModel()
     }
 }
 
-glm::mat4x4 Scene::GetActiveModelWorldTransformation()
+glm::mat4x4 Scene::GetActiveModelTransformation()
 {
     if (m_activeCamera != DISABLED)
     {
         Model* activeModel = m_models[m_activeModel];
-        return  activeModel->GetWorldTransformation();
+        return  activeModel->GetModelTransformation();
     }
     else
     {
