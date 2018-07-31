@@ -30,17 +30,17 @@ const glm::mat4x4& Camera::GetProjection()
 
 void Camera::LookAt(const glm::vec3 & eye, const glm::vec3 & at, const glm::vec3 & up)
 {
-    glm::vec3   eyeAtDirection   /*forward*/               = glm::normalize(eye - at);
-    glm::vec3   fromUpAlongCameraTop            = glm::cross(up, eyeAtDirection);
-    glm::vec3   fromUpAlongCameraTopDirection /*left*/  = glm::normalize(fromUpAlongCameraTop);
-    glm::vec3   cameraView            /*up*/          = glm::cross(eyeAtDirection, fromUpAlongCameraTopDirection);
-    glm::vec3   cameraViewDirection             = glm::normalize(cameraView);
-    glm::vec4   homogenousComponent             = glm::vec4(HOMOGENIC_VECTOR4);
+    glm::vec3   eyeAtDirection                /*forward*/  = glm::normalize(eye - at);
+    glm::vec3   fromUpAlongCameraTop                       = glm::cross(up, eyeAtDirection);
+    glm::vec3   fromUpAlongCameraTopDirection /*left*/     = glm::normalize(fromUpAlongCameraTop);
+    glm::vec3   cameraView                    /*up*/       = glm::cross(eyeAtDirection, fromUpAlongCameraTopDirection);
+    glm::vec3   cameraViewDirection                        = glm::normalize(cameraView);
+    glm::vec4   homogenousComponent                        = glm::vec4(HOMOGENEOUS_VECTOR4);
+    glm::mat4x4 cameraViewTransformation                   = glm::mat4x4(Util::expandToVec4(fromUpAlongCameraTopDirection),
+                                                                         Util::expandToVec4(cameraViewDirection),
+                                                                         Util::expandToVec4(eyeAtDirection),
+                                                                         homogenousComponent);
 
-    glm::mat4x4 cameraViewTransformation        = glm::mat4x4(Util::expandToVec4(fromUpAlongCameraTopDirection),
-                                                              Util::expandToVec4(cameraViewDirection),
-                                                              Util::expandToVec4(eyeAtDirection),
-                                                              homogenousComponent);
     cameraViewTransformation[0][3] = -fromUpAlongCameraTopDirection.x * eye.x
                                      -fromUpAlongCameraTopDirection.y * eye.y
                                      -fromUpAlongCameraTopDirection.z * eye.z;
@@ -95,6 +95,8 @@ void Camera::Frustum(const PROJ_PARAMS projParams)
 
     m_frustumParams = projParams;
 
+    throw false;
+
 
 
 //     glm::mat4x4 H = glm::mat4x4(
@@ -133,22 +135,31 @@ void Camera::Perspective(const PERSPECTIVE_PARAMS perspectiveParams)
 {
    // SET_PERSP_PARAMS(perspectiveParams);
 
-    float height = perspectiveParams.zNear * tan(TO_RADIAN(perspectiveParams.fovy / 2.0f));
-    float width = height * perspectiveParams.aspect;
+    PROJ_PARAMS projParams  = { 0 };
+    float       height      = perspectiveParams.zNear * tan(TO_RADIAN(perspectiveParams.fovy / 2.0f));
+    float       width       = height * perspectiveParams.aspect;
 
-    PROJ_PARAMS projParams = { 0 };
-    projParams.left = -width;
-    projParams.right = width;
-    projParams.bottom = -height;
-    projParams.top = height;
-    projParams.zNear = perspectiveParams.zNear;
-    projParams.zFar = perspectiveParams.zFar;
+    
+    projParams.left         = -width;
+    projParams.right        = width;
+    projParams.bottom       = -height;
+    projParams.top          = height;
+    projParams.zNear        = perspectiveParams.zNear;
+    projParams.zFar         = perspectiveParams.zFar;
 
-    Frustum(projParams);
+
+    
+
+    
 
   SET_PROJ_PARAMS(m_frustumParams);
 
+    Frustum(projParams);
 
+    if (zNear == 0 || top - bottom == 0 || zFar - zNear == 0)
+    {
+        throw true;
+    }
 
     glm::mat4x4 H = glm::mat4x4(
     {
@@ -180,6 +191,8 @@ void Camera::Perspective(const PERSPECTIVE_PARAMS perspectiveParams)
     });
     
    m_cameraProjection = N * S * H;
+
+   throw false;
 }
 
 void Camera::validateProjParams(PROJ_PARAMS projParams)
@@ -188,8 +201,6 @@ void Camera::validateProjParams(PROJ_PARAMS projParams)
 
     if (right - left == 0 || top - bottom == 0 || zFar - zNear == 0)
     {
-//         throw string("Illegal Params");
+        throw true;
     }
-
-
 }

@@ -17,7 +17,7 @@
 #define I_MATRIX                         { {1,0,0,0},{ 0,1,0,0 },{ 0,0,1,0 },{ 0,0,0,1 } }
 #define SCALING_MATRIX(value)            { {(value),0,0,0},{ 0,(value),0,0 },{ 0,0,(value),0 },{ 0,0,0,1 } }
 #define TRANSLATION_MATRIX(x, y, z)      { {1,0,0,0},{ 0,1,0,0 },{ 0,0,1,0 },{ (x),(y),(z),1 } }
-#define HOMOGENIC_VECTOR4                { 0.0f, 0.0f, 0.0f, 1.0f }
+#define HOMOGENEOUS_VECTOR4              { 0.0f, 0.0f, 0.0f, 1.0f }
 #define ROTATING_MATRIX_X_AXIS(angle)    { {1,0,0,0},{ 0,cos(TO_RADIAN(angle)),sin(TO_RADIAN(angle)),0 },{ 0,-sin(TO_RADIAN(angle)),cos(TO_RADIAN(angle)),0 },{ 0,0,0,1 } }
 #define ROTATING_MATRIX_Y_AXIS(angle)    { {cos(TO_RADIAN(angle)),0,-sin(TO_RADIAN(angle)),0},{ 0,1,0,0 },{ sin(TO_RADIAN(angle)),0,cos(TO_RADIAN(angle)),0 },{ 0,0,0,1 } }
 #define ROTATING_MATRIX_Z_AXIS(angle)    { {cos(TO_RADIAN(angle)),sin(TO_RADIAN(angle)),0,0},{ -sin(TO_RADIAN(angle)),cos(TO_RADIAN(angle)),0,0 },{ 0,0,1,0 },{ 0,0,0,1 } }
