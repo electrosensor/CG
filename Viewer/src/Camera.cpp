@@ -9,7 +9,7 @@ Camera::Camera() : m_cameraTransform(I_MATRIX), m_cameraProjection(I_MATRIX)
     m_cameraTransform =  m_cameraTransform * toCenter;
 }
 
-Camera::Camera(const glm::vec4& eye, const glm::vec4& at, const glm::vec4& up)
+Camera::Camera(const glm::vec4& eye, const glm::vec4& at, const glm::vec4& up) : m_cameraTransform(I_MATRIX), m_cameraProjection(I_MATRIX)
 {
     LookAt(eye, at, {0, 1, 0});
 }
