@@ -81,20 +81,69 @@ void Camera::Frustum(const PROJ_PARAMS projParams)
     m_frustum = glm::mat4x4(
     {
 
-        {2.0f*zNear / (right - left),              0             , (right + left) / (right - left),                  0              },
-        {              0            , 2.0f*zNear / (top - bottom), (top + bottom) / (top - bottom),                  0              },
-        {              0            ,              0             ,-(zFar + zNear) / (zFar - zNear), -2.0f*zFar*zNear / (zFar-zNear) },
-        {              0            ,              0             ,                -1              ,                  0              }
+        {   2.0f*zNear / (right - left)    ,             0                    ,                  0                  ,                  0              },
+        {                0                 ,   2.0f*zNear / (top - bottom)    ,                  0                  ,                  0              },
+        { (right + left) / (right - left)  , (top + bottom) / (top - bottom)  ,  -(zFar + zNear) / (zFar - zNear)   ,                 -1              },
+        {                0                 ,              0                   , -2.0f*zFar*zNear / (zFar - zNear)   ,                  0              }
 
     });
 
     m_frustumParams = projParams;
+
+
+
+//     glm::mat4x4 H = glm::mat4x4(
+//         {
+//             {                1              ,                0              ,              0              ,           0           },
+//             {                0              ,                1              ,              0              ,           0           },
+//             { (right + left) / -2.0f*zNear  , (top + bottom) / -2.0f*zNear  ,              1              ,           0           },
+//             {                0              ,                0              ,              0              ,           1           }
+//         });
+// 
+//     glm::mat4x4 S = glm::mat4x4(
+//         {
+//             { -2.0f*zNear / (right - left),             0               ,                0              ,           0           },
+//             {               0             , -2.0f*zNear / (top - bottom),                0              ,           0           },
+//             {               0             ,             0               ,                1              ,           0           },
+//             {               0             ,             0               ,                0              ,           1           }
+//         });
+// 
+//     zNear = -1.0f;
+//     zFar = 1.0f;
+//     float alpha = (zNear + zFar) / (zNear - zFar);
+//     float beta = (2.0f * zNear * zFar) / (zNear - zFar);
+// 
+//     glm::mat4x4 N = glm::mat4x4(
+//         {
+//             {                   1             ,             0               ,                0              ,           0       },
+//             {                   0             ,             1               ,                0              ,           0       },
+//             {                   0             ,             0               ,              alpha            ,          -1       },
+//             {                   0             ,             0               ,               beta            ,           0       }
+//         });
+// 
+//     m_cameraProjection = N * S * H;
 }
 
 void Camera::Perspective(const PERSPECTIVE_PARAMS perspectiveParams)
 {
-    //SET_PERSP_PARAMS(perspectiveParams);
-    SET_PROJ_PARAMS(m_frustumParams);
+   // SET_PERSP_PARAMS(perspectiveParams);
+
+    float height = perspectiveParams.zNear * tan(TO_RADIAN(perspectiveParams.fovy / 2.0f));
+    float width = height * perspectiveParams.aspect;
+
+    PROJ_PARAMS projParams = { 0 };
+    projParams.left = -width;
+    projParams.right = width;
+    projParams.bottom = -height;
+    projParams.top = height;
+    projParams.zNear = perspectiveParams.zNear;
+    projParams.zFar = perspectiveParams.zFar;
+
+    Frustum(projParams);
+
+  SET_PROJ_PARAMS(m_frustumParams);
+
+
 
     glm::mat4x4 H = glm::mat4x4(
     {
@@ -125,5 +174,5 @@ void Camera::Perspective(const PERSPECTIVE_PARAMS perspectiveParams)
         {                   0             ,             0               ,               -1              ,           0       }
     });
     
-    m_cameraProjection = N * S * H;
+   m_cameraProjection = N * S * H;
 }

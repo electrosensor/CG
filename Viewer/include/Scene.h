@@ -43,7 +43,8 @@ public:
 	void SetActiveCameraIdx(unsigned int cameraIdx);
 
 	unsigned int  AddCamera(const glm::vec4 & eye, const glm::vec4 & at, const glm::vec4 & up);
-	void NextCamera();
+    void setPerspectiveProjection(PERSPECTIVE_PARAMS projParams);
+    void NextCamera();
 
 	glm::mat4x4 GetActiveCameraTransformation();
 	glm::mat4x4 GetActiveCameraProjection();

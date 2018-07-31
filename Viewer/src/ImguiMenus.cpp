@@ -23,6 +23,17 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 	{
 		ImGui::Begin("Main menu");
 
+//         static string sExc = "";
+//         ImGui::Text("%s", sExc.c_str());
+// 
+//         try {
+//             throw string("Hello");
+//         }
+//         catch (string s) {
+//             sExc = s;
+//         }
+
+
 		if (ImGui::Button("Add sphere model"))
 		{
 			int idx = scene->AddPrimitiveModel(PM_SPHERE);
@@ -59,7 +70,6 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 
 
 		static PROJ_PARAMS projParams = { 0 };
-// 		void Camera::Ortho(const float left, const float right, const float bottom, const float top, const float zNear, const float zFar)
 		ImGui::InputFloat("Left",  &projParams.left);
 		ImGui::InputFloat("Right", &projParams.right);
 		ImGui::InputFloat("Bottom",&projParams.bottom);
@@ -76,6 +86,15 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 			scene->setFrustum(projParams);
 		}
 
+        static PERSPECTIVE_PARAMS perspParam = { 0 };
+        ImGui::InputFloat("Fovy", &perspParam.fovy);
+        ImGui::InputFloat("Near", &perspParam.zNear);
+        ImGui::InputFloat("Far", &perspParam.zFar);
+        perspParam.aspect = DEFAULT_WIDTH / DEFAULT_HEIGHT;
+        if (ImGui::Button("Perspective Projection"))
+        {
+            scene->setPerspectiveProjection(perspParam);
+        }
 
 		static glm::mat4x4 activeCameraTransformation = glm::mat4x4(0);
 		activeCameraTransformation = scene->GetActiveCameraTransformation();
@@ -108,7 +127,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 		ImGui::Text("Camera Projection:\n");
 		ImGui::Text(sCameraProjection.c_str());
 
-		//Camera sacaling:
+		//Camera sacaling:            
 		static float camScaleFactor = 1.5f;
 		ImGui::SliderFloat("scaling factor:", &camScaleFactor, 1.0f, 10.0f);
 

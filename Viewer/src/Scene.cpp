@@ -50,6 +50,15 @@ unsigned int Scene::AddCamera(const glm::vec4& eye, const glm::vec4& at, const g
 	return m_cameras.size() - 1;
 }
 
+void Scene::setPerspectiveProjection(PERSPECTIVE_PARAMS projParams)
+{
+    if (m_activeCamera != DISABLED)
+    {
+        Camera* activeCamera = m_cameras[m_activeCamera];
+        activeCamera->Perspective(projParams);
+    }
+}
+
 void Scene::setOrthoProjection(PROJ_PARAMS projParams)
 {
 	if (m_activeCamera != DISABLED)
