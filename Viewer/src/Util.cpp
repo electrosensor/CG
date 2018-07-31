@@ -1,6 +1,6 @@
 #include "Util.h"
 
-glm::vec4 Util::toHomogeniousForm(const glm::vec3& normalForm)
+glm::vec4 Util::toHomogeneousForm(const glm::vec3& normalForm)
 {
 	return glm::vec4(normalForm.x, normalForm.y, normalForm.z, 1);
 }
@@ -10,12 +10,12 @@ glm::vec4 Util::expandToVec4(const glm::vec3 & vector)
 	return glm::vec4(vector.x, vector.y, vector.z, 0);
 }
 
-glm::vec3 Util::toNormalForm(const glm::vec4& homogenicForm)
+glm::vec3 Util::toNormalForm(const glm::vec4& homogeneousForm)
 {
-	return glm::vec3(homogenicForm.x / homogenicForm[3], homogenicForm.y / homogenicForm[3], homogenicForm.z / homogenicForm[3]);
+	return glm::vec3(homogeneousForm.x / homogeneousForm[3], homogeneousForm.y / homogeneousForm[3], homogeneousForm.z / homogeneousForm[3]);
 }
 
 glm::vec4 Util::Cross(const glm::vec4 & lVector4, const glm::vec4 & rVector4)
 {
-	return toHomogeniousForm(glm::cross(toNormalForm(lVector4), toNormalForm(rVector4))); // TODO_YURI: check
+	return toHomogeneousForm(glm::cross(toNormalForm(lVector4), toNormalForm(rVector4))); // TODO_YURI: check
 }

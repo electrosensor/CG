@@ -48,8 +48,8 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 		}
 
 		ImGui::Text("-------------- Cameras Control: --------------");
-		static int eye[3] = { 0,0,0 };
-		static int at[3] = { 0,0,0 };
+        static int eye[3] = { 0,0,0 };
+        static int at[3]  = { 0,0,0 };
 		ImGui::InputInt3("Look from: (x,y,z)", eye);
 		ImGui::InputInt3("Look at: (x,y,z)", at);
 		ImGui::Text("Look from: (%d, %d, %d)", eye[0], eye[1], eye[2]);

@@ -178,7 +178,7 @@ const vector<glm::vec3>* MeshModel::Draw()
 	for (size_t i = 0; i < m_vertexPosSize; i++)
 	{
 		glm::vec3 vertex = m_vertexPositions[i];
-		vertex = Util::toNormalForm(m_normalTransformation * m_worldTransformation * Util::toHomogeniousForm(vertex)); //TODO_YURI: check the order of transformations
+		vertex = Util::toNormalForm(m_normalTransformation * m_worldTransformation * Util::toHomogeneousForm(vertex)); //TODO_YURI: check the order of transformations
 		meshModelVertices->push_back(vertex);
 	}
 	return meshModelVertices;

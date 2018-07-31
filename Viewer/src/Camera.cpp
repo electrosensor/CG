@@ -1,8 +1,8 @@
 #include "Camera.h"
-#include "Defs.h"
-#include "Util.h"
 
-Camera::Camera() : m_cameraTransform(I_MATRIX), m_cameraProjection(I_MATRIX), m_frustum(I_MATRIX)
+using namespace std;
+
+Camera::Camera() : m_cameraTransform(I_MATRIX), m_cameraProjection(I_MATRIX)
 {
     glm::mat4x4 toCenter(TRANSLATION_MATRIX(DEFAULT_WIDTH / 2, DEFAULT_HEIGHT / 2, 0));
 
@@ -26,11 +26,6 @@ const glm::mat4x4& Camera::GetTransformation()
 const glm::mat4x4& Camera::GetProjection()
 {
     return m_cameraProjection;
-}
-
-const glm::mat4x4& Camera::GetFrustum()
-{
-    return m_frustum;
 }
 
 void Camera::LookAt(const glm::vec3 & eye, const glm::vec3 & at, const glm::vec3 & up)
@@ -86,16 +81,16 @@ void Camera::Ortho(const PROJ_PARAMS projParams)
 
 void Camera::Frustum(const PROJ_PARAMS projParams)
 {
+    validateProjParams(projParams);
+
     SET_PROJ_PARAMS(projParams);
-
-    m_frustum = glm::mat4x4(
+    
+    m_cameraProjection = glm::mat4x4(
     {
-
         {   2.0f*zNear / (right - left)    ,             0                    ,                  0                  ,                  0              },
         {                0                 ,   2.0f*zNear / (top - bottom)    ,                  0                  ,                  0              },
         { (right + left) / (right - left)  , (top + bottom) / (top - bottom)  ,  -(zFar + zNear) / (zFar - zNear)   ,                 -1              },
         {                0                 ,              0                   , -2.0f*zFar*zNear / (zFar - zNear)   ,                  0              }
-
     });
 
     m_frustumParams = projParams;
@@ -185,4 +180,16 @@ void Camera::Perspective(const PERSPECTIVE_PARAMS perspectiveParams)
     });
     
    m_cameraProjection = N * S * H;
+}
+
+void Camera::validateProjParams(PROJ_PARAMS projParams)
+{
+    SET_PROJ_PARAMS(projParams);
+
+    if (right - left == 0 || top - bottom == 0 || zFar - zNear == 0)
+    {
+//         throw string("Illegal Params");
+    }
+
+
 }
