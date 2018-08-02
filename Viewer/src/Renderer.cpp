@@ -46,19 +46,22 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNo
 
         if (bDrawFaceNormals)
         {
-            glm::vec3 subs1       = nrm1 - nrm3;
-            glm::vec3 subs2       = nrm2 - nrm3;
+            glm::vec3 subs1       = nrm3 - nrm1;
+            glm::vec3 subs2       = nrm3 - nrm2;
             glm::vec3 faceNormal = glm::cross(subs1, subs2); /* /sqrt(pow(faceNormal.x, 2) + pow(faceNormal.y, 2) + pow(faceNormal.z, 2))*/;
             
+            nrm3 = (nrm1 + nrm2 + nrm3) / 3.0f;
 
-            glm::vec3 nrm2 = /*faceNormal / */{ faceNormal.x / sqrt(pow(faceNormal.x, 2) + pow(faceNormal.y, 2) + pow(faceNormal.z, 2)),
-                                                 faceNormal.y / sqrt(pow(faceNormal.x, 2) + pow(faceNormal.y, 2) + pow(faceNormal.z, 2)),
-                                                 faceNormal.z / sqrt(pow(faceNormal.x, 2) + pow(faceNormal.y, 2) + pow(faceNormal.z, 2)) };
-            glm::vec3 nP1 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * glm::mat4x4(SCALING_MATRIX4(1000.0f)) * Util::toHomogeneousForm(nrm1));
-            glm::vec3 nP2 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * glm::mat4x4(SCALING_MATRIX4(1000.0f)) * Util::toHomogeneousForm(nrm1 + nrm2));
+            glm::vec3 nrm2 = { 
+                               faceNormal.x / sqrt(pow(faceNormal.x, 2) + pow(faceNormal.y, 2) + pow(faceNormal.z, 2)),
+                               faceNormal.y / sqrt(pow(faceNormal.x, 2) + pow(faceNormal.y, 2) + pow(faceNormal.z, 2)),
+                               faceNormal.z / sqrt(pow(faceNormal.x, 2) + pow(faceNormal.y, 2) + pow(faceNormal.z, 2)) 
+                             };
+            glm::vec3 nP1 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * glm::mat4x4(SCALING_MATRIX4(1.2f)) * Util::toHomogeneousForm(nrm3));
+            glm::vec3 nP2 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * /*glm::mat4x4(SCALING_MATRIX4(100.0f)) **/ Util::toHomogeneousForm(nrm3 + nrm2));
 
 
-            DrawLine(nP1, nP2, { 0,0,1.0f });
+            DrawLine(nP1, nP2, { 0,0,1 });
         }
     }
 }

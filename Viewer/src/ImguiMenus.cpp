@@ -356,7 +356,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 
 
         ImGui::Checkbox("Show vertices normals", &bShowVertNorms);
-//         ImGui::Checkbox("Show face normals", &bShowFaceNorms);
+        ImGui::Checkbox("Show face normals", &bShowFaceNorms);
        
         scene->showVerticesNormals(bShowVertNorms);
         scene->showFacesNormals(bShowFaceNorms);
