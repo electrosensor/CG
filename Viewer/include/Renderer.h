@@ -23,6 +23,7 @@ private:
 
     // Draws a pixel in location p with color color
     void putPixel(int i, int j, const glm::vec3& color );
+    void putPixel(int x, int y, bool steep, const glm::vec3& color);
     // creates float array of dimension [3,w,h]
     void createBuffers(int w, int h);
     //##############################
@@ -44,6 +45,8 @@ private:
     int m_currentWidth;
     int m_currentHeight;
 
+    void getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, OUT float* pDx, OUT float* pDy);
+    void yStepErrorUpdate(float dx, float dy, float& error, int& y, const int& ystep);
 public:
     Renderer();
     Renderer(int w, int h);
@@ -85,4 +88,7 @@ public:
     void SetDemoBuffer();
 
     void setCurrentDims(int currentHeight, int currentWidth);
+private:
+    void orderPoints(float& x1, float& x2, float& y1, float& y2);
+    bool isSlopeBiggerThanOne(float x1, float x2, float y1, float y2) { return (fabs(y2 - y1) > fabs(x2 - x1)); }
 };

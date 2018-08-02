@@ -57,8 +57,8 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNo
                                faceNormal.y / sqrt(pow(faceNormal.x, 2) + pow(faceNormal.y, 2) + pow(faceNormal.z, 2)),
                                faceNormal.z / sqrt(pow(faceNormal.x, 2) + pow(faceNormal.y, 2) + pow(faceNormal.z, 2)) 
                              };
-            glm::vec3 nP1 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * glm::mat4x4(SCALING_MATRIX4(1.2f)) * Util::toHomogeneousForm(nrm3));
-            glm::vec3 nP2 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * /*glm::mat4x4(SCALING_MATRIX4(100.0f)) **/ Util::toHomogeneousForm(nrm3 + nrm2));
+            glm::vec3 nP1 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform /** glm::mat4x4(SCALING_MATRIX4(1.2f))*/ * Util::toHomogeneousForm(nrm3));
+            glm::vec3 nP2 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * glm::mat4x4(SCALING_MATRIX4(1.2f)) *  Util::toHomogeneousForm(nrm3 + nrm2));
 
 
             DrawLine(nP1, nP2, { 0,0,1 });
@@ -93,52 +93,43 @@ void Renderer::putPixel(int i, int j, const glm::vec3& color)
 
 void Renderer::DrawLine(const glm::vec2 & p1, const glm::vec2 & p2, const glm::vec3& color)
 {
+    float dx, dy;
+
     float x1 = p1.x;
     float x2 = p2.x;
     float y1 = p1.y;
     float y2 = p2.y;
-    // taken from internet:
-        // Bresenham's line algorithm
-        const bool steep = (fabs(y2 - y1) > fabs(x2 - x1));
-        if (steep)
-        {
-            std::swap(x1, y1);
-            std::swap(x2, y2);
-        }
+ 
+    const bool bSteep = isSlopeBiggerThanOne(x1, x2, y1, y2);
+    
+    orderPoints(x1, x2, y1, y2);
 
-        if (x1 > x2)
-        {
-            std::swap(x1, x2);
-            std::swap(y1, y2);
-        }
+    getDeltas(x1, x2, y1, y2, &dx, &dy);
+    
+    float error = dx / 2.0f;
+    const int ystep = (y1 < y2) ? 1 : -1;
+    int y = (int)y1;
 
-        const float dx = x2 - x1;
-        const float dy = fabs(y2 - y1);
+    const int maxX = (int)x2;
 
-        float error = dx / 2.0f;
-        const int ystep = (y1 < y2) ? 1 : -1;
-        int y = (int)y1;
+    for (int x = (int)x1; x < maxX; x++)
+    {
+        putPixel(x, y, bSteep, color);
 
-        const int maxX = (int)x2;
+        yStepErrorUpdate(dx, dy, error, y, ystep);
+    }
+}
 
-        for (int x = (int)x1; x<maxX; x++)
-        {
-            if (steep)
-            {
-                putPixel(y, x, color);
-            }
-            else
-            {
-                putPixel(x, y, color);
-            }
-
-            error -= dy;
-            if (error < 0)
-            {
-                y += ystep;
-                error += dx;
-            }
-        }
+void Renderer::putPixel(int x, int y, bool steep, const glm::vec3& color)
+{
+    if (steep)
+    {
+        putPixel(y, x, color);
+    }
+    else
+    {
+        putPixel(x, y, color);
+    }
 }
 
 
@@ -150,9 +141,9 @@ void Renderer::drawVerticesNormals(vector<glm::vec3> vertices, vector<glm::vec3>
         glm::vec3 p2 = normals[i];
 
         glm::vec3 nP1 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p1));
-        glm::vec3 nP2 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p1 + p2));
+        glm::vec3 nP2 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * glm::mat4x4(SCALING_MATRIX4(12.f)) *  Util::toHomogeneousForm(p1 + p2));
 
-        DrawLine(nP1, nP2, { 1.0f,0,0 });
+        DrawLine(nP1, nP2, { 1.0f, 0 ,0 });
     }
 }
 
@@ -199,6 +190,21 @@ void Renderer::setCurrentDims(int currentHeight, int currentWidth)
 {
     m_currentHeight = currentHeight;
     m_currentWidth  = currentWidth;
+}
+
+void Renderer::orderPoints(float& x1, float& x2, float& y1, float& y2)
+{
+    if (isSlopeBiggerThanOne(x1, x2, y1, y2))
+    {
+        std::swap(x1, y1);
+        std::swap(x2, y2);
+    }
+
+    if (x1 > x2)
+    {
+        std::swap(x1, x2);
+        std::swap(y1, y2);
+    }
 }
 
 //##############################
@@ -264,6 +270,22 @@ void Renderer::initOpenGLRendering()
 
     // Tells the shader to use GL_TEXTURE0 as the texture id.
     glUniform1i(glGetUniformLocation(program, "texture"),0);
+}
+
+void Renderer::getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, OUT float* pDx, OUT float* pDy)
+{
+    *pDx = x2 - x1;
+    *pDy = fabs(y2 - y1);
+}
+
+void Renderer::yStepErrorUpdate(float dx, float dy, float& error, int& y, const int& ystep)
+{
+    error -= dy;
+    if (error < 0)
+    {
+        y += ystep;
+        error += dx;
+    }
 }
 
 void Renderer::createOpenGLBuffer()

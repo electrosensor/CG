@@ -52,7 +52,7 @@ typedef enum _RETURN_CODE
 
 typedef enum _PRIM_MODEL
 {
-    PM_TEAPOT = 0,
+    PM_SPHERE = 0,
     PM_CUBE,
 
 }PRIM_MODEL;

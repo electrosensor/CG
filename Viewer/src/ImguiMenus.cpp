@@ -53,9 +53,9 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             modelControlWindow = true;
         }
 
-        if (ImGui::Button("Add Teapot model"))
+        if (ImGui::Button("Add Sphere model"))
         {
-            int idx = scene->AddPrimitiveModel(PM_TEAPOT);
+            int idx = scene->AddPrimitiveModel(PM_SPHERE);
             scene->SetActiveModelIdx(idx);
             modelControlWindow = true;
         }

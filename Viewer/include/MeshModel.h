@@ -16,6 +16,8 @@ class MeshModel : public Model
 {
 	protected :
 
+        glm::vec3 *m_vectorNormals;
+        size_t m_vectorNormSize;
 		glm::vec3 *m_vertexPositions;
 		size_t m_vertexPosSize;
         glm::vec3 *m_vertexNormals;
