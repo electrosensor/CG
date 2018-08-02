@@ -33,12 +33,12 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNo
         glm::vec3 p2 = *(it++);
         glm::vec3 p3 = *(it++);
 
-        glm::vec3 nrm1     = p1;
-            glm::vec3 nrm2 = p2;
-            glm::vec3 nrm3 = p3;
-        p1                 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p1));
-        p2                 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p2));
-        p3                 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p3));
+        glm::vec3 nrm1 = p1;
+        glm::vec3 nrm2 = p2;
+        glm::vec3 nrm3 = p3;
+        p1             = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p1));
+        p2             = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p2));
+        p3             = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p3));
 
         DrawLine(glm::vec2(p1.x, p1.y), glm::vec2(p2.x, p2.y), color);
         DrawLine(glm::vec2(p2.x, p2.y), glm::vec2(p3.x, p3.y), color);
@@ -46,20 +46,17 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNo
 
         if (bDrawFaceNormals)
         {
-            glm::vec3 subs1       = nrm3 - nrm1;
-            glm::vec3 subs2       = nrm3 - nrm2;
-            glm::vec3 faceNormal = glm::cross(subs1, subs2); /* /sqrt(pow(faceNormal.x, 2) + pow(faceNormal.y, 2) + pow(faceNormal.z, 2))*/;
+            glm::vec3 subs1      = nrm3 - nrm1;
+            glm::vec3 subs2      = nrm2 - nrm1;
+            glm::vec3 faceNormal = glm::cross(subs1, subs2);
             
-            nrm3 = (nrm1 + nrm2 + nrm3) / 3.0f;
+            glm::vec3 faceCenter        = (nrm1 + nrm2 + nrm3) / 3.0f;
 
-            glm::vec3 nrm2 = { 
-                               faceNormal.x / sqrt(pow(faceNormal.x, 2) + pow(faceNormal.y, 2) + pow(faceNormal.z, 2)),
-                               faceNormal.y / sqrt(pow(faceNormal.x, 2) + pow(faceNormal.y, 2) + pow(faceNormal.z, 2)),
-                               faceNormal.z / sqrt(pow(faceNormal.x, 2) + pow(faceNormal.y, 2) + pow(faceNormal.z, 2)) 
-                             };
-            glm::vec3 nP1 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform /** glm::mat4x4(SCALING_MATRIX4(1.2f))*/ * Util::toHomogeneousForm(nrm3));
-            glm::vec3 nP2 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * glm::mat4x4(SCALING_MATRIX4(1.2f)) *  Util::toHomogeneousForm(nrm3 + nrm2));
-
+            glm::vec4 homogeneousNormal = Util::toHomogeneousForm(glm::normalize(faceNormal));
+            glm::vec3 scaledNormal      = Util::toNormalForm(glm::mat4x4(SCALING_MATRIX4(30.f)) * homogeneousNormal);
+             
+            glm::vec3 nP1 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform *  Util::toHomogeneousForm(faceCenter));
+            glm::vec3 nP2 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform *  Util::toHomogeneousForm(faceCenter + scaledNormal));
 
             DrawLine(nP1, nP2, { 0,0,1 });
         }
@@ -137,11 +134,13 @@ void Renderer::drawVerticesNormals(vector<glm::vec3> vertices, vector<glm::vec3>
 {
     for (int i = 0; i < normals.size(); i++)
     {
-        glm::vec3 p1 = vertices[i];
-        glm::vec3 p2 = normals[i];
+        glm::vec3 vertex = vertices[i];
+        glm::vec3 vertexNormal = normals[i];
 
-        glm::vec3 nP1 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p1));
-        glm::vec3 nP2 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * glm::mat4x4(SCALING_MATRIX4(12.f)) *  Util::toHomogeneousForm(p1 + p2));
+        glm::vec3 scaledVertexNormal = Util::toNormalForm((glm::mat4x4(SCALING_MATRIX4(30.f)) * Util::toHomogeneousForm(vertexNormal)));
+
+        glm::vec3 nP1 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(vertex));
+        glm::vec3 nP2 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(vertex + scaledVertexNormal));
 
         DrawLine(nP1, nP2, { 1.0f, 0 ,0 });
     }
