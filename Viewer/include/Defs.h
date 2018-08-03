@@ -24,7 +24,17 @@
 #define ROTATING_MATRIX_Z_AXIS(angle)    { {cos(angle),sin(angle),0,0},{ -sin(angle),cos(angle),0,0 },{ 0,0,1,0 },{ 0,0,0,1 } }
 #define PERSPECTIVE_MATRIX(d)            { {1,0,0,0},{ 0,1,0,0 },{ 0,0,1,1.0f/(d) },{ 0,0,0,0 } }
 
-#define WHITE_COLOR                      (1.0f, 1.0f, 1.0f)
+typedef enum _R_COLOR
+{
+    WHITE,
+    BLACK,
+    GREEN,
+    LIME,
+    BLUE,
+    RED,
+    YELLOW
+}R_COLOR;
+
 
 #define SET_PROJ_PARAMS(projParams)                                            \
                                          float left   = projParams.left;       \

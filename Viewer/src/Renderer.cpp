@@ -25,7 +25,6 @@ Renderer::~Renderer()
 
 void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNormals /*= false*/, UINT32 normScaleRate /*= 1*/, const vector<glm::vec3>* normals/*=NULL*/)
 {
-    glm::vec3 color(WHITE_COLOR);
     vector<glm::vec3>::const_iterator it = vertices->begin();
     while (it != vertices->end())
     {
@@ -40,9 +39,9 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNo
         p2             = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p2));
         p3             = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(p3));
 
-        DrawLine(glm::vec2(p1.x, p1.y), glm::vec2(p2.x, p2.y), color);
-        DrawLine(glm::vec2(p2.x, p2.y), glm::vec2(p3.x, p3.y), color);
-        DrawLine(glm::vec2(p3.x, p3.y), glm::vec2(p1.x, p1.y), color);
+        DrawLine(glm::vec2(p1.x, p1.y), glm::vec2(p2.x, p2.y), COLOR(WHITE));
+        DrawLine(glm::vec2(p2.x, p2.y), glm::vec2(p3.x, p3.y), COLOR(WHITE));
+        DrawLine(glm::vec2(p3.x, p3.y), glm::vec2(p1.x, p1.y), COLOR(WHITE));
 
         if (bDrawFaceNormals)
         {
@@ -58,7 +57,7 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNo
             glm::vec3 nP1 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform *  Util::toHomogeneousForm(faceCenter));
             glm::vec3 nP2 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform *  Util::toHomogeneousForm(faceCenter + scaledNormal));
 
-            DrawLine(nP1, nP2, { 0,0,1 });
+            DrawLine(nP1, nP2, COLOR(LIME));
         }
     }
 }
@@ -142,7 +141,7 @@ void Renderer::drawVerticesNormals(vector<glm::vec3> vertices, vector<glm::vec3>
         glm::vec3 nP1 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(vertex));
         glm::vec3 nP2 = Util::toNormalForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(vertex + scaledVertexNormal));
 
-        DrawLine(nP1, nP2, { 1.0f, 0 ,0 });
+        DrawLine(nP1, nP2, COLOR(RED));
     }
 }
 

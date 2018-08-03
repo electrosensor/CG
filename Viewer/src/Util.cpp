@@ -24,3 +24,27 @@ glm::vec3 Util::findCentralVec(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3)
 {
     return 0.5f*(p2 + p3) - p1;  
 }
+
+glm::vec3 Util::getColor(R_COLOR color)
+{
+    switch (color)
+    {
+    case WHITE:
+        return { 1.0f, 1.0f, 1.0f };
+    case BLACK:
+        return { 0.f, 0.f, 0.f };
+    case LIME:
+        return { 0, 1.0f ,0 };
+    case GREEN:
+        return { 0, 0.5f, 0 };
+    case BLUE:
+        return { 0, 0 ,1.0f };
+    case RED:
+        return { 1.0f, 0 ,0 };
+    case YELLOW:
+        return { 1.0f,1.0f,0 };
+    default:
+        return { 0.f, 0.f, 0.f };
+
+    }
+}
