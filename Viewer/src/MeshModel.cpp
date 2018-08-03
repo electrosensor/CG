@@ -170,6 +170,7 @@ void MeshModel::LoadFile(const string& fileName)
 
 	m_vertexPosSize   = faces.size()*FACE_ELEMENTS;
 	m_vertexPositions = new glm::vec3[m_vertexPosSize];
+    m_vectorNormSize  = normals.size();
     m_vertexNormals   = new glm::vec3[m_vertexPosSize];
 	// iterate through all stored faces and create triangles
 	size_t posIdx = 0;
@@ -217,7 +218,7 @@ const pair<vector<glm::vec3>, vector<glm::vec3> >* MeshModel::Draw()
 		meshModelVertices.push_back(vertex);
 	}
 
-    for (size_t i = 0; i < m_vertexPosSize; i++)
+    for (size_t i = 0; i < m_vectorNormSize; i++)
     {
         glm::vec3 normal = m_vertexNormals[i];
         normal = Util::toNormalForm(m_normalTransformation * m_worldTransformation * m_modelTransformation * Util::toHomogeneousForm(normal)); //TODO_YURI: check the order of transformations
