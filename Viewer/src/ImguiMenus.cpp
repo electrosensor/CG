@@ -86,18 +86,25 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 //             
 //         }
 
-        ImGui::Text("Active camera: %d", scene->GetActiveCameraIdx());
-        
+        static bool bShowCamera = false;
+        int cameraIndex = scene->GetActiveCameraIdx();
+        ImGui::Text("Active camera: %d", cameraIndex);
+        bShowCamera = scene->shouldRenderCamera(cameraIndex);
+        ImGui::SameLine();
+        if (ImGui::Checkbox("Show Camera", &bShowCamera))
+        {
+            scene->getActiveCamera()->getCameraModel()->setModelRenderingState(bShowCamera);
+        }
 
 
         static PROJ_PARAMS projParams = 
         {
-            projParams.left = -10,
-            projParams.right = 10,
+            projParams.left   = -10,
+            projParams.right  = 10,
             projParams.bottom = -10,
-            projParams.top = 10,
-            projParams.zNear = 5,
-            projParams.zFar = 25,
+            projParams.top    = 10,
+            projParams.zNear  = 5,
+            projParams.zFar   = 25,
         };
         ImGui::SliderFloat("Left",   &projParams.left,   -1000, 1000);
         ImGui::SliderFloat("Right",  &projParams.right,  -1000, 1000);

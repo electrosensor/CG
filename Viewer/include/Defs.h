@@ -7,6 +7,8 @@
 #define MAX_HEIGHT_4K                    2160
 #define MAX_WIDTH_4K                     3840
 
+#define CAMERA_OBJ_FILE                  "PrimModels/camera.obj"
+
 #define DISABLED                         -1
 #define PI                               3.141592653589793238462643383279502884L
 #define INDEX(width,x,y,c)               ((x)+(y)*(width))*3+(c)
@@ -64,6 +66,7 @@ typedef enum _PRIM_MODEL
 {
     PM_SPHERE = 0,
     PM_CUBE,
+    PRV_CAMERA
 
 }PRIM_MODEL;
 

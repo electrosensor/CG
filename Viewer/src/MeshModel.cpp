@@ -8,7 +8,6 @@
 #include <sstream>
 
 
-typedef Model* PModel;
 using namespace std;
 
 // A struct for processing a single line in a wafefront obj file:
@@ -79,8 +78,8 @@ MeshModel::MeshModel(const string& fileName) : m_modelTransformation(SCALING_MAT
 											   m_normalTransformation(I_MATRIX),
                                                m_worldTransformation(I_MATRIX)
 {
-
 	LoadFile(fileName);
+    setModelRenderingState(true);
 }
 
 MeshModel::~MeshModel()
@@ -171,7 +170,7 @@ void MeshModel::LoadFile(const string& fileName)
 	m_vertexPosSize   = faces.size()*FACE_ELEMENTS;
 	m_vertexPositions = new glm::vec3[m_vertexPosSize];
     m_vectorNormSize  = normals.size();
-    m_vertexNormals   = new glm::vec3[m_vertexPosSize];
+    m_vertexNormals   = new glm::vec3[m_vectorNormSize];
 	// iterate through all stored faces and create triangles
 	size_t posIdx = 0;
 	for each (FaceIdx face in faces)
@@ -187,24 +186,15 @@ void MeshModel::LoadFile(const string& fileName)
 	}
 
     posIdx = 0;
-    if (!normals.empty())
+    
+    for (unsigned int i = 0; i < normals.size(); i++)
     {
-        for each (FaceIdx face in faces)
-        {
-            for (int i = 0; i < FACE_ELEMENTS; i++)
-            {
-                int currentNormalIdx = face.v[i];
-                float x = normals[currentNormalIdx - 1].x;
-                float y = normals[currentNormalIdx - 1].y;
-                float z = normals[currentNormalIdx - 1].z;
-                m_vertexNormals[posIdx++] = glm::vec3(x, y, z);
-            }
-        }
+        m_vertexNormals[i] = normals[i];
     }
 
 }
 
-const pair<vector<glm::vec3>, vector<glm::vec3> >* MeshModel::Draw()
+const pair<vector<glm::vec3>, vector<glm::vec3> >* MeshModel::Draw() 
 {
     pair<vector<glm::vec3>, vector<glm::vec3> >* verticesData = new pair<vector<glm::vec3>, vector<glm::vec3>>();
 	vector<glm::vec3> meshModelVertices;

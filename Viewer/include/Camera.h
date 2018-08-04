@@ -2,6 +2,7 @@
 #include <glm/glm.hpp>
 #include "Defs.h"
 #include "Util.h"
+#include "MeshModel.h"
 
 
 /*
@@ -14,6 +15,8 @@ private:
     glm::mat4x4 m_cameraProjection;
     PROJ_PARAMS m_frustumParams;
     int m_cameraIdx;
+    PModel m_cameraModel;
+    
 
 public:
     Camera();
@@ -40,6 +43,10 @@ public:
 
     // Sets perspective projection matrix.
     void Perspective(const PERSPECTIVE_PARAMS perspectiveParams);
+
+    void setCameraModel(Model* camModel) { m_cameraModel = camModel; }
+    
+    PModel getCameraModel() { return m_cameraModel; }
 
 private:
     void validateProjParams(PROJ_PARAMS projParams);

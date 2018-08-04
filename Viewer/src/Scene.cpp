@@ -6,19 +6,18 @@ using namespace std;
 void Scene::LoadOBJModel(string fileName)
 {
     MeshModel* model = new MeshModel(fileName);
-    m_models.push_back(model);
-    m_activeModel++;
+    if (fileName != CAMERA_OBJ_FILE)
+    {
+        m_models.push_back(model);
+        m_activeModel++;
+    }
+
 }
 
 void Scene::Draw()
 {
     // 1. Send the renderer the current camera transform and the projection
     // 2. Tell all models to draw themselves
-
-//     glm::mat4x4({{},{},{},{}})
-//     renderer->DrawLine(glm::vec2(0,0), glm::vec2(10000, 0),
-//     renderer->DrawLine(glm::vec2(0, 0),
-//     renderer->DrawLine(glm::vec2(0, 0),
 
     if (m_activeCamera == DISABLED)
     {
@@ -43,6 +42,21 @@ void Scene::Draw()
 
         renderer->SwapBuffers();
         delete modelVertices;
+    }
+
+    for each(Camera* camera in m_cameras)
+    {
+        CamMeshModel* camModel = (CamMeshModel*) camera->getCameraModel();
+        if (camModel->isModelRenderingActive())
+        {
+            camModel->SetWorldTransformation(m_worldTransformation);
+            const pair<vector<glm::vec3>, vector<glm::vec3> >* camVertices = camModel->Draw();
+
+
+            renderer->DrawTriangles(&camVertices->first, FALSE, 1);
+            renderer->SwapBuffers();
+            delete camVertices;
+        }
     }
 }
 
@@ -316,6 +330,11 @@ void Scene::RotateActiveModelZAxis(float angle)
     }
 }
 
+
+bool Scene::shouldRenderCamera(int cameraIndex)
+{
+    return m_cameras[cameraIndex]->getCameraModel()->isModelRenderingActive();
+}
 
 unsigned int Scene::AddPrimitiveModel(PRIM_MODEL primitiveModel)
 {

@@ -4,6 +4,7 @@ using namespace std;
 
 Camera::Camera() : m_cameraTransform(I_MATRIX), m_cameraProjection(I_MATRIX)
 {
+    m_cameraModel = (PModel) new CamMeshModel(HOMOGENEOUS_VECTOR4);
    // glm::mat4x4 toCenter(TRANSLATION_MATRIX(DEFAULT_WIDTH / 2, DEFAULT_HEIGHT / 2, 0));
 
    // m_cameraTransform =  m_cameraTransform/* * toCenter*/;
@@ -12,6 +13,7 @@ Camera::Camera() : m_cameraTransform(I_MATRIX), m_cameraProjection(I_MATRIX)
 Camera::Camera(const glm::vec4& eye, const glm::vec4& at, const glm::vec4& up) : m_cameraTransform(I_MATRIX), m_cameraProjection(I_MATRIX)
 {
     LookAt(eye, at, up);
+    m_cameraModel = (PModel) new CamMeshModel(eye);
 }
 
 Camera::~Camera()

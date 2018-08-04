@@ -3,6 +3,7 @@
 #include <string>
 #include "Model.h"
 #include "Defs.h"
+#include "Util.h"
 
 
 using namespace std;
@@ -41,7 +42,6 @@ class MeshModel : public Model
 
 		void LoadFile(const string& fileName);
 		const pair<vector<glm::vec3>, vector<glm::vec3>>* Draw();
-
 };
 
 class PrimMeshModel : public MeshModel
@@ -61,5 +61,48 @@ private:
 	string* setPrimModelFilePath(PRIM_MODEL primModel);
 
 	string* m_pPrimModelString;
+};
+
+
+class CamMeshModel : public MeshModel
+{
+public:
+    CamMeshModel(glm::vec4 camCoords) : MeshModel(CAMERA_OBJ_FILE)
+    {
+        m_camCoords = camCoords;
+        m_bShouldRender = false;
+    }
+
+    glm::vec4 m_camCoords;
+
+    void setCamCoords(glm::vec4 camCoords)
+    {
+        m_camCoords = camCoords;
+    }
+
+    glm::vec4 getCamCoords()
+    {
+        return m_camCoords;
+    }
+
+    pair<vector<glm::vec3>, vector<glm::vec3> >* Draw()
+    {
+        pair<vector<glm::vec3>, vector<glm::vec3> >* verticesData = new pair<vector<glm::vec3>, vector<glm::vec3>>();
+        vector<glm::vec3> camModelVertices;
+        vector<glm::vec3> dummy;
+
+
+        for (size_t i = 0; i < m_vertexPosSize; i++)
+        {
+            glm::vec3 vertex = m_vertexPositions[i];
+            vertex = Util::toNormalForm(m_normalTransformation * m_worldTransformation * m_modelTransformation * Util::toHomogeneousForm(vertex)); //TODO_YURI: check the order of transformations
+            camModelVertices.push_back(vertex);
+        }
+
+        verticesData->first = camModelVertices;
+        verticesData->second = dummy;
+
+        return verticesData;
+    }
 };
 

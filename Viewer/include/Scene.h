@@ -47,6 +47,8 @@ public:
     //Cameras API:
 
     int  GetActiveCameraIdx();
+    Camera* getActiveCamera() { return m_cameras[m_activeCamera]; }
+    Camera* getCameraByIndex(int index) { return index < m_cameras.size() ? m_cameras[index] : nullptr; }
     void SetActiveCameraIdx(unsigned int cameraIdx);
 
     unsigned int  AddCamera(const glm::vec4 & eye, const glm::vec4 & at, const glm::vec4 & up);
@@ -93,4 +95,5 @@ public:
     void showFacesNormals(bool bDrawFaceNormal) { m_bDrawFaceNormal = bDrawFaceNormal; }
     void showVerticesNormals(bool bDrawVecNormal) { m_bDrawVecNormal = bDrawVecNormal; }
 
+    bool shouldRenderCamera(int cameraIndex);
 };

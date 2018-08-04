@@ -3,6 +3,7 @@
 #include <glm/glm.hpp>
 
 using namespace std;
+
 /*
  * Model class. An abstract class for all types of geometric data.
  */
@@ -17,4 +18,12 @@ public:
 	virtual void SetWorldTransformation(glm::mat4x4& transformation) = 0;
 	virtual void SetNormalTransformation(glm::mat4x4& transformation) = 0;
 	virtual const pair<vector<glm::vec3>, vector<glm::vec3>>* Draw() = 0;
+
+    bool isModelRenderingActive() { return m_bShouldRender; }
+    void setModelRenderingState(bool bIsRenderingStateActive) { m_bShouldRender = bIsRenderingStateActive; }
+
+protected:
+    bool m_bShouldRender;
 };
+
+typedef Model* PModel;
