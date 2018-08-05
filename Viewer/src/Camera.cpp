@@ -5,6 +5,15 @@ using namespace std;
 Camera::Camera() : m_cameraTransform(I_MATRIX), m_cameraProjection(I_MATRIX)
 {
     m_cameraModel = (PModel) new CamMeshModel(HOMOGENEOUS_VECTOR4);
+//     PROJ_PARAMS initProj;
+//     initProj.left = -100;
+//     initProj.right = 100;
+//     initProj.top = 100;
+//     initProj.bottom = -100;
+//     initProj.zFar = 100;
+//     initProj.zNear = 1;
+//     Ortho(initProj);
+
    // glm::mat4x4 toCenter(TRANSLATION_MATRIX(DEFAULT_WIDTH / 2, DEFAULT_HEIGHT / 2, 0));
 
    // m_cameraTransform =  m_cameraTransform/* * toCenter*/;
@@ -73,10 +82,10 @@ void Camera::Ortho(const PROJ_PARAMS projParams)
     m_cameraProjection = glm::mat4x4(
     {
 
-        {      2.0f       / (right - left),                 0               ,                0               , 0 },
-        {                 0               ,      2.0f       / (top - bottom),                0               , 0 },
-        {                 0               ,                 0               ,       2.0f     / (zNear - zFar), 0 },
-        { -(right + left) / (right - left), -(bottom + top) / (top - bottom), (zFar + zNear) / (zFar - zNear), 1 }
+        {      2.0f       / (right - left) ,                 0                ,                 0                   ,              0              },
+        {                 0                ,      2.0f       / (top - bottom) ,                 0                   ,              0              },
+        {                 0                ,                 0                ,        2.0f     / (zNear - zFar)    ,              0              },
+        { -(right + left) / (right - left) , -(bottom + top) / (top - bottom) , -(zFar + zNear) / (zFar - zNear)    ,              1              }
 
     });
 }
@@ -89,59 +98,24 @@ void Camera::Frustum(const PROJ_PARAMS projParams)
     
     m_cameraProjection = glm::mat4x4(
     {
-        {   2.0f*zNear / (right - left)    ,             0                    ,                  0                  ,                  0              },
-        {                0                 ,   2.0f*zNear / (top - bottom)    ,                  0                  ,                  0              },
-        { (right + left) / (right - left)  , (top + bottom) / (top - bottom)  ,  -(zFar + zNear) / (zFar - zNear)   ,                 -1              },
-        {                0                 ,              0                   , -2.0f*zFar*zNear / (zFar - zNear)   ,                  0              }
+        {   2.0f*zNear / (right - left)    ,             0                    ,                  0                  ,              0              },
+        {                0                 ,   2.0f*zNear / (top - bottom)    ,                  0                  ,              0              },
+        { (right + left) / (right - left)  , (top + bottom) / (top - bottom)  ,  -(zFar + zNear) / (zFar - zNear)   ,             -1              },
+        {                0                 ,              0                   , -2.0f*zFar*zNear / (zFar - zNear)   ,              0              }
     });
 
     m_frustumParams = projParams;
 
     throw false;
-
-
-
-//     glm::mat4x4 H = glm::mat4x4(
-//         {
-//             {                1              ,                0              ,              0              ,           0           },
-//             {                0              ,                1              ,              0              ,           0           },
-//             { (right + left) / -2.0f*zNear  , (top + bottom) / -2.0f*zNear  ,              1              ,           0           },
-//             {                0              ,                0              ,              0              ,           1           }
-//         });
-// 
-//     glm::mat4x4 S = glm::mat4x4(
-//         {
-//             { -2.0f*zNear / (right - left),             0               ,                0              ,           0           },
-//             {               0             , -2.0f*zNear / (top - bottom),                0              ,           0           },
-//             {               0             ,             0               ,                1              ,           0           },
-//             {               0             ,             0               ,                0              ,           1           }
-//         });
-// 
-//     zNear = -1.0f;
-//     zFar = 1.0f;
-//     float alpha = (zNear + zFar) / (zNear - zFar);
-//     float beta = (2.0f * zNear * zFar) / (zNear - zFar);
-// 
-//     glm::mat4x4 N = glm::mat4x4(
-//         {
-//             {                   1             ,             0               ,                0              ,           0       },
-//             {                   0             ,             1               ,                0              ,           0       },
-//             {                   0             ,             0               ,              alpha            ,          -1       },
-//             {                   0             ,             0               ,               beta            ,           0       }
-//         });
-// 
-//     m_cameraProjection = N * S * H;
 }
 
 void Camera::Perspective(const PERSPECTIVE_PARAMS perspectiveParams)
 {
-   // SET_PERSP_PARAMS(perspectiveParams);
 
     PROJ_PARAMS projParams  = { 0 };
     float       height      = perspectiveParams.zNear * tan(TO_RADIAN(perspectiveParams.fovy) / 2.0f);
     float       width       = height * perspectiveParams.aspect;
 
-    
     projParams.left         = -width;
     projParams.right        = width;
     projParams.bottom       = -height;
@@ -149,49 +123,11 @@ void Camera::Perspective(const PERSPECTIVE_PARAMS perspectiveParams)
     projParams.zNear        = perspectiveParams.zNear;
     projParams.zFar         = perspectiveParams.zFar;
 
-
-
-  SET_PROJ_PARAMS(m_frustumParams);
-
+    validateProjParams(projParams);
+          
     Frustum(projParams);
 
-    if (zNear == 0 || top - bottom == 0 || zFar - zNear == 0)
-    {
-        throw true;
-    }
-
-    glm::mat4x4 H = glm::mat4x4(
-    {
-        {           1           ,           0           , (right + left) / -2.0f*zNear  ,           0           },
-        {           0           ,           1           , (top + bottom) / -2.0f*zNear  ,           0           },
-        {           0           ,           0           ,                1              ,           0           },
-        {           0           ,           0           ,                0              ,           1           }
-    });
-
-    glm::mat4x4 S = glm::mat4x4(
-    {
-        { -2.0f*zNear / (right - left),             0               ,                0              ,           0           },
-        {               0             , -2.0f*zNear / (top - bottom),                0              ,           0           },
-        {               0             ,             0               ,                1              ,           0           },
-        {               0             ,             0               ,                0              ,           1           }
-    });
-
-    zNear = -1;
-    zFar = 1;
-    float alpha = (zNear + zFar) / (zNear - zFar);
-    float beta  = (2.0f * zNear * zFar) / (zNear - zFar);
-
-    glm::mat4x4 N = glm::mat4x4(
-    {
-        {                   1             ,             0               ,                0              ,           0       },
-        {                   0             ,             1               ,                0              ,           0       },
-        {                   0             ,             0               ,              alpha            ,          beta     },
-        {                   0             ,             0               ,               -1              ,           0       }
-    });
-    
-   m_cameraProjection = N * S * H;
-
-   throw false;
+    throw false;
 }
 
 void Camera::validateProjParams(PROJ_PARAMS projParams)

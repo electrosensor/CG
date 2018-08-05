@@ -17,8 +17,9 @@ class MeshModel : public Model
 {
 	protected :
 
-        glm::vec3 *m_vectorNormals;
-        size_t m_vectorNormSize;
+        size_t m_verticesSize;
+        glm::vec3 *m_vertices;
+        size_t m_vertexNormSize;
 		glm::vec3 *m_vertexPositions;
 		size_t m_vertexPosSize;
         glm::vec3 *m_vertexNormals;
@@ -41,7 +42,7 @@ class MeshModel : public Model
 		void SetNormalTransformation(glm::mat4x4& transformation);
 
 		void LoadFile(const string& fileName);
-		const pair<vector<glm::vec3>, vector<glm::vec3>>* Draw();
+		pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >* Draw();
 };
 
 class PrimMeshModel : public MeshModel
@@ -85,17 +86,17 @@ public:
         return m_camCoords;
     }
 
-    pair<vector<glm::vec3>, vector<glm::vec3> >* Draw()
+    pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >* Draw()
     {
-        pair<vector<glm::vec3>, vector<glm::vec3> >* verticesData = new pair<vector<glm::vec3>, vector<glm::vec3>>();
-        vector<glm::vec3> camModelVertices;
-        vector<glm::vec3> dummy;
+        pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >* verticesData = new pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >();
+        vector<glm::vec3> camModelVertices; //AVIAD TODO CHECK
+        pair<vector<glm::vec3>, vector<glm::vec3> > dummy;
 
 
         for (size_t i = 0; i < m_vertexPosSize; i++)
         {
             glm::vec3 vertex = m_vertexPositions[i];
-            vertex = Util::toNormalForm(m_normalTransformation * m_worldTransformation * m_modelTransformation * Util::toHomogeneousForm(vertex)); //TODO_YURI: check the order of transformations
+            vertex = Util::toCartesianForm(m_normalTransformation * m_worldTransformation * m_modelTransformation * Util::toHomogeneousForm(vertex)); //TODO_YURI: check the order of transformations
             camModelVertices.push_back(vertex);
         }
 

@@ -32,12 +32,12 @@ void Scene::Draw()
     for each (Model* model in m_models)
     {
         model->SetWorldTransformation(m_worldTransformation);
-        const pair<vector<glm::vec3>, vector<glm::vec3> >* modelVertices = model->Draw();
+        const pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >* modelVertices = model->Draw();
         //renderer->SetObjectMatrices();
         renderer->DrawTriangles(&modelVertices->first, m_bDrawFaceNormal, 1);
-        if (m_bDrawVecNormal && !modelVertices->second.empty())
-        {
-            renderer->drawVerticesNormals(modelVertices->first ,modelVertices->second);
+        if (m_bDrawVecNormal && !modelVertices->second.second.empty())
+        {//BUG is HERE ;)
+            renderer->drawVerticesNormals(modelVertices->second.first ,modelVertices->second.second);
         }
 
         renderer->SwapBuffers();
@@ -50,7 +50,7 @@ void Scene::Draw()
         if (camModel->isModelRenderingActive())
         {
             camModel->SetWorldTransformation(m_worldTransformation);
-            const pair<vector<glm::vec3>, vector<glm::vec3> >* camVertices = camModel->Draw();
+            const pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >* camVertices = camModel->Draw();
 
 
             renderer->DrawTriangles(&camVertices->first, FALSE, 1);

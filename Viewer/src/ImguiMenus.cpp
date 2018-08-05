@@ -36,7 +36,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         {
             for (int j = 0; j < 4; j++)
             {
-                sWorldTransform.append(std::to_string(worldTransformation[j][i]) + " ");
+                sWorldTransform.append(std::to_string(worldTransformation[i][j]) + " ");
             }
             sWorldTransform.append("\n");
         }
@@ -182,7 +182,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         {
             for (int j = 0; j < 4; j++)
             {
-                sCameraTransform.append(std::to_string(activeCameraTransformation[j][i]) + " ");
+                sCameraTransform.append(std::to_string(activeCameraTransformation[i][j]) + " ");
             }
             sCameraTransform.append("\n");
         }
@@ -198,7 +198,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         {
             for (int j = 0; j < 4; j++)
             {
-                sCameraProjection.append(std::to_string(activeCameraProjection[j][i]) + " ");
+                sCameraProjection.append(std::to_string(activeCameraProjection[i][j]) + " ");
             }
             sCameraProjection.append("\n");
         }
@@ -336,7 +336,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         {
             for (int j = 0; j < 4; j++)
             {
-                sModelTransform.append(std::to_string(activeModelWorldTransformation[j][i]) + " ");
+                sModelTransform.append(std::to_string(activeModelWorldTransformation[i][j]) + " ");
             }
             sModelTransform.append("\n");
         }

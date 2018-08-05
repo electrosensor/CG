@@ -21,6 +21,7 @@ private:
     // Screen dimensions
     int width, height;
 
+
     // Draws a pixel in location p with color color
     void putPixel(int i, int j, const glm::vec3& color );
     void putPixel(int x, int y, bool steep, const glm::vec3& color);
@@ -42,8 +43,8 @@ private:
     glm::mat4x4 m_normalTransform;
     glm::mat4x4 m_viewPort;
 
-    int m_currentWidth;
-    int m_currentHeight;
+    int m_currentWidth; // remove
+    int m_currentHeight; // remove
 
     void getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, OUT float* pDx, OUT float* pDy);
     void yStepErrorUpdate(float dx, float dy, float& error, int& y, const int& ystep);
@@ -57,7 +58,7 @@ public:
     // Draws a line by Bresenham algorithm: 
     void DrawLine(const glm::vec2& p1, const glm::vec2& p2, const glm::vec3& color);
 
-    void drawVerticesNormals(vector<glm::vec3> vertices, vector<glm::vec3> normals);
+    void drawVerticesNormals(const vector<glm::vec3>& vertices, const vector<glm::vec3>& normals);
     // Draws wireframe triangles to the color buffer
     void DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNormals = false, UINT32 normScaleRate = 1, const vector<glm::vec3>* normals=NULL);
 

@@ -17,7 +17,7 @@ public:
     virtual void SetModelTransformation(glm::mat4x4& transformation) = 0;
 	virtual void SetWorldTransformation(glm::mat4x4& transformation) = 0;
 	virtual void SetNormalTransformation(glm::mat4x4& transformation) = 0;
-	virtual const pair<vector<glm::vec3>, vector<glm::vec3>>* Draw() = 0;
+	virtual pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >* Draw() = 0;
 
     bool isModelRenderingActive() { return m_bShouldRender; }
     void setModelRenderingState(bool bIsRenderingStateActive) { m_bShouldRender = bIsRenderingStateActive; }
