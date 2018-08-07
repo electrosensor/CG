@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <stdlib.h>
 
 #define DEFAULT_HEIGHT                   720
 #define DEFAULT_WIDTH                    1280
@@ -26,6 +27,10 @@
 #define ROTATING_MATRIX_Z_AXIS(angle)    { {cos(angle),sin(angle),0,0},{ -sin(angle),cos(angle),0,0 },{ 0,0,1,0 },{ 0,0,0,1 } }
 #define PERSPECTIVE_MATRIX(d)            { {1,0,0,0},{ 0,1,0,0 },{ 0,0,1,1.0f/(d) },{ 0,0,0,0 } }
 
+#define MAX(a,b)                         (((a) > (b)) ? (a) : (b))
+#define MIN(a,b)                         (((a) < (b)) ? (a) : (b))
+#define NORM_ZERO_TO_ONE(value,min,max)  ((value) - (min)) / ((max) - (min))
+#define NORMALIZE_COORDS(value,min,max)  (((NORM_ZERO_TO_ONE(value,min,max)*2) - 1))                  
 
 
 typedef enum _R_COLOR

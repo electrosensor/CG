@@ -20,7 +20,7 @@ private:
     // width*height
     float *zBuffer;
     // Screen dimensions
-    int width, height;
+    int m_width, m_height;
 
 
     // Draws a pixel in location p with color color
@@ -37,15 +37,13 @@ private:
     void initOpenGLRendering();
     //##############################
 
+    glm::mat4x4 m_worldTransformation;
     glm::mat4x4 m_cameraTransform;
     glm::mat4x4 m_cameraProjection;
-    glm::mat4x4 m_cameraFrustum;
     glm::mat4x4 m_objectTransform;
     glm::mat4x4 m_normalTransform;
-    glm::mat4x4 m_viewPort;
 
-    int m_currentWidth; // remove
-    int m_currentHeight; // remove
+    glm::vec2 toViewPlane(glm::vec2 point);
 
     void getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, OUT float* pDx, OUT float* pDy);
     void yStepErrorUpdate(float dx, float dy, float& error, int& y, const int& ystep);
@@ -90,7 +88,7 @@ public:
     // Draw wide vertical and horizontal lines on the screen
     void SetDemoBuffer();
 
-    void setCurrentDims(int currentHeight, int currentWidth);
+    void setWorldTransformation(glm::mat4x4 m_worldTransformation);
 private:
     void orderPoints(float& x1, float& x2, float& y1, float& y2);
     bool isSlopeBiggerThanOne(float x1, float x2, float y1, float y2) { return (fabs(y2 - y1) > fabs(x2 - x1)); }

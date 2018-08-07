@@ -6,13 +6,13 @@
 #include "Defs.h"
 
 
-Renderer::Renderer() : width(DEFAULT_WIDTH), height(DEFAULT_HEIGHT), m_viewPort(I_MATRIX)
+Renderer::Renderer() : m_width(DEFAULT_WIDTH), m_height(DEFAULT_HEIGHT)
 {
     initOpenGLRendering();
     createBuffers(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 }
 
-Renderer::Renderer(int w, int h) : width(w), height(h), m_viewPort(I_MATRIX)
+Renderer::Renderer(int w, int h) : m_width(w), m_height(h)
 {
     initOpenGLRendering();
     createBuffers(w,h);
@@ -45,14 +45,14 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNo
 
         glm::vec2 screenPoint1, screenPoint2, screenPoint3;
 
-        screenPoint1.x = round((p1.x + 1) * width  / 2.0f);
-        screenPoint1.y = round((p1.y + 1) * height / 2.0f);
+        screenPoint1.x = round((p1.x + 1) * m_width  / 2.0f);
+        screenPoint1.y = round((p1.y + 1) * m_height / 2.0f);
        
-        screenPoint2.x = round((p2.x + 1) * width  / 2.0f);
-        screenPoint2.y = round((p2.y + 1) * height / 2.0f);
+        screenPoint2.x = round((p2.x + 1) * m_width  / 2.0f);
+        screenPoint2.y = round((p2.y + 1) * m_height / 2.0f);
        
-        screenPoint3.x = round((p3.x + 1) * width / 2.0f);
-        screenPoint3.y = round((p3.y + 1) * height / 2.0f);
+        screenPoint3.x = round((p3.x + 1) * m_width / 2.0f);
+        screenPoint3.y = round((p3.y + 1) * m_height / 2.0f);
 
         DrawLine(screenPoint1, screenPoint2, COLOR(WHITE));
         DrawLine(screenPoint2, screenPoint3, COLOR(WHITE));
@@ -69,8 +69,8 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNo
             glm::vec4 homogeneousNormal = Util::toHomogeneousForm(glm::normalize(faceNormal));
             glm::vec3 scaledNormal      = Util::toCartesianForm(glm::mat4x4(SCALING_MATRIX4(30.f)) * homogeneousNormal);
              
-            glm::vec3 nP1 = Util::toCartesianForm(m_viewPort * m_cameraProjection * m_cameraTransform *  Util::toHomogeneousForm(faceCenter));
-            glm::vec3 nP2 = Util::toCartesianForm(m_viewPort * m_cameraProjection * m_cameraTransform *  Util::toHomogeneousForm(faceCenter + scaledNormal));
+            glm::vec3 nP1 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform *  Util::toHomogeneousForm(faceCenter));
+            glm::vec3 nP2 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform *  Util::toHomogeneousForm(faceCenter + scaledNormal));
 
             DrawLine(nP1, nP2, COLOR(LIME));
         }
@@ -81,8 +81,25 @@ void Renderer::drawBordersCube(CUBE_LINES borderCube, glm::vec3 modelOffset)
 {
     for each (std::pair<glm::vec3, glm::vec3> line in borderCube.line)
     {
-        DrawLine(line.first + modelOffset, line.second + modelOffset, COLOR(BLUE));
+        glm::vec3 pStart = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_objectTransform * m_worldTransformation * Util::toHomogeneousForm(line.first));
+        glm::vec3 pEnd   = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_objectTransform * m_worldTransformation * Util::toHomogeneousForm(line.second));
+
+        DrawLine(toViewPlane(pStart), toViewPlane(pEnd), COLOR(RED));
     }
+}
+
+glm::vec2 Renderer::toViewPlane(glm::vec2 point)
+{
+
+    // convert to raster space 
+    point.x = (round((point.x + 1) * m_width  / 2.0f));
+    point.y = (round((point.y + 1) * m_height / 2.0f));
+
+
+//     point.x = point.x * (m_height / m_width);
+//     point.y = point.y * (m_width / m_height);
+
+    return point;
 }
 
 void Renderer::SetCameraTransform(const glm::mat4x4 & cTransform)
@@ -103,11 +120,11 @@ void Renderer::SetObjectMatrices(const glm::mat4x4 & oTransform, const glm::mat4
 
 void Renderer::putPixel(int i, int j, const glm::vec3& color)
 {
-    if (i < 0) return; if (i >= width) return;
-    if (j < 0) return; if (j >= height) return;
-    colorBuffer[INDEX(width, i, j, 0)] = color.x;
-    colorBuffer[INDEX(width, i, j, 1)] = color.y;
-    colorBuffer[INDEX(width, i, j, 2)] = color.z;
+    if (i < 0) return; if (i >= m_width) return;
+    if (j < 0) return; if (j >= m_height) return;
+    colorBuffer[INDEX(m_width, i, j, 0)] = color.x;
+    colorBuffer[INDEX(m_width, i, j, 1)] = color.y;
+    colorBuffer[INDEX(m_width, i, j, 2)] = color.z;
 }
 
 void Renderer::DrawLine(const glm::vec2 & p1, const glm::vec2 & p2, const glm::vec3& color)
@@ -161,8 +178,8 @@ void Renderer::drawVerticesNormals(const vector<glm::vec3>& vertices, const vect
 
         glm::vec3 scaledVertexNormal = Util::toCartesianForm((glm::mat4x4(SCALING_MATRIX4(30.f)) * Util::toHomogeneousForm(vertexNormal)));
 
-        glm::vec3 nP1 = Util::toCartesianForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(vertex));
-        glm::vec3 nP2 = Util::toCartesianForm(m_viewPort * m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(vertex + scaledVertexNormal));
+        glm::vec3 nP1 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(vertex));
+        glm::vec3 nP2 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(vertex + scaledVertexNormal));
 
         DrawLine(nP1, nP2, COLOR(RED));
     }
@@ -186,31 +203,31 @@ void Renderer::SetDemoBuffer()
     int r = 5;
     // Wide red vertical line
     glm::vec4 red = glm::vec4(1, 0, 0, 1);
-    for (int i = 0; i<height; i++)
+    for (int i = 0; i<m_height; i++)
     {
         for (int r0 = 0; r0 < r; r0++)
         {
-            putPixel((width / 2) + r0, i, red);
-            putPixel((width / 2) - r0, i, red);
+            putPixel((m_width / 2) + r0, i, red);
+            putPixel((m_width / 2) - r0, i, red);
         }
     }
     // Wide magenta horizontal line
     glm::vec4 magenta = glm::vec4(1, 0, 1, 1);
-    for (int i = 0; i<width; i++)
+    for (int i = 0; i<m_width; i++)
     {
         for (int r0 = 0; r0 < r; r0++)
         {
-            putPixel(i, (height / 2) + r0, magenta);
-            putPixel(i, (height / 2) - r0, magenta);
+            putPixel(i, (m_height / 2) + r0, magenta);
+            putPixel(i, (m_height / 2) - r0, magenta);
         }
 
     }
 }
 
-void Renderer::setCurrentDims(int currentHeight, int currentWidth)
+
+void Renderer::setWorldTransformation(glm::mat4x4 worldTransformation)
 {
-    m_currentHeight = currentHeight;
-    m_currentWidth  = currentWidth;
+    m_worldTransformation = worldTransformation;
 }
 
 void Renderer::orderPoints(float& x1, float& x2, float& y1, float& y2)
@@ -316,8 +333,8 @@ void Renderer::createOpenGLBuffer()
     // Makes glScreenTex (which was allocated earlier) the current texture.
     glBindTexture(GL_TEXTURE_2D, glScreenTex);
     // malloc for a texture on the gpu.
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, width, height, 0, GL_RGB, GL_FLOAT, NULL);
-    glViewport(0, 0, width, height);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, m_width, m_height, 0, GL_RGB, GL_FLOAT, NULL);
+    glViewport(0, 0, m_width, m_height);
 }
 
 void Renderer::SwapBuffers()
@@ -327,7 +344,7 @@ void Renderer::SwapBuffers()
     // Makes glScreenTex (which was allocated earlier) the current texture.
     glBindTexture(GL_TEXTURE_2D, glScreenTex);
     // memcopy's colorBuffer into the gpu.
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGB, GL_FLOAT, colorBuffer);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_width, m_height, GL_RGB, GL_FLOAT, colorBuffer);
     // Tells opengl to use mipmapping
     glGenerateMipmap(GL_TEXTURE_2D);
     // Make glScreenVtc current VAO
@@ -338,9 +355,9 @@ void Renderer::SwapBuffers()
 
 void Renderer::ClearColorBuffer(const glm::vec3& color)
 {
-    for (int i = 0; i < width; i++)
+    for (int i = 0; i < m_width; i++)
     {
-        for (int j = 0; j < height; j++)
+        for (int j = 0; j < m_height; j++)
         {
             putPixel(i, j, color);
         }
@@ -349,12 +366,12 @@ void Renderer::ClearColorBuffer(const glm::vec3& color)
 
 void Renderer::Viewport(int w, int h)
 {
-    if (w == width && h == height)
+    if (w == m_width && h == m_height)
     {
         return;
     }
-    width = w;
-    height = h;
+    m_width = w;
+    m_height = h;
     delete[] colorBuffer;
     colorBuffer = new float[3 * h*w];
     createOpenGLBuffer();

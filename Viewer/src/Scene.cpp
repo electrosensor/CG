@@ -31,10 +31,17 @@ void Scene::Draw()
 
     for each (Model* model in m_models)
     {
+        const pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >* modelVertices;
+        
+        
+        modelVertices = model->Draw();
         model->SetWorldTransformation(m_worldTransformation);
-        const pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >* modelVertices = model->Draw();
-        //renderer->SetObjectMatrices();
+        renderer->SetObjectMatrices(model->GetModelTransformation(), model->GetNormalTransformation());
+        renderer->setWorldTransformation(m_worldTransformation);
+        
         renderer->DrawTriangles(&modelVertices->first, m_bDrawFaceNormal, 1);
+        
+        
         if (m_bDrawVecNormal && !modelVertices->second.second.empty())
         {//BUG is HERE ;)
             renderer->drawVerticesNormals(modelVertices->second.first ,modelVertices->second.second);
@@ -117,10 +124,6 @@ void Scene::SetFrustum(PROJ_PARAMS projParams)
     }
 }
 
-void Scene::UpdateCurrentDims(int currWindowHeight, int currWindowWidth)
-{
-    renderer->setCurrentDims(currWindowHeight, currWindowWidth);
-}
 
 glm::mat4x4 Scene::GetActiveCameraTransformation()
 {

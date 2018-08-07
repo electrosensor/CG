@@ -74,7 +74,7 @@ glm::vec2 vec2fFromStream(std::istream& issLine)
 	return glm::vec2(x, y);
 }
 
-MeshModel::MeshModel(const string& fileName) : m_modelTransformation(SCALING_MATRIX4(7)),
+MeshModel::MeshModel(const string& fileName) : m_modelTransformation(I_MATRIX),
 											   m_normalTransformation(I_MATRIX),
                                                m_worldTransformation(I_MATRIX)
 {
@@ -136,7 +136,7 @@ void MeshModel::LoadFile(const string& fileName)
 
     glm::vec3 maxCoords = { std::numeric_limits<float>::min(), std::numeric_limits<float>::min() ,std::numeric_limits<float>::min() };
     glm::vec3 minCoords = { std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max() };
-    
+    glm::vec3 normalizedVec;
 	// while not end of file
 	while (!ifile.eof())
 	{
@@ -182,12 +182,32 @@ void MeshModel::LoadFile(const string& fileName)
 			cout << "Found unknown line Type \"" << lineType << "\"";
 		}
 	}
+
+    float totalMin = MIN(minCoords.x, MIN(minCoords.y, minCoords.z));
+    float totalMax = MAX(maxCoords.x, MAX(maxCoords.y, maxCoords.z));
+
     m_verticesSize    = vertices.size();
     m_vertices        = new glm::vec3[m_verticesSize];
 	m_vertexPosSize   = faces.size()*FACE_ELEMENTS;
 	m_vertexPositions = new glm::vec3[m_vertexPosSize];
     m_vertexNormSize  = normals.size();
     m_vertexNormals   = new glm::vec3[m_vertexNormSize];
+
+
+
+    for (unsigned int i = 0; i < m_verticesSize; i++)
+
+    {
+        normalizedVec.x = NORMALIZE_COORDS(vertices[i].x, totalMin, totalMax);
+        normalizedVec.y = NORMALIZE_COORDS(vertices[i].y, totalMin, totalMax);
+        normalizedVec.z = NORMALIZE_COORDS(vertices[i].z, totalMin, totalMax);
+
+        fprintf(stderr, "x = %f, y = %f, z = %f\n", normalizedVec.x, normalizedVec.y, normalizedVec.z);
+
+        m_vertices[i] = normalizedVec;
+
+    }
+
 	// iterate through all stored faces and create triangles
 	size_t posIdx = 0;
 	for each (FaceIdx face in faces)
@@ -195,26 +215,29 @@ void MeshModel::LoadFile(const string& fileName)
 		for (int i = 0; i < FACE_ELEMENTS; i++)
 		{
 			int currentVertexIdx = face.v[i];
-			float x = vertices[currentVertexIdx - 1].x;
-			float y = vertices[currentVertexIdx - 1].y;
-			float z = vertices[currentVertexIdx - 1].z;
+            float x = m_vertices[currentVertexIdx - 1].x;
+            float y = m_vertices[currentVertexIdx - 1].y;
+            float z = m_vertices[currentVertexIdx - 1].z;
 			m_vertexPositions[posIdx++] = glm::vec3(x, y, z);
 		}
 	}
-
-    for (unsigned int i = 0; i < m_verticesSize; i++)
-    {
-        m_vertices[i] = vertices[i];
-
-    }
     
     for (unsigned int i = 0; i < m_vertexNormSize; i++)
     {
-        m_vertexNormals[i] = normals[i];
+        normalizedVec.x = NORMALIZE_COORDS(normals[i].x, totalMin, totalMax);
+        normalizedVec.y = NORMALIZE_COORDS(normals[i].y, totalMin, totalMax);
+        normalizedVec.z = NORMALIZE_COORDS(normals[i].z, totalMin, totalMax);
+
+        m_vertexNormals[i] = normalizedVec;
     }
 
-    m_minCoords = minCoords;
-    m_maxCoords = maxCoords;
+    m_minCoords.x = NORMALIZE_COORDS(minCoords.x, totalMin, totalMax);
+    m_minCoords.y = NORMALIZE_COORDS(minCoords.y, totalMin, totalMax);
+    m_minCoords.z = NORMALIZE_COORDS(minCoords.z, totalMin, totalMax);
+
+    m_maxCoords.x = NORMALIZE_COORDS(maxCoords.x, totalMin, totalMax);
+    m_maxCoords.y = NORMALIZE_COORDS(maxCoords.y, totalMin, totalMax);
+    m_maxCoords.z = NORMALIZE_COORDS(maxCoords.z, totalMin, totalMax);
 
 
 }
