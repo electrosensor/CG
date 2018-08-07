@@ -39,6 +39,11 @@ void Scene::Draw()
         {//BUG is HERE ;)
             renderer->drawVerticesNormals(modelVertices->second.first ,modelVertices->second.second);
         }
+        
+        if (m_bShowBorderCube)
+        {
+            renderer->drawBordersCube(model->getBordersCube(), model->getModelOffset());
+        }
 
         renderer->SwapBuffers();
         delete modelVertices;
@@ -335,6 +340,7 @@ bool Scene::shouldRenderCamera(int cameraIndex)
 {
     return m_cameras[cameraIndex]->getCameraModel()->isModelRenderingActive();
 }
+
 
 unsigned int Scene::AddPrimitiveModel(PRIM_MODEL primitiveModel)
 {

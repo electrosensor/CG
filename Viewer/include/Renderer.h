@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <GLFW/glfw3.h>
 #include <imgui/imgui.h>
+#include "Defs.h"
 
 using namespace std;
 
@@ -61,7 +62,8 @@ public:
     void drawVerticesNormals(const vector<glm::vec3>& vertices, const vector<glm::vec3>& normals);
     // Draws wireframe triangles to the color buffer
     void DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNormals = false, UINT32 normScaleRate = 1, const vector<glm::vec3>* normals=NULL);
-
+    // Draws surrounding border cube;
+    void drawBordersCube(CUBE_LINES borderCube, glm::vec3 modelOffset);
     // Sets the camera transformations with relation to world coordinates
     void SetCameraTransform(const glm::mat4x4& cTransform);
 

@@ -360,13 +360,16 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 
         static bool bShowVertNorms = false;
         static bool bShowFaceNorms = false;
+        static bool bShowBorderCube = false;
 
 
         ImGui::Checkbox("Show vertices normals", &bShowVertNorms);
         ImGui::Checkbox("Show face normals", &bShowFaceNorms);
+        ImGui::Checkbox("Show Border Cube", &bShowBorderCube);
        
         scene->showVerticesNormals(bShowVertNorms);
         scene->showFacesNormals(bShowFaceNorms);
+        scene->showBorderCube(bShowBorderCube);
 
         //Model moves:
 

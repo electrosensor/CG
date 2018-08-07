@@ -43,6 +43,9 @@ class MeshModel : public Model
 
 		void LoadFile(const string& fileName);
 		pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >* Draw();
+
+        glm::vec3 getModelOffset() {return { m_modelTransformation[3].x,m_modelTransformation[3].y,m_modelTransformation[3].z };}
+
 };
 
 class PrimMeshModel : public MeshModel
@@ -56,7 +59,6 @@ public:
 			m_pPrimModelString = nullptr;
 		}
 	}
-
 
 private:
 	string* setPrimModelFilePath(PRIM_MODEL primModel);
@@ -105,5 +107,7 @@ public:
 
         return verticesData;
     }
+
+
 };
 

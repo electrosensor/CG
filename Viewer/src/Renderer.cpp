@@ -77,6 +77,14 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNo
     }
 }
 
+void Renderer::drawBordersCube(CUBE_LINES borderCube, glm::vec3 modelOffset)
+{
+    for each (std::pair<glm::vec3, glm::vec3> line in borderCube.line)
+    {
+        DrawLine(line.first + modelOffset, line.second + modelOffset, COLOR(BLUE));
+    }
+}
+
 void Renderer::SetCameraTransform(const glm::mat4x4 & cTransform)
 {
     m_cameraTransform = cTransform;

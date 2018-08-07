@@ -26,6 +26,8 @@
 #define ROTATING_MATRIX_Z_AXIS(angle)    { {cos(angle),sin(angle),0,0},{ -sin(angle),cos(angle),0,0 },{ 0,0,1,0 },{ 0,0,0,1 } }
 #define PERSPECTIVE_MATRIX(d)            { {1,0,0,0},{ 0,1,0,0 },{ 0,0,1,1.0f/(d) },{ 0,0,0,0 } }
 
+
+
 typedef enum _R_COLOR
 {
     WHITE,
@@ -38,19 +40,28 @@ typedef enum _R_COLOR
 }R_COLOR;
 
 
-#define SET_PROJ_PARAMS(projParams)                                            \
-                                         float left   = projParams.left;       \
-                                         float right  = projParams.right;      \
-                                         float top    = projParams.top;        \
-                                         float bottom = projParams.bottom;     \
-                                         float zNear  = projParams.zNear;      \
-                                         float zFar   = projParams.zFar;       \
+#define SET_PROJ_PARAMS(projParams)                                           \
+                                         float left      = projParams.left;   \
+                                         float right     = projParams.right;  \
+                                         float top       = projParams.top;    \
+                                         float bottom    = projParams.bottom; \
+                                         float zNear     = projParams.zNear;  \
+                                         float zFar      = projParams.zFar;   \
 
-#define SET_PERSP_PARAMS(perspParams)                                          \
-                                         float fovy     = perspParams.fovy;    \
-                                         float aspect   = perspParams.aspect;  \
-                                         float zNear    = perspParams.zNear;   \
-                                         float zFar     = perspParams.zFar;    \
+#define INIT_CUBE_COORDS(maxCoords, minCoords)                                \
+                                         float cRight    = m_maxCoords.x;     \
+                                         float cTop      = m_maxCoords.y;     \
+                                         float cFar      = m_maxCoords.z;     \
+                                         float cLeft     = m_minCoords.x;     \
+                                         float cBottom   = m_minCoords.y;     \
+                                         float cNear     = m_minCoords.z;     \
+
+
+#define SET_PERSP_PARAMS(perspParams)                                         \
+                                         float fovy     = perspParams.fovy;   \
+                                         float aspect   = perspParams.aspect; \
+                                         float zNear    = perspParams.zNear;  \
+                                         float zFar     = perspParams.zFar;   \
 
 
 typedef enum _RETURN_CODE
@@ -88,3 +99,9 @@ typedef struct _PERSPECTIVE_PARAMS
     float zNear;
     float zFar;
 }PERSPECTIVE_PARAMS, *PPERSPECTIVE_PARAMS;
+
+typedef struct _CUBE_LINES
+{
+    std::pair<glm::vec3, glm::vec3> line[12];
+}CUBE_LINES, *PCUBE_LINES;
+

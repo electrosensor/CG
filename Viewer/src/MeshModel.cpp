@@ -80,6 +80,7 @@ MeshModel::MeshModel(const string& fileName) : m_modelTransformation(SCALING_MAT
 {
 	LoadFile(fileName);
     setModelRenderingState(true);
+    buildBorderCube(m_cubeLines);
 }
 
 MeshModel::~MeshModel()
@@ -132,6 +133,10 @@ void MeshModel::LoadFile(const string& fileName)
 	vector<FaceIdx> faces;
 	vector<glm::vec3> vertices;
     vector<glm::vec3> normals;
+
+    glm::vec3 maxCoords = { std::numeric_limits<float>::min(), std::numeric_limits<float>::min() ,std::numeric_limits<float>::min() };
+    glm::vec3 minCoords = { std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max() };
+    
 	// while not end of file
 	while (!ifile.eof())
 	{
@@ -147,8 +152,18 @@ void MeshModel::LoadFile(const string& fileName)
 
 		// based on the type parse data
 		if (lineType == "v")
-		{
-			vertices.push_back(vec3fFromStream(issLine));
+        {
+            glm::vec3 parsedVec = vec3fFromStream(issLine);
+            
+            minCoords.x = (minCoords.x > parsedVec.x) ? parsedVec.x : minCoords.x;
+            minCoords.y = (minCoords.y > parsedVec.y) ? parsedVec.y : minCoords.y;
+            minCoords.z = (minCoords.z > parsedVec.z) ? parsedVec.z : minCoords.z;
+
+            maxCoords.x = (maxCoords.x < parsedVec.x) ? parsedVec.x : maxCoords.x;
+            maxCoords.y = (maxCoords.y < parsedVec.y) ? parsedVec.y : maxCoords.y;
+            maxCoords.z = (maxCoords.z < parsedVec.z) ? parsedVec.z : maxCoords.z;
+
+			vertices.push_back(parsedVec);
 		}
         else if (lineType == "vn")
         {
@@ -167,8 +182,8 @@ void MeshModel::LoadFile(const string& fileName)
 			cout << "Found unknown line Type \"" << lineType << "\"";
 		}
 	}
-    m_verticesSize = vertices.size();
-    m_vertices = new glm::vec3[m_verticesSize];
+    m_verticesSize    = vertices.size();
+    m_vertices        = new glm::vec3[m_verticesSize];
 	m_vertexPosSize   = faces.size()*FACE_ELEMENTS;
 	m_vertexPositions = new glm::vec3[m_vertexPosSize];
     m_vertexNormSize  = normals.size();
@@ -196,8 +211,11 @@ void MeshModel::LoadFile(const string& fileName)
     for (unsigned int i = 0; i < m_vertexNormSize; i++)
     {
         m_vertexNormals[i] = normals[i];
-
     }
+
+    m_minCoords = minCoords;
+    m_maxCoords = maxCoords;
+
 
 }
 
@@ -230,8 +248,8 @@ std::pair<std::vector<glm::vec3>, std::pair<std::vector<glm::vec3>, std::vector<
         meshModelVerticesNormals.push_back(normal);
     }
 
-    verticesData->first  = meshModelVertexPositions;
-    verticesData->second.first = meshModelVertices;
+    verticesData->first         = meshModelVertexPositions;
+    verticesData->second.first  = meshModelVertices;
     verticesData->second.second = meshModelVerticesNormals;
 
 	return verticesData;
@@ -253,3 +271,4 @@ string* PrimMeshModel::setPrimModelFilePath(PRIM_MODEL primModel)
 	}
 	return m_pPrimModelString;
 }
+

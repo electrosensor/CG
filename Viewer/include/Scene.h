@@ -27,7 +27,7 @@ private:
 
     bool m_bDrawVecNormal;
     bool m_bDrawFaceNormal;
-
+    bool m_bShowBorderCube;
 
 public:
     Scene() {};
@@ -94,6 +94,7 @@ public:
     
     void showFacesNormals(bool bDrawFaceNormal) { m_bDrawFaceNormal = bDrawFaceNormal; }
     void showVerticesNormals(bool bDrawVecNormal) { m_bDrawVecNormal = bDrawVecNormal; }
+    void showBorderCube(bool bShowBorderCube) { m_bShowBorderCube = bShowBorderCube; }
 
     bool shouldRenderCamera(int cameraIndex);
 };
