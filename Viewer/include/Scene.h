@@ -54,6 +54,7 @@ public:
     unsigned int  AddCamera(const glm::vec4 & eye, const glm::vec4 & at, const glm::vec4 & up);
     void NextCamera();
 
+    void DeleteActiveCamera();
     void SetPerspectiveProjection(PERSPECTIVE_PARAMS projParams);
     void SetOrthoProjection(PROJ_PARAMS projParams);
     void SetFrustum(PROJ_PARAMS projParams);
@@ -79,6 +80,7 @@ public:
 
     unsigned int  AddPrimitiveModel(PRIM_MODEL primitiveModel); //TO_DO develop good API
     void NextModel();
+    void DeleteActiveModel();
 
     glm::mat4x4 GetActiveModelTransformation();
     

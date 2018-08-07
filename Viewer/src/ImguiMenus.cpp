@@ -43,7 +43,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         ImGui::Text("World transformation:\n");
         ImGui::Text(sWorldTransform.c_str());
 
-        //scene->updateCurrentDims((int) ImGui::GetWindowHeight(), (int) ImGui::GetWindowWidth());
+        //cene->updateCurrentDims((int) ImGui::GetWindowHeight(), (int) ImGui::GetWindowWidth());
         ImGui::Text("-------------- Primitives Models: --------------");
         
         if (ImGui::Button("Add Cube model"))
@@ -79,6 +79,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         if (ImGui::Button("Next camera"))
         {
             scene->NextCamera();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Delete camera"))
+        {
+            scene->DeleteActiveCamera();
         }
 //         ImGui::SameLine();
 //         if (ImGui::Button("Apply to camera (todo)"))
@@ -326,7 +331,10 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         {
             scene->NextModel();
         }
-
+        if (ImGui::Button("Delete model"))
+        {
+            scene->DeleteActiveModel();
+        }
         ImGui::Text("Active model: %d", scene->GetActiveModelIdx());
 
         static glm::mat4x4 activeModelWorldTransformation;

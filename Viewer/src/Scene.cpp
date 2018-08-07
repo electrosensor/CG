@@ -158,6 +158,15 @@ void Scene::NextCamera()
     }
 }
 
+void Scene::DeleteActiveCamera()
+{
+    if (m_activeModel != DISABLED)
+    {
+        m_cameras.erase(m_cameras.begin() + m_activeCamera);
+        m_activeCamera = m_cameras.size() - 1;
+    }
+}
+
 int Scene::GetActiveCameraIdx()
 {
     return m_activeCamera;
@@ -359,9 +368,18 @@ void Scene::NextModel()
     }
 }
 
+void Scene::DeleteActiveModel()
+{
+    if (m_activeModel != DISABLED)
+    {
+        m_models.erase(m_models.begin() + m_activeModel);
+        m_activeModel = m_models.size() - 1;
+    }
+}
+
 glm::mat4x4 Scene::GetActiveModelTransformation()
 {
-    if (m_activeCamera != DISABLED)
+    if (m_activeModel != DISABLED)
     {
         Model* activeModel = m_models[m_activeModel];
         return  activeModel->GetModelTransformation();

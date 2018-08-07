@@ -202,7 +202,7 @@ void MeshModel::LoadFile(const string& fileName)
         normalizedVec.y = NORMALIZE_COORDS(vertices[i].y, totalMin, totalMax);
         normalizedVec.z = NORMALIZE_COORDS(vertices[i].z, totalMin, totalMax);
 
-        fprintf(stderr, "x = %f, y = %f, z = %f\n", normalizedVec.x, normalizedVec.y, normalizedVec.z);
+       // fprintf(stderr, "x = %f, y = %f, z = %f\n", normalizedVec.x, normalizedVec.y, normalizedVec.z);
 
         m_vertices[i] = normalizedVec;
 
