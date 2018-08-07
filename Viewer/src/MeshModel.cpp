@@ -252,22 +252,18 @@ std::pair<std::vector<glm::vec3>, std::pair<std::vector<glm::vec3>, std::vector<
 	for (size_t i = 0; i < m_vertexPosSize; i++)
 	{
 		glm::vec3 vertexPosition = m_vertexPositions[i];
-        vertexPosition = Util::toCartesianForm(m_worldTransformation * m_modelTransformation * Util::toHomogeneousForm(vertexPosition)); //TODO_YURI: check the order of transformations
         meshModelVertexPositions.push_back(vertexPosition);
 	}
    
     for (size_t i = 0; i < m_verticesSize; i++)
     {
         glm::vec3 vertex = m_vertices[i];
-        vertex = Util::toCartesianForm(m_worldTransformation * m_modelTransformation * Util::toHomogeneousForm(vertex)); //TODO_YURI: check the order of transformations
         meshModelVertices.push_back(vertex);
     }
-
 
     for (size_t i = 0; i < m_vertexNormSize; i++)
     {
         glm::vec3 normal = m_vertexNormals[i];
-        normal = Util::toCartesianForm(m_worldTransformation * m_normalTransformation * Util::toHomogeneousForm(normal)); //TODO_YURI: check the order of transformations
         meshModelVerticesNormals.push_back(normal);
     }
 

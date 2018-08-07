@@ -43,7 +43,7 @@ private:
     glm::mat4x4 m_objectTransform;
     glm::mat4x4 m_normalTransform;
 
-    glm::vec2 toViewPlane(glm::vec2 point);
+    glm::uvec2 toViewPlane(const glm::vec2& point);
 
     void getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, OUT float* pDx, OUT float* pDy);
     void yStepErrorUpdate(float dx, float dy, float& error, int& y, const int& ystep);
@@ -55,7 +55,7 @@ public:
     void Init();
 
     // Draws a line by Bresenham algorithm: 
-    void DrawLine(const glm::vec2& p1, const glm::vec2& p2, const glm::vec3& color);
+    void DrawLine(const glm::uvec2& p1, const glm::uvec2& p2, const glm::vec3& color);
 
     void drawVerticesNormals(const vector<glm::vec3>& vertices, const vector<glm::vec3>& normals);
     // Draws wireframe triangles to the color buffer

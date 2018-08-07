@@ -33,7 +33,6 @@ void Scene::Draw()
     {
         const pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >* modelVertices;
         
-        
         modelVertices = model->Draw();
         model->SetWorldTransformation(m_worldTransformation);
         renderer->SetObjectMatrices(model->GetModelTransformation(), model->GetNormalTransformation());
@@ -43,7 +42,7 @@ void Scene::Draw()
         
         
         if (m_bDrawVecNormal && !modelVertices->second.second.empty())
-        {//BUG is HERE ;)
+        {
             renderer->drawVerticesNormals(modelVertices->second.first ,modelVertices->second.second);
         }
         
