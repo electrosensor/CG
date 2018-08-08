@@ -3,6 +3,8 @@
 #include <string>
 
 using namespace std;
+#define IS_CAMERA true
+
 void Scene::LoadOBJModel(string fileName)
 {
     MeshModel* model = new MeshModel(fileName);
@@ -22,12 +24,20 @@ void Scene::Draw()
     if (m_activeCamera == DISABLED)
     {
         Camera* camera = new Camera();
+        renderer->SetCameraTransform(inverse(camera->GetTransformation()));
         m_cameras.push_back(camera);
+        
         m_activeCamera = 0;
     }
-    Camera* activeCamera = m_cameras[m_activeCamera];
-    renderer->SetCameraTransform(inverse(activeCamera->GetTransformation()));
-    renderer->SetProjection(m_cameras[m_activeCamera]->GetProjection());
+    else
+    {
+        Camera* activeCamera = m_cameras[m_activeCamera];
+        renderer->SetCameraTransform(inverse(activeCamera->GetTransformation()));
+        renderer->SetProjection(activeCamera->GetProjection());
+    }
+
+
+    renderer->drawAxis();
 
     for each (Model* model in m_models)
     {
@@ -51,7 +61,6 @@ void Scene::Draw()
             renderer->drawBordersCube(model->getBordersCube());
         }
 
-        renderer->SwapBuffers();
         delete modelVertices;
     }
 
@@ -64,11 +73,13 @@ void Scene::Draw()
             const pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >* camVertices = camModel->Draw();
 
 
-            renderer->DrawTriangles(&camVertices->first, FALSE, NULL, 1);
-            renderer->SwapBuffers();
+            renderer->DrawTriangles(&camVertices->first, FALSE, NULL, 1, IS_CAMERA);
             delete camVertices;
         }
     }
+    
+    renderer->SwapBuffers();
+
 }
 
 glm::mat4x4 Scene::GetWorldTransformation()

@@ -69,6 +69,14 @@ glm::vec3 Util::getColor(R_COLOR color)
         return { 1.0f, 0 ,0 };
     case YELLOW:
         return { 1.0f,1.0f,0 };
+    case X_COL:
+        return { 1.f,102.f / 255.f,0.f };
+    case Y_COL:
+        return { 153.f / 255.f,204.f / 255.f,0.f };
+    case Z_COL:
+        return {51.f / 255.f, 102.f / 255, 1.f};
+
+        
     default:
         return { 0.f, 0.f, 0.f };
 

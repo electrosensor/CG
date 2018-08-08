@@ -59,7 +59,7 @@ public:
 
     void drawVerticesNormals(const vector<glm::vec3>& vertices, const vector<glm::vec3>& normals);
     // Draws wireframe triangles to the color buffer
-    void DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNormals = false, const glm::vec3* modelCentroid = NULL, UINT32 normScaleRate = 1, const vector<glm::vec3>* normals=NULL);
+    void DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNormals = false, const glm::vec3* modelCentroid = NULL, UINT32 normScaleRate = 1, bool bIsCamera = false);
     // Draws surrounding border cube;
     void drawBordersCube(CUBE_LINES borderCube);
     // Sets the camera transformations with relation to world coordinates
@@ -92,4 +92,6 @@ public:
 private:
     void orderPoints(float& x1, float& x2, float& y1, float& y2);
     bool isSlopeBiggerThanOne(float x1, float x2, float y1, float y2) { return (fabs(y2 - y1) > fabs(x2 - x1)); }
+public:
+    void drawAxis();
 };

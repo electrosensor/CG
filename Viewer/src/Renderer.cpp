@@ -12,7 +12,7 @@ Renderer::Renderer() : m_width(DEFAULT_WIDTH), m_height(DEFAULT_HEIGHT)
     createBuffers(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 }
 
-Renderer::Renderer(int w, int h) : m_width(w), m_height(h)
+Renderer::Renderer(int w, int h) : m_width(w), m_height(h), m_normalTransform(I_MATRIX), m_cameraTransform(I_MATRIX), m_objectTransform(I_MATRIX), m_cameraProjection(I_MATRIX), m_worldTransformation(I_MATRIX)
 {
     initOpenGLRendering();
     createBuffers(w,h);
@@ -23,12 +23,26 @@ Renderer::~Renderer()
     delete[] colorBuffer;
 }
 
-void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNormals /*= false*/, const glm::vec3* pModelCentroid /*= NULL*/, UINT32 normScaleRate /*= 1*/, const vector<glm::vec3>* normals/*=NULL*/)
+void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNormals /*= false*/, const glm::vec3* pModelCentroid /*= NULL*/, UINT32 normScaleRate /*= 1*/, bool bIsCamera /*=false*/)
 {
     vector<glm::vec3>::const_iterator it = vertices->begin();
     int globcount = 0;
     int np1Count = 0;
     int np2Count = 0;
+
+    glm::mat4x4 objectTransform;
+    if (bIsCamera) 
+    {
+        objectTransform = glm::mat4(I_MATRIX);
+
+    }
+    else
+    {
+        objectTransform = m_objectTransform;
+
+    }
+
+    
     while (it != vertices->end())
     {
         globcount++;
@@ -42,9 +56,10 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNo
         glm::vec3 nrm2 = p2;
         glm::vec3 nrm3 = p3;
 
-        p1 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(p1));
-        p2 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(p2));
-        p3 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(p3));
+/*        if ()*/
+        p1 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * objectTransform * Util::toHomogeneousForm(p1));
+        p2 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * objectTransform * Util::toHomogeneousForm(p2));
+        p3 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * objectTransform * Util::toHomogeneousForm(p3));
 
         DrawLine(toViewPlane(p1), toViewPlane(p2), COLOR(WHITE));
         DrawLine(toViewPlane(p2), toViewPlane(p3), COLOR(WHITE));
@@ -234,6 +249,26 @@ void Renderer::orderPoints(float& x1, float& x2, float& y1, float& y2)
         std::swap(x1, x2);
         std::swap(y1, y2);
     }
+}
+
+void Renderer::drawAxis()
+{
+    glm::vec3 axisX     = { 1,0,0 };
+    glm::vec3 axisY     = { 0,1,0 };
+    glm::vec3 axisZ     = { 0,0,1 };
+    glm::vec3 zeroPoint = { 0,0,0 };
+
+    axisX     = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * Util::toHomogeneousForm(axisX));
+    axisY     = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * Util::toHomogeneousForm(axisY));
+    axisZ     = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * Util::toHomogeneousForm(axisZ));
+    zeroPoint = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * Util::toHomogeneousForm(zeroPoint));
+
+
+
+    DrawLine(toViewPlane(zeroPoint), toViewPlane(axisX*5.f), COLOR(X_COL));
+    DrawLine(toViewPlane(zeroPoint), toViewPlane(axisY*5.f), COLOR(Y_COL));
+    DrawLine(toViewPlane(zeroPoint), toViewPlane(axisZ*5.f), COLOR(Z_COL));
+
 }
 
 //##############################

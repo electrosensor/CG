@@ -237,8 +237,8 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 
         //Camera moves:
 
-        static float camMoveFactor = 10.0f;
-        ImGui::SliderFloat("move factor", &camMoveFactor, 1.0f, 300.0f);
+        static float camMoveFactor = 0.5f;
+        ImGui::SliderFloat("move factor", &camMoveFactor, 0.1f, 1.f);
 
         if (ImGui::IsKeyPressed(GLFW_KEY_LEFT) || ImGui::Button("  Left  "))
         {

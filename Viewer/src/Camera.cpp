@@ -52,15 +52,9 @@ void Camera::LookAt(const glm::vec3 & eye, const glm::vec3 & at, const glm::vec3
                                                                          Util::expandToVec4(eyeAtDirection),
                                                                          homogenousComponent);
 
-    cameraViewTransformation[3][0] = -fromUpAlongCameraTopDirection.x * eye.x
-                                     -fromUpAlongCameraTopDirection.y * eye.y
-                                     -fromUpAlongCameraTopDirection.z * eye.z;
-    cameraViewTransformation[3][1] = -cameraViewDirection.x * eye.x
-                                     -cameraViewDirection.y * eye.y
-                                     -cameraViewDirection.z * eye.z;
-    cameraViewTransformation[3][2] = -eyeAtDirection.x * eye.x
-                                     -eyeAtDirection.y * eye.y
-                                     -eyeAtDirection.z * eye.z;
+    cameraViewTransformation[0][3] -= eye.x;
+    cameraViewTransformation[1][3] -= eye.y;
+    cameraViewTransformation[2][3] -= eye.z;
 
     m_cameraTransform = cameraViewTransformation;
 }

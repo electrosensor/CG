@@ -41,7 +41,10 @@ typedef enum _R_COLOR
     LIME,
     BLUE,
     RED,
-    YELLOW
+    YELLOW,
+    X_COL,
+    Y_COL,
+    Z_COL
 }R_COLOR;
 
 
