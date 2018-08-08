@@ -26,9 +26,7 @@ Renderer::~Renderer()
 void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNormals /*= false*/, const glm::vec3* pModelCentroid /*= NULL*/, UINT32 normScaleRate /*= 1*/, bool bIsCamera /*=false*/)
 {
     vector<glm::vec3>::const_iterator it = vertices->begin();
-    int globcount = 0;
-    int np1Count = 0;
-    int np2Count = 0;
+
 
     glm::mat4x4 objectTransform;
     if (bIsCamera) 
@@ -45,7 +43,6 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNo
     
     while (it != vertices->end())
     {
-        globcount++;
         glm::vec3 p1 = *(it++);
         if (it == vertices->end()) break;
         glm::vec3 p2 = *(it++);
