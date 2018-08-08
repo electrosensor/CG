@@ -23,13 +23,17 @@ Renderer::~Renderer()
     delete[] colorBuffer;
 }
 
-void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNormals /*= false*/, UINT32 normScaleRate /*= 1*/, const vector<glm::vec3>* normals/*=NULL*/)
+void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNormals /*= false*/, const glm::vec3* pModelCentroid /*= NULL*/, UINT32 normScaleRate /*= 1*/, const vector<glm::vec3>* normals/*=NULL*/)
 {
     vector<glm::vec3>::const_iterator it = vertices->begin();
+    int globcount = 0;
+    int np1Count = 0;
+    int np2Count = 0;
     while (it != vertices->end())
     {
+        globcount++;
         glm::vec3 p1 = *(it++);
-        if(it == vertices->end()) break;
+        if (it == vertices->end()) break;
         glm::vec3 p2 = *(it++);
         if (it == vertices->end()) break;
         glm::vec3 p3 = *(it++);
@@ -48,17 +52,19 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNo
 
         if (bDrawFaceNormals)
         {
-            glm::vec3 subs1      = nrm3 - nrm1;
-            glm::vec3 subs2      = nrm2 - nrm1;
+            glm::vec3 subs1 = nrm3 - nrm1;
+            glm::vec3 subs2 = nrm2 - nrm1;
             glm::vec3 faceNormal = glm::cross(subs1, subs2);
-            
-            glm::vec3 faceCenter        = (nrm1 + nrm2 + nrm3) / 3.0f;
 
-            glm::vec3 normalizedFaceNormal = glm::normalize(faceNormal);
-             
+            glm::vec3 faceCenter = (nrm1 + nrm2 + nrm3) / 3.0f;
+
+            glm::vec3 normalizedFaceNormal = Util::isVecEqual(faceNormal, glm::vec3(0, 0, 0)) ? faceNormal : glm::normalize(faceNormal);
+
+
+            normalizedFaceNormal /= 2.5f;
             glm::vec3 nP1 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(faceCenter));
             glm::vec3 nP2 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(faceCenter + normalizedFaceNormal));
-
+            
             DrawLine(toViewPlane(nP1), toViewPlane(nP2), COLOR(LIME));
         }
     }
@@ -72,13 +78,13 @@ void Renderer::drawVerticesNormals(const vector<glm::vec3>& vertices, const vect
         glm::vec3 vertexNormal = normals[i];
 
         glm::vec3 nP1 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(vertex));
-        glm::vec3 nP2 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(vertex + vertexNormal));
+        glm::vec3 nP2 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(vertex + vertexNormal/2.5f));
 
         DrawLine(toViewPlane(nP1), toViewPlane(nP2), COLOR(RED));
     }
 }
 
-void Renderer::drawBordersCube(CUBE_LINES borderCube, glm::vec3 modelOffset)
+void Renderer::drawBordersCube(CUBE_LINES borderCube)
 {
     for each (std::pair<glm::vec3, glm::vec3> line in borderCube.line)
     {

@@ -1,4 +1,5 @@
 #include "Util.h"
+#include <limits>
 
 glm::vec4 Util::toHomogeneousForm(const glm::vec3& normalForm)
 {
@@ -23,6 +24,31 @@ glm::vec4 Util::Cross(const glm::vec4 & lVector4, const glm::vec4 & rVector4)
 glm::vec3 Util::findCentralVec(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3)
 {
     return 0.5f*(p2 + p3) - p1;  
+}
+
+bool Util::isVecEqual(glm::vec3 v1, glm::vec3 v2)
+{
+    bool bEquals = true;
+
+    bEquals &= fabs(v1.x - v2.x) < std::numeric_limits<float>::epsilon();
+    bEquals &= fabs(v1.y - v2.y) < std::numeric_limits<float>::epsilon();
+    bEquals &= fabs(v1.z - v2.z) < std::numeric_limits<float>::epsilon();
+
+    return bEquals;
+    
+
+}
+
+bool Util::isVecEqual(glm::vec4 v1, glm::vec4 v2)
+{
+    bool bEquals = true;
+
+    bEquals &= fabs(v1.x - v2.x) < std::numeric_limits<float>::epsilon();
+    bEquals &= fabs(v1.y - v2.y) < std::numeric_limits<float>::epsilon();
+    bEquals &= fabs(v1.z - v2.z) < std::numeric_limits<float>::epsilon();
+    bEquals &= fabs(v1.w - v2.w) < std::numeric_limits<float>::epsilon();
+
+    return bEquals;
 }
 
 glm::vec3 Util::getColor(R_COLOR color)

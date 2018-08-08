@@ -30,7 +30,7 @@ private:
     bool m_bShowBorderCube;
 
 public:
-    Scene() {};
+    Scene() : m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamera(DISABLED), m_worldTransformation(I_MATRIX), m_bDrawVecNormal(false) { ; }
     Scene(Renderer *renderer) : renderer(renderer), m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamera(DISABLED), m_worldTransformation(I_MATRIX), m_bDrawVecNormal(false) { ; }
 
     // Loads an obj file into the scene.

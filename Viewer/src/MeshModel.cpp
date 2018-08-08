@@ -76,7 +76,8 @@ glm::vec2 vec2fFromStream(std::istream& issLine)
 
 MeshModel::MeshModel(const string& fileName) : m_modelTransformation(I_MATRIX),
 											   m_normalTransformation(I_MATRIX),
-                                               m_worldTransformation(I_MATRIX)
+                                               m_worldTransformation(I_MATRIX),
+                                               m_modelCentroid(0,0,0)
 {
 	LoadFile(fileName);
     setModelRenderingState(true);
@@ -134,9 +135,11 @@ void MeshModel::LoadFile(const string& fileName)
 	vector<glm::vec3> vertices;
     vector<glm::vec3> normals;
 
-    glm::vec3 maxCoords = { std::numeric_limits<float>::min(), std::numeric_limits<float>::min() ,std::numeric_limits<float>::min() };
-    glm::vec3 minCoords = { std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max() };
+    glm::vec3 maxCoords = { -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max() };
+    glm::vec3 minCoords = {  std::numeric_limits<float>::max(),  std::numeric_limits<float>::max(),  std::numeric_limits<float>::max() };
     glm::vec3 normalizedVec;
+    unsigned int numVertices = 0;
+    glm::vec3 modelCentroid = { 0,0,0 };
 	// while not end of file
 	while (!ifile.eof())
 	{
@@ -162,6 +165,10 @@ void MeshModel::LoadFile(const string& fileName)
             maxCoords.x = (maxCoords.x < parsedVec.x) ? parsedVec.x : maxCoords.x;
             maxCoords.y = (maxCoords.y < parsedVec.y) ? parsedVec.y : maxCoords.y;
             maxCoords.z = (maxCoords.z < parsedVec.z) ? parsedVec.z : maxCoords.z;
+            
+            m_modelCentroid += parsedVec;
+            
+            numVertices++;
 
 			vertices.push_back(parsedVec);
 		}
@@ -183,8 +190,14 @@ void MeshModel::LoadFile(const string& fileName)
 		}
 	}
 
+    m_modelCentroid /= (float)numVertices;
+    minCoords -= m_modelCentroid;
+    maxCoords -= m_modelCentroid;
+
+
     float totalMin = MIN(minCoords.x, MIN(minCoords.y, minCoords.z));
     float totalMax = MAX(maxCoords.x, MAX(maxCoords.y, maxCoords.z));
+
 
     m_verticesSize    = vertices.size();
     m_vertices        = new glm::vec3[m_verticesSize];
@@ -198,10 +211,12 @@ void MeshModel::LoadFile(const string& fileName)
     for (unsigned int i = 0; i < m_verticesSize; i++)
 
     {
-        normalizedVec.x = NORMALIZE_COORDS(vertices[i].x, totalMin, totalMax);
-        normalizedVec.y = NORMALIZE_COORDS(vertices[i].y, totalMin, totalMax);
-        normalizedVec.z = NORMALIZE_COORDS(vertices[i].z, totalMin, totalMax);
+        
 
+        normalizedVec.x = NORMALIZE_COORDS((vertices[i].x - m_modelCentroid.x), totalMin, totalMax);
+        normalizedVec.y = NORMALIZE_COORDS((vertices[i].y - m_modelCentroid.y), totalMin, totalMax);
+        normalizedVec.z = NORMALIZE_COORDS((vertices[i].z - m_modelCentroid.z), totalMin, totalMax);
+                                           
        // fprintf(stderr, "x = %f, y = %f, z = %f\n", normalizedVec.x, normalizedVec.y, normalizedVec.z);
 
         m_vertices[i] = normalizedVec;
@@ -226,6 +241,13 @@ void MeshModel::LoadFile(const string& fileName)
     {
         m_vertexNormals[i] = normals[i];
     }
+
+    
+
+    
+    m_modelCentroid.x = NORMALIZE_COORDS(modelCentroid.x, totalMin, totalMax);
+    m_modelCentroid.y = NORMALIZE_COORDS(modelCentroid.y, totalMin, totalMax);
+    m_modelCentroid.z = NORMALIZE_COORDS(modelCentroid.z, totalMin, totalMax);
 
     m_minCoords.x = NORMALIZE_COORDS(minCoords.x, totalMin, totalMax);
     m_minCoords.y = NORMALIZE_COORDS(minCoords.y, totalMin, totalMax);

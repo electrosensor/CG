@@ -28,6 +28,7 @@ class MeshModel : public Model
         glm::mat4x4 m_modelTransformation;
 		glm::mat4x4 m_worldTransformation;
 		glm::mat4x4 m_normalTransformation;
+        glm::vec3   m_modelCentroid;
 
 	public:
 		MeshModel(const string& fileName);
@@ -43,8 +44,9 @@ class MeshModel : public Model
 
 		void LoadFile(const string& fileName);
 		pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >* Draw();
+        glm::vec3 getCentroid() { return  m_modelCentroid; }
 
-        glm::vec3 getModelOffset() {return { m_modelTransformation[3].x,m_modelTransformation[3].y,m_modelTransformation[3].z };}
+
 
 };
 

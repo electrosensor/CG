@@ -38,7 +38,7 @@ void Scene::Draw()
         renderer->SetObjectMatrices(model->GetModelTransformation(), model->GetNormalTransformation());
         renderer->setWorldTransformation(m_worldTransformation);
         
-        renderer->DrawTriangles(&modelVertices->first, m_bDrawFaceNormal, 1);
+        renderer->DrawTriangles(&modelVertices->first, m_bDrawFaceNormal, &model->getCentroid(), 1);
         
         
         if (m_bDrawVecNormal && !modelVertices->second.second.empty())
@@ -48,7 +48,7 @@ void Scene::Draw()
         
         if (m_bShowBorderCube)
         {
-            renderer->drawBordersCube(model->getBordersCube(), model->getModelOffset());
+            renderer->drawBordersCube(model->getBordersCube());
         }
 
         renderer->SwapBuffers();
@@ -64,7 +64,7 @@ void Scene::Draw()
             const pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >* camVertices = camModel->Draw();
 
 
-            renderer->DrawTriangles(&camVertices->first, FALSE, 1);
+            renderer->DrawTriangles(&camVertices->first, FALSE, NULL, 1);
             renderer->SwapBuffers();
             delete camVertices;
         }

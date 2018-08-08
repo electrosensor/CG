@@ -30,7 +30,7 @@
 #define MAX(a,b)                         (((a) > (b)) ? (a) : (b))
 #define MIN(a,b)                         (((a) < (b)) ? (a) : (b))
 #define NORM_ZERO_TO_ONE(value,min,max)  ((value) - (min)) / ((max) - (min))
-#define NORMALIZE_COORDS(value,min,max)  (((NORM_ZERO_TO_ONE(value,min,max)*2) - 1))                  
+#define NORMALIZE_COORDS(value,min,max)  (((NORM_ZERO_TO_ONE(value,min,max)*2) - 1))
 
 
 typedef enum _R_COLOR

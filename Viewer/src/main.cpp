@@ -66,6 +66,7 @@ int main(int argc, char **argv)
 		scene.Draw();
         // Start the ImGui frame
 		StartFrame();
+        renderer.ClearColorBuffer(GetClearColor());
 		// imgui stuff here
 		DrawImguiMenus(io,&scene);
         // Rendering + user rendering - finishing the ImGui frame
