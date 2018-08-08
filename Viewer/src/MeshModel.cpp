@@ -224,11 +224,7 @@ void MeshModel::LoadFile(const string& fileName)
     
     for (unsigned int i = 0; i < m_vertexNormSize; i++)
     {
-        normalizedVec.x = NORMALIZE_COORDS(normals[i].x, totalMin, totalMax);
-        normalizedVec.y = NORMALIZE_COORDS(normals[i].y, totalMin, totalMax);
-        normalizedVec.z = NORMALIZE_COORDS(normals[i].z, totalMin, totalMax);
-
-        m_vertexNormals[i] = normalizedVec;
+        m_vertexNormals[i] = normals[i];
     }
 
     m_minCoords.x = NORMALIZE_COORDS(minCoords.x, totalMin, totalMax);

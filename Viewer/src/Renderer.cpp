@@ -68,7 +68,7 @@ void Renderer::drawVerticesNormals(const vector<glm::vec3>& vertices, const vect
 {
     for (int i = 0; i < normals.size() && i < vertices.size(); i++)
     {
-        glm::vec3 vertex = vertices[i];
+        glm::vec3 vertex       = vertices[i];
         glm::vec3 vertexNormal = normals[i];
 
         glm::vec3 nP1 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(vertex));
