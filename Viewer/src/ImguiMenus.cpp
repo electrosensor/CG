@@ -63,10 +63,10 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 
         ImGui::Text("------------------- Cameras: -------------------");
 
-        static int eye[3] = { 0,0,0 };
-        static int at[3] = { 0,0,0 };
-        ImGui::SliderInt3("Look from: (x,y,z)", eye, -1000, 1000);
-        ImGui::SliderInt3("Look at: (x,y,z)", at, -1000, 1000);
+        static float eye[3] = { 2,2,2 };
+        static float at[3] = { 0,0,0 };
+        ImGui::SliderFloat3("Look from: (x,y,z)", eye, -10, 10);
+        ImGui::SliderFloat3("Look at: (x,y,z)", at, -10, 10);
         ImGui::Text("Look from: (%d, %d, %d)", eye[0], eye[1], eye[2]);
         ImGui::Text("Look at: (%d, %d, %d)", at[0], at[1], at[2]);
         if (ImGui::Button("Add new camera"))
@@ -111,12 +111,12 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             projParams.zNear  = 5,
             projParams.zFar   = 25,
         };
-        ImGui::SliderFloat("Left",   &projParams.left,   -1000, 1000);
-        ImGui::SliderFloat("Right",  &projParams.right,  -1000, 1000);
-        ImGui::SliderFloat("Bottom", &projParams.bottom, -1000, 1000);
-        ImGui::SliderFloat("Top",    &projParams.top,    -1000, 1000);
-        ImGui::SliderFloat("zNear",  &projParams.zNear,  -1000, 1000);
-        ImGui::SliderFloat("zFar",   &projParams.zFar,   -1000, 1000);
+        ImGui::SliderFloat("Left",   &projParams.left,  -5.0, 5.0);
+        ImGui::SliderFloat("Right",  &projParams.right, -5.0, 5.0);
+        ImGui::SliderFloat("Bottom", &projParams.bottom,-5.0, 5.0);
+        ImGui::SliderFloat("Top",    &projParams.top,   -5.0, 5.0);
+        ImGui::SliderFloat("zNear",  &projParams.zNear, -5.0, 5.0);
+        ImGui::SliderFloat("zFar",   &projParams.zFar,  -5.0, 5.0);
 
         static bool bIsProjError = false;
         static bool bIsPersError = false;
@@ -152,14 +152,14 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 
         static PERSPECTIVE_PARAMS perspParam = 
         {
-            perspParam.fovy = PI/3,
+            perspParam.fovy   = PI/3,
             perspParam.aspect = ImGui::GetWindowWidth() / ImGui::GetWindowHeight(),
-            perspParam.zNear = 5,
-            perspParam.zFar = 20
+            perspParam.zNear  = 1,
+            perspParam.zFar   = 5
         };
         ImGui::SliderAngle("Fovy", &perspParam.fovy, 1);
-        ImGui::SliderFloat("Near", &perspParam.zNear, 1, 10000);
-        ImGui::SliderFloat("Far",  &perspParam.zFar, 2, 10000);
+        ImGui::SliderFloat("Near", &perspParam.zNear, 0.1, 10 );
+        ImGui::SliderFloat("Far",  &perspParam.zFar, 0.2, 20);
 
         try
         {
@@ -353,8 +353,8 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         ImGui::Text(sModelTransform.c_str());
 
         //Model scaling:
-        static float modelScaleFactor = 1.5f;
-        ImGui::SliderFloat("scaling factor", &modelScaleFactor, 1.0f, 10.0f);
+        static float modelScaleFactor = 1.0f;
+        ImGui::SliderFloat("scaling factor", &modelScaleFactor, 0.1f, 2.5f);
 
         if (ImGui::Button("Bigger"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
         {
@@ -381,8 +381,8 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 
         //Model moves:
 
-        static float modelMoveFactor = 10.0f;
-        ImGui::SliderFloat("move factor", &modelMoveFactor, 1.0f, 300.0f);
+        static float modelMoveFactor = 0.5f;
+        ImGui::SliderFloat("move factor", &modelMoveFactor, 0.1f, 30.f);
 
         if (ImGui::Button("   Left  "))
         {

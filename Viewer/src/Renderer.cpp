@@ -264,7 +264,7 @@ void Renderer::drawAxis()
 
     DrawLine(toViewPlane(zeroPoint), toViewPlane(axisX*5.f), COLOR(X_COL));
     DrawLine(toViewPlane(zeroPoint), toViewPlane(axisY*5.f), COLOR(Y_COL));
-    DrawLine(toViewPlane(zeroPoint), toViewPlane(axisZ*5.f), COLOR(Z_COL));
+    DrawLine(toViewPlane(zeroPoint), toViewPlane(axisZ*5.f), COLOR(YELLOW));
 
 }
 
