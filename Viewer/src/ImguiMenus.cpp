@@ -128,13 +128,13 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             {
                 scene->SetOrthoProjection(projParams);
             }
-
-            ImGui::SameLine();
-
-            if (ImGui::Button("Frustum"))
-            {
-                scene->SetFrustum(projParams);
-            }
+// 
+//             ImGui::SameLine();
+// 
+//             if (ImGui::Button("Frustum"))
+//             {
+//                 scene->SetFrustum(projParams);
+//             }
         }
         catch (bool thrownErrorState)
         {
@@ -369,15 +369,16 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         static bool bShowVertNorms = false;
         static bool bShowFaceNorms = false;
         static bool bShowBorderCube = false;
-
+        
+        scene->showVerticesNormals(bShowVertNorms);
+        scene->showFacesNormals(bShowFaceNorms);
+        scene->showBorderCube(bShowBorderCube);
 
         ImGui::Checkbox("Show vertices normals", &bShowVertNorms);
         ImGui::Checkbox("Show face normals", &bShowFaceNorms);
         ImGui::Checkbox("Show Border Cube", &bShowBorderCube);
        
-        scene->showVerticesNormals(bShowVertNorms);
-        scene->showFacesNormals(bShowFaceNorms);
-        scene->showBorderCube(bShowBorderCube);
+
 
         //Model moves:
 
