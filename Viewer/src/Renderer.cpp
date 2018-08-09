@@ -103,7 +103,7 @@ void Renderer::drawBordersCube(CUBE_LINES borderCube)
         glm::vec3 pStart = Util::toCartesianForm(m_cameraProjection * m_cameraTransform *  m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(line.first));
         glm::vec3 pEnd   = Util::toCartesianForm(m_cameraProjection * m_cameraTransform *  m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(line.second));
 
-        DrawLine(toViewPlane(pStart), toViewPlane(pEnd), COLOR(RED));
+        DrawLine(toViewPlane(pStart), toViewPlane(pEnd), COLOR(BLUE));
     }
 }
 

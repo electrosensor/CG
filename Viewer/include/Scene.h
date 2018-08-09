@@ -42,7 +42,6 @@ public:
     glm::mat4x4 GetWorldTransformation();
     void SetWorldTransformation(const glm::mat4x4 world);
 
-    void UpdateCurrentDims(int currWindowHeight, int currWindowWidth);
 
     //Cameras API:
 
