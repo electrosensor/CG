@@ -65,9 +65,9 @@ void Scene::Draw()
 
             renderer->setWorldTransformation(m_worldTransformation);
 
-//             cameraTransformation
+            glm::mat4x4 cameraTransformation = glm::mat4x4(SCALING_MATRIX4(1.f / 4.f))*camera->GetTransformation();
 
-            renderer->SetObjectMatrices(camera->GetTransformation(), glm::mat4x4(I_MATRIX));
+            renderer->SetObjectMatrices(cameraTransformation, glm::mat4x4(I_MATRIX));
 
             const pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >* camVertices = camModel->Draw();
 
