@@ -27,18 +27,14 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNo
 {
     vector<glm::vec3>::const_iterator it = vertices->begin();
 
+// 
+//     glm::mat4x4 objectTransform;
+//     if (bIsCamera) 
+//     {
+//         m_cameraTransform = glm::mat4(I_MATRIX);
+// 
+//     }
 
-    glm::mat4x4 objectTransform;
-    if (bIsCamera) 
-    {
-        objectTransform = glm::mat4(I_MATRIX);
-
-    }
-    else
-    {
-        objectTransform = m_objectTransform;
-
-    }
 
     
     while (it != vertices->end())
@@ -54,9 +50,9 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNo
         glm::vec3 nrm3 = p3;
 
 /*        if ()*/
-        p1 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * objectTransform * Util::toHomogeneousForm(p1));
-        p2 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * objectTransform * Util::toHomogeneousForm(p2));
-        p3 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * objectTransform * Util::toHomogeneousForm(p3));
+        p1 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(p1));
+        p2 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(p2));
+        p3 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(p3));
 
         DrawLine(toViewPlane(p1), toViewPlane(p2), COLOR(WHITE));
         DrawLine(toViewPlane(p2), toViewPlane(p3), COLOR(WHITE));

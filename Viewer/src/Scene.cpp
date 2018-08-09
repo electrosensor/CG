@@ -21,21 +21,12 @@ void Scene::Draw()
     // 1. Send the renderer the current camera transform and the projection
     // 2. Tell all models to draw themselves
 
-    if (m_activeCamera == DISABLED)
-    {
-        Camera* camera = new Camera();
-        renderer->SetCameraTransform(inverse(camera->GetTransformation()));
-        m_cameras.push_back(camera);
-        
-        m_activeCamera = 0;
-    }
-    else
+    if (m_activeCamera != DISABLED)
     {
         Camera* activeCamera = m_cameras[m_activeCamera];
         renderer->SetCameraTransform(inverse(activeCamera->GetTransformation()));
         renderer->SetProjection(activeCamera->GetProjection());
     }
-
 
     renderer->drawAxis();
 
@@ -44,7 +35,6 @@ void Scene::Draw()
         const pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >* modelVertices;
         
         modelVertices = model->Draw();
-        model->SetWorldTransformation(m_worldTransformation);
         renderer->SetObjectMatrices(model->GetModelTransformation(), model->GetNormalTransformation());
         renderer->setWorldTransformation(m_worldTransformation);
         
@@ -67,11 +57,19 @@ void Scene::Draw()
     for each(Camera* camera in m_cameras)
     {
         CamMeshModel* camModel = (CamMeshModel*) camera->getCameraModel();
-        if (camModel->isModelRenderingActive())
+        if (camModel->isModelRenderingActive() && camera != m_cameras[m_activeCamera])
         {
-            camModel->SetWorldTransformation(m_worldTransformation);
-            const pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >* camVertices = camModel->Draw();
+            Camera* activeCamera = m_cameras[m_activeCamera];
+            renderer->SetCameraTransform(inverse(activeCamera->GetTransformation()));
+            renderer->SetProjection(activeCamera->GetProjection());
 
+            renderer->setWorldTransformation(m_worldTransformation);
+
+//             cameraTransformation
+
+            renderer->SetObjectMatrices(camera->GetTransformation(), glm::mat4x4(I_MATRIX));
+
+            const pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >* camVertices = camModel->Draw();
 
             renderer->DrawTriangles(&camVertices->first, FALSE, NULL, 1, IS_CAMERA);
             delete camVertices;
@@ -171,7 +169,7 @@ void Scene::NextCamera()
 
 void Scene::DeleteActiveCamera()
 {
-    if (m_activeModel != DISABLED)
+    if (m_activeCamera != DISABLED)
     {
         m_cameras.erase(m_cameras.begin() + m_activeCamera);
         m_activeCamera = m_cameras.size() - 1;
@@ -360,7 +358,11 @@ void Scene::RotateActiveModelZAxis(float angle)
 
 bool Scene::shouldRenderCamera(int cameraIndex)
 {
-    return m_cameras[cameraIndex]->getCameraModel()->isModelRenderingActive();
+    if (m_activeCamera != DISABLED)
+    {
+        return m_cameras[cameraIndex]->getCameraModel()->isModelRenderingActive();
+    }
+    else return false;
 }
 
 

@@ -98,7 +98,9 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         ImGui::SameLine();
         if (ImGui::Checkbox("Show Camera", &bShowCamera))
         {
-            scene->getActiveCamera()->getCameraModel()->setModelRenderingState(bShowCamera);
+            if (scene->getActiveCamera() != NULL) {
+                scene->getActiveCamera()->getCameraModel()->setModelRenderingState(bShowCamera);
+            }
         }
 
 

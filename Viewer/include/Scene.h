@@ -46,8 +46,17 @@ public:
     //Cameras API:
 
     int  GetActiveCameraIdx();
-    Camera* getActiveCamera() { return m_cameras[m_activeCamera]; }
-    Camera* getCameraByIndex(int index) { return index < m_cameras.size() ? m_cameras[index] : nullptr; }
+    Camera* getActiveCamera()
+    {
+        if (m_activeCamera != DISABLED) {
+            return m_cameras[m_activeCamera]; 
+        }
+        else return NULL;
+    }
+    Camera* getCameraByIndex(int index)
+    {
+        return index < m_cameras.size() ? m_cameras[index] : nullptr; 
+    }
     void SetActiveCameraIdx(unsigned int cameraIdx);
 
     unsigned int  AddCamera(const glm::vec4 & eye, const glm::vec4 & at, const glm::vec4 & up);

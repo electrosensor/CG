@@ -96,11 +96,9 @@ public:
         vector<glm::vec3> camModelVertices; //AVIAD TODO CHECK
         pair<vector<glm::vec3>, vector<glm::vec3> > dummy;
 
-
         for (size_t i = 0; i < m_vertexPosSize; i++)
         {
             glm::vec3 vertex = m_vertexPositions[i];
-            vertex = Util::toCartesianForm(m_normalTransformation * m_worldTransformation * m_modelTransformation * Util::toHomogeneousForm(vertex)); //TODO_YURI: check the order of transformations
             camModelVertices.push_back(vertex);
         }
 
