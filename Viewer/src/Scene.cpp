@@ -20,13 +20,17 @@ void Scene::Draw()
 {
     // 1. Send the renderer the current camera transform and the projection
     // 2. Tell all models to draw themselves
+    Camera* activeCamera = NULL;
 
     if (m_activeCamera != DISABLED)
     {
-        Camera* activeCamera = m_cameras[m_activeCamera];
-        renderer->SetCameraTransform(inverse(activeCamera->GetTransformation()));
+        activeCamera = m_cameras[m_activeCamera];
+        renderer->SetCameraTransform(activeCamera->GetTransformation());
         renderer->SetProjection(activeCamera->GetProjection());
     }
+
+    renderer->SetBgColor(m_bgColor);
+    renderer->SetPolygonColor(m_polygonColor);
 
     renderer->drawAxis();
 
@@ -38,12 +42,11 @@ void Scene::Draw()
         renderer->SetObjectMatrices(model->GetModelTransformation(), model->GetNormalTransformation());
         renderer->setWorldTransformation(m_worldTransformation);
         
-        renderer->DrawTriangles(&modelVertices->first, m_bDrawFaceNormal, &model->getCentroid(), 1);
-        
-        
+        renderer->DrawTriangles(&modelVertices->first, m_bDrawFaceNormal, &model->getCentroid(), m_fnScaleFactor);
+
         if (m_bDrawVecNormal && !modelVertices->second.second.empty())
         {
-            renderer->drawVerticesNormals(modelVertices->second.first ,modelVertices->second.second);
+            renderer->drawVerticesNormals(modelVertices->second.first ,modelVertices->second.second, m_vnScaleFactor);
         }
         
         if (m_bShowBorderCube)
@@ -52,22 +55,23 @@ void Scene::Draw()
         }
 
         delete modelVertices;
+
     }
 
     for each(Camera* camera in m_cameras)
     {
         CamMeshModel* camModel = (CamMeshModel*) camera->getCameraModel();
-        if (camModel->isModelRenderingActive() && camera != m_cameras[m_activeCamera])
+        if (camModel->isModelRenderingActive() && camera != activeCamera)
         {
-            Camera* activeCamera = m_cameras[m_activeCamera];
-            renderer->SetCameraTransform(inverse(activeCamera->GetTransformation()));
-            renderer->SetProjection(activeCamera->GetProjection());
+//             Camera* activeCamera = m_cameras[m_activeCamera];
+//             renderer->SetCameraTransform(inverse(activeCamera->GetTransformation()));
+//            renderer->SetProjection(glm::mat4x4(I_MATRIX));
 
             renderer->setWorldTransformation(m_worldTransformation);
 
-            glm::mat4x4 cameraTransformation = glm::mat4x4(SCALING_MATRIX4(1.f / 4.f))*camera->GetTransformation();
+            glm::mat4x4 cameraModelTransformation = /*camera->GetTransformation()*/camModel->GetModelTransformation();
 
-            renderer->SetObjectMatrices(cameraTransformation, glm::mat4x4(I_MATRIX));
+            renderer->SetObjectMatrices(cameraModelTransformation, glm::mat4x4(I_MATRIX));
 
             const pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >* camVertices = camModel->Draw();
 
@@ -193,10 +197,10 @@ void Scene::ScaleActiveCamera(float value)
 {
     if (m_activeCamera != DISABLED)
     {
-        Camera* activeCamera = m_cameras[m_activeCamera];
-        glm::mat4x4 currTransf = activeCamera->GetTransformation();
+        Camera* p_activeCamera = m_cameras[m_activeCamera];
+        glm::mat4x4 currTransf = p_activeCamera->GetTransformation();
         glm::mat4x4 scaleTransform(SCALING_MATRIX4(value));
-        activeCamera->SetTransformation(scaleTransform * currTransf);
+        p_activeCamera->SetTransformation(inverse(scaleTransform * inverse(currTransf)));
     }
 }
 
@@ -204,10 +208,13 @@ void Scene::TranslateActiveCameraXAxis(float value)
 {
     if (m_activeCamera != DISABLED)
     {
-        Camera* activeCamera = m_cameras[m_activeCamera];
-        glm::mat4x4 currTransf = activeCamera->GetTransformation();
+        Camera* p_activeCamera = m_cameras[m_activeCamera];
+        glm::mat4x4 currTransf = p_activeCamera->GetTransformation();
         glm::mat4x4 translateTransform(TRANSLATION_MATRIX(value, 0, 0));
-        activeCamera->SetTransformation(translateTransform * currTransf);
+        p_activeCamera->SetTransformation(inverse(translateTransform * inverse(currTransf)));
+
+        PModel p_cameraModel = p_activeCamera->getCameraModel();
+        p_cameraModel->SetModelTransformation(translateTransform * p_cameraModel->GetModelTransformation());
     }
 }
 
@@ -215,10 +222,14 @@ void Scene::TranslateActiveCameraYAxis(float value)
 {
     if (m_activeCamera != DISABLED)
     {
-        Camera* activeCamera = m_cameras[m_activeCamera];
-        glm::mat4x4 currTransf = activeCamera->GetTransformation();
+        Camera* p_activeCamera = m_cameras[m_activeCamera];
+        glm::mat4x4 currTransf = p_activeCamera->GetTransformation();
         glm::mat4x4 translateTransform(TRANSLATION_MATRIX(0, value, 0));
-        activeCamera->SetTransformation(translateTransform * currTransf);
+        p_activeCamera->SetTransformation(inverse(translateTransform * inverse(currTransf)));
+
+
+        PModel p_cameraModel = p_activeCamera->getCameraModel();
+        p_cameraModel->SetModelTransformation(translateTransform * p_cameraModel->GetModelTransformation());
     }
 }
 
@@ -226,10 +237,56 @@ void Scene::TranslateActiveCameraZAxis(float value)
 {
     if (m_activeCamera != DISABLED)
     {
-        Camera* activeCamera = m_cameras[m_activeCamera];
-        glm::mat4x4 currTransf = activeCamera->GetTransformation();
+        Camera* p_activeCamera = m_cameras[m_activeCamera];
+        glm::mat4x4 currTransf = p_activeCamera->GetTransformation();
         glm::mat4x4 translateTransform(TRANSLATION_MATRIX(0, 0, value));
-        activeCamera->SetTransformation(translateTransform * currTransf);
+        p_activeCamera->SetTransformation(inverse(translateTransform * inverse(currTransf)));
+
+
+        PModel p_cameraModel = p_activeCamera->getCameraModel();
+        p_cameraModel->SetModelTransformation(translateTransform * p_cameraModel->GetModelTransformation());
+    }
+}
+void Scene::RotateActiveCameraWorldXAxis(float angle)
+{
+    if (m_activeCamera != DISABLED)
+    {
+        Camera* p_activeCamera = m_cameras[m_activeCamera];
+        glm::mat4x4 currTransf = p_activeCamera->GetTransformation();
+        glm::mat4x4 rotateTransform(ROTATING_MATRIX_X_AXIS(angle));
+        p_activeCamera->SetTransformation(inverse(rotateTransform * inverse(currTransf)));
+
+        PModel p_cameraModel = p_activeCamera->getCameraModel();
+        p_cameraModel->SetModelTransformation(rotateTransform * p_cameraModel->GetModelTransformation());
+    }
+}
+
+void Scene::RotateActiveCameraWorldYAxis(float angle)
+{
+    if (m_activeCamera != DISABLED)
+    {
+        Camera* p_activeCamera = m_cameras[m_activeCamera];
+        glm::mat4x4 currTransf = p_activeCamera->GetTransformation();
+
+        glm::mat4x4 rotateTransform(ROTATING_MATRIX_Y_AXIS(angle));
+        p_activeCamera->SetTransformation(inverse(rotateTransform * inverse(currTransf)));
+
+        PModel p_cameraModel = p_activeCamera->getCameraModel();
+        p_cameraModel->SetModelTransformation(rotateTransform * p_cameraModel->GetModelTransformation());
+    }
+}
+
+void Scene::RotateActiveCameraWorldZAxis(float angle)
+{
+    if (m_activeCamera != DISABLED)
+    {
+        Camera* p_activeCamera = m_cameras[m_activeCamera];
+        glm::mat4x4 currTransf = p_activeCamera->GetTransformation();
+        glm::mat4x4 rotateTransform(ROTATING_MATRIX_Z_AXIS(angle));
+        p_activeCamera->SetTransformation(inverse(rotateTransform * inverse(currTransf)));
+
+        PModel p_cameraModel = p_activeCamera->getCameraModel();
+        p_cameraModel->SetModelTransformation(rotateTransform * p_cameraModel->GetModelTransformation());
     }
 }
 
@@ -237,12 +294,15 @@ void Scene::RotateActiveCameraXAxis(float angle)
 {
     if (m_activeCamera != DISABLED)
     {
-        Camera* activeCamera = m_cameras[m_activeCamera];
-        glm::mat4x4 currTransf = activeCamera->GetTransformation();
+        Camera* p_activeCamera = m_cameras[m_activeCamera];
+        glm::mat4x4 currTransf = p_activeCamera->GetTransformation();
         glm::mat4x4 toOrigin(TRANSLATION_MATRIX(-currTransf[3][0], -currTransf[3][1], -currTransf[3][2]));
         glm::mat4x4 toPlace(TRANSLATION_MATRIX(currTransf[3][0], currTransf[3][1], currTransf[3][2]));
         glm::mat4x4 rotateTransform(ROTATING_MATRIX_X_AXIS(angle));
-        activeCamera->SetTransformation(toPlace * rotateTransform * toOrigin * currTransf);
+        p_activeCamera->SetTransformation(inverse(toPlace * rotateTransform * toOrigin * inverse(currTransf)));
+
+        PModel p_cameraModel = p_activeCamera->getCameraModel();
+        p_cameraModel->SetModelTransformation(rotateTransform * p_cameraModel->GetModelTransformation());
     }
 }
 
@@ -250,12 +310,15 @@ void Scene::RotateActiveCameraYAxis(float angle)
 {
     if (m_activeCamera != DISABLED)
     {
-        Camera* activeCamera = m_cameras[m_activeCamera];
-        glm::mat4x4 currTransf = activeCamera->GetTransformation();
+        Camera* p_activeCamera = m_cameras[m_activeCamera];
+        glm::mat4x4 currTransf = p_activeCamera->GetTransformation();
         glm::mat4x4 toOrigin(TRANSLATION_MATRIX(-currTransf[3][0], -currTransf[3][1], -currTransf[3][2]));
         glm::mat4x4 toPlace(TRANSLATION_MATRIX(currTransf[3][0], currTransf[3][1], currTransf[3][2]));
         glm::mat4x4 rotateTransform(ROTATING_MATRIX_Y_AXIS(angle));
-        activeCamera->SetTransformation(toPlace * rotateTransform * toOrigin * currTransf);
+        p_activeCamera->SetTransformation(inverse(toPlace * rotateTransform * toOrigin * inverse(currTransf)));
+
+        PModel p_cameraModel = p_activeCamera->getCameraModel();
+        p_cameraModel->SetModelTransformation(rotateTransform * p_cameraModel->GetModelTransformation());
     }
 }
 
@@ -263,12 +326,15 @@ void Scene::RotateActiveCameraZAxis(float angle)
 {
     if (m_activeCamera != DISABLED)
     {
-        Camera* activeCamera = m_cameras[m_activeCamera];
-        glm::mat4x4 currTransf = activeCamera->GetTransformation();
+        Camera* p_activeCamera = m_cameras[m_activeCamera];
+        glm::mat4x4 currTransf = p_activeCamera->GetTransformation();
         glm::mat4x4 toOrigin(TRANSLATION_MATRIX(-currTransf[3][0], -currTransf[3][1], -currTransf[3][2]));
         glm::mat4x4 toPlace(TRANSLATION_MATRIX(currTransf[3][0], currTransf[3][1], currTransf[3][2]));
         glm::mat4x4 rotateTransform(ROTATING_MATRIX_Z_AXIS(angle));
-        activeCamera->SetTransformation(toPlace * rotateTransform * toOrigin * currTransf);
+        p_activeCamera->SetTransformation(inverse(toPlace * rotateTransform * toOrigin * inverse(currTransf)));
+
+        PModel p_cameraModel = p_activeCamera->getCameraModel();
+        p_cameraModel->SetModelTransformation(rotateTransform * p_cameraModel->GetModelTransformation());
     }
 }
 //////////////////// Model ////////////////////////
@@ -365,6 +431,47 @@ bool Scene::shouldRenderCamera(int cameraIndex)
     else return false;
 }
 
+
+glm::vec3 Scene::GetBgColor()
+{
+    return m_bgColor;
+}
+
+void Scene::SetBgColor(glm::vec3 newBgColor)
+{
+    m_bgColor = newBgColor;
+}
+
+glm::vec3 Scene::GetPolygonColor()
+{
+    return m_polygonColor;
+}
+
+void Scene::SetPolygonColor(glm::vec3 newMeshColor)
+{
+    m_polygonColor = newMeshColor;
+}
+
+
+float Scene::GetvnScale()
+{
+    return m_vnScaleFactor;
+}
+
+void Scene::SetvnScale(float scale)
+{
+    m_vnScaleFactor = scale;
+}
+
+float Scene::GetfnScale()
+{
+    return m_fnScaleFactor;
+}
+
+void Scene::SetfnScale(float scale)
+{
+    m_fnScaleFactor = scale;
+}
 
 unsigned int Scene::AddPrimitiveModel(PRIM_MODEL primitiveModel)
 {

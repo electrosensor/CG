@@ -75,6 +75,8 @@ public:
     CamMeshModel(glm::vec4 camCoords) : MeshModel(CAMERA_OBJ_FILE)
     {
         m_camCoords = camCoords;
+//         glm::mat4x4 eyeTranslation = glm::mat4x4(TRANSLATION_MATRIX(camCoords.x, camCoords.y, camCoords.x))*GetModelTransformation();
+//         SetModelTransformation(eyeTranslation);
         m_bShouldRender = false;
     }
 
@@ -98,7 +100,7 @@ public:
 
         for (size_t i = 0; i < m_vertexPosSize; i++)
         {
-            glm::vec3 vertex = m_vertexPositions[i];
+            glm::vec3 vertex = Util::toCartesianForm(glm::mat4x4(SCALING_MATRIX4(0.3f))*Util::toHomogeneousForm(m_vertexPositions[i])) ;
             camModelVertices.push_back(vertex);
         }
 

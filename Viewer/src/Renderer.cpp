@@ -12,18 +12,19 @@ Renderer::Renderer() : m_width(DEFAULT_WIDTH), m_height(DEFAULT_HEIGHT)
     createBuffers(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 }
 
-Renderer::Renderer(int w, int h) : m_width(w), m_height(h), m_normalTransform(I_MATRIX), m_cameraTransform(I_MATRIX), m_objectTransform(I_MATRIX), m_cameraProjection(I_MATRIX), m_worldTransformation(I_MATRIX)
+Renderer::Renderer(int w, int h) : m_width(w), m_height(h), m_normalTransform(I_MATRIX), m_cameraTransform(I_MATRIX), m_objectTransform(I_MATRIX), m_cameraProjection(I_MATRIX), m_worldTransformation(I_MATRIX), m_bgColor(Util::getColor(CLEAR)), m_polygonColor(Util::getColor(WHITE))
 {
     initOpenGLRendering();
-    createBuffers(w,h);
+    createBuffers(w, h);
 }
 
 Renderer::~Renderer()
 {
     delete[] colorBuffer;
+    delete[] zBuffer;
 }
 
-void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNormals /*= false*/, const glm::vec3* pModelCentroid /*= NULL*/, UINT32 normScaleRate /*= 1*/, bool bIsCamera /*=false*/)
+void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNormals /*= false*/, const glm::vec3* modelCentroid /*= NULL*/, float normScaleRate /*= 1*/, bool bIsCamera /*= false*/)
 {
     vector<glm::vec3>::const_iterator it = vertices->begin();
 
@@ -34,7 +35,6 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNo
 //         m_cameraTransform = glm::mat4(I_MATRIX);
 // 
 //     }
-
 
     
     while (it != vertices->end())
@@ -49,14 +49,14 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNo
         glm::vec3 nrm2 = p2;
         glm::vec3 nrm3 = p3;
 
-/*        if ()*/
+
         p1 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(p1));
         p2 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(p2));
         p3 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(p3));
 
-        DrawLine(toViewPlane(p1), toViewPlane(p2), COLOR(WHITE));
-        DrawLine(toViewPlane(p2), toViewPlane(p3), COLOR(WHITE));
-        DrawLine(toViewPlane(p3), toViewPlane(p1), COLOR(WHITE));
+        DrawLine(toViewPlane(p1), toViewPlane(p2), m_polygonColor);
+        DrawLine(toViewPlane(p2), toViewPlane(p3), m_polygonColor);
+        DrawLine(toViewPlane(p3), toViewPlane(p1), m_polygonColor);
 
         if (bDrawFaceNormals)
         {
@@ -68,8 +68,9 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNo
 
             glm::vec3 normalizedFaceNormal = Util::isVecEqual(faceNormal, glm::vec3(0, 0, 0)) ? faceNormal : glm::normalize(faceNormal);
 
+            normalizedFaceNormal = Util::toHomogeneousForm(glm::mat4x4(SCALING_MATRIX4(normScaleRate))*Util::toHomogeneousForm(normalizedFaceNormal));
 
-            normalizedFaceNormal /= 2.5f;
+            //normalizedFaceNormal *= fnScale;
             glm::vec3 nP1 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(faceCenter));
             glm::vec3 nP2 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(faceCenter + normalizedFaceNormal));
             
@@ -78,15 +79,19 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNo
     }
 }
 
-void Renderer::drawVerticesNormals(const vector<glm::vec3>& vertices, const vector<glm::vec3>& normals)
+void Renderer::drawVerticesNormals(const vector<glm::vec3>& vertices, const vector<glm::vec3>& normals, float normScaleRate)
 {
     for (int i = 0; i < normals.size() && i < vertices.size(); i++)
     {
         glm::vec3 vertex       = vertices[i];
         glm::vec3 vertexNormal = normals[i];
 
+        glm::vec3 normalizedVertexNormal = Util::isVecEqual(vertexNormal, glm::vec3(0, 0, 0)) ? vertexNormal : glm::normalize(vertexNormal);
+
+        normalizedVertexNormal = Util::toHomogeneousForm(glm::mat4x4(SCALING_MATRIX4(normScaleRate))*Util::toHomogeneousForm(normalizedVertexNormal));
+
         glm::vec3 nP1 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(vertex));
-        glm::vec3 nP2 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(vertex + vertexNormal/2.5f));
+        glm::vec3 nP2 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(vertex + normalizedVertexNormal));
 
         DrawLine(toViewPlane(nP1), toViewPlane(nP2), COLOR(RED));
     }
@@ -103,7 +108,7 @@ void Renderer::drawBordersCube(CUBE_LINES borderCube)
     }
 }
 
-glm::uvec2 Renderer::toViewPlane(const glm::vec2& point)
+glm::uvec2 Renderer::toViewPlane(const glm::vec3& point)
 {
     // convert to raster space 
 
@@ -112,11 +117,27 @@ glm::uvec2 Renderer::toViewPlane(const glm::vec2& point)
     screenPoint.x = ((point.x + 1) * m_width  / 2.0f);
     screenPoint.y = ((point.y + 1) * m_height / 2.0f);
 
-    screenPoint.x = round((screenPoint.x - (m_width  / 2.0f)) * (500.0f / m_width ) + (m_width  / 2.0f));
-    screenPoint.y = round((screenPoint.y - (m_height / 2.0f)) * (500.0f / m_height) + (m_height / 2.0f));
+    screenPoint.x = round((screenPoint.x - (m_width  / 2.0f)) * (250.0f / m_width ) + (m_width  / 2.0f));
+    screenPoint.y = round((screenPoint.y - (m_height / 2.0f)) * (250.0f / m_height) + (m_height / 2.0f));
+    if (/*m_bzBuffer*/1)
+    {
+//             for every pixel(x, y);
+//                 PutZ(x, y, MaxZ);
+//             for each polygon P
+//                 Q = Project(P);
+//             for each pixel(x, y) in Q
+//                 z : = Depth(Q, x, y);
+//             if (z < GetZ(x, y)) then
+//                 PutColor(x, y, Col(P));
+//             PutZ(x, y, z);
+//             end
+//                 end
+//                 end
 
+    }
     return glm::vec2(screenPoint.x, screenPoint.y);
 }
+
 
 void Renderer::SetCameraTransform(const glm::mat4x4 & cTransform)
 {
@@ -138,9 +159,16 @@ void Renderer::putPixel(int i, int j, const glm::vec3& color)
 {
     if (i < 0) return; if (i >= m_width) return;
     if (j < 0) return; if (j >= m_height) return;
-    colorBuffer[INDEX(m_width, i, j, 0)] = color.x;
-    colorBuffer[INDEX(m_width, i, j, 1)] = color.y;
-    colorBuffer[INDEX(m_width, i, j, 2)] = color.z;
+    colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 0)] = color.x;
+    colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 1)] = color.y;
+    colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 2)] = color.z;
+}
+
+void Renderer::putZ(int x, int y, float d)
+{
+    if (x < 0) return; if (x >= m_width) return;
+    if (y < 0) return; if (y >= m_height) return;
+    zBuffer[Z_BUF_INDEX(m_width, x, y)] = d;
 }
 
 void Renderer::DrawLine(const glm::uvec2& p1, const glm::uvec2& p2, const glm::vec3& color)
@@ -188,11 +216,13 @@ void Renderer::createBuffers(int w, int h)
 {
     createOpenGLBuffer(); //Do not remove this line.
     colorBuffer = new float[3*w*h];
+    zBuffer = new float[w*h];
     for (int i = 0; i < w; i++)
     {
         for (int j = 0; j < h; j++)
         {
             putPixel(i, j, glm::vec3(0.0f, 0.0f, 0.0f));
+            putZ(i, j, 0.f);
         }
     }
 }
@@ -246,21 +276,41 @@ void Renderer::orderPoints(float& x1, float& x2, float& y1, float& y2)
 
 void Renderer::drawAxis()
 {
-    glm::vec3 axisX     = { 1,0,0 };
-    glm::vec3 axisY     = { 0,1,0 };
-    glm::vec3 axisZ     = { 0,0,1 };
+    glm::vec3 axisX     = m_worldTransformation[0];
+    glm::vec3 axisY     = m_worldTransformation[1];
+    glm::vec3 axisZ     = m_worldTransformation[2];
     glm::vec3 zeroPoint = { 0,0,0 };
 
-    axisX     = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * Util::toHomogeneousForm(axisX));
-    axisY     = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * Util::toHomogeneousForm(axisY));
-    axisZ     = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * Util::toHomogeneousForm(axisZ));
-    zeroPoint = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * Util::toHomogeneousForm(zeroPoint));
+    axisX     = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(axisX));
+    axisY     = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(axisY));
+    axisZ     = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(axisZ));
+    zeroPoint = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(zeroPoint));
 
 
 
     DrawLine(toViewPlane(zeroPoint), toViewPlane(axisX*5.f), COLOR(X_COL));
     DrawLine(toViewPlane(zeroPoint), toViewPlane(axisY*5.f), COLOR(Y_COL));
-    DrawLine(toViewPlane(zeroPoint), toViewPlane(axisZ*5.f), COLOR(YELLOW));
+    DrawLine(toViewPlane(zeroPoint), toViewPlane(axisZ*5.f), COLOR(Z_COL));
+
+}
+
+void Renderer::drawModelAxis()
+{
+    glm::vec3 axisX = { 1,0,0 };
+    glm::vec3 axisY = { 0,1,0 };
+    glm::vec3 axisZ = { 0,0,1 };
+    glm::vec3 zeroPoint = { m_objectTransform[0][3],m_objectTransform[1][3],m_objectTransform[2][3] };
+
+    axisX = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_objectTransform * Util::toHomogeneousForm(axisX));
+    axisY = Util::toCartesianForm(m_cameraProjection * m_cameraTransform  * m_objectTransform * Util::toHomogeneousForm(axisY));
+    axisZ = Util::toCartesianForm(m_cameraProjection * m_cameraTransform  * m_objectTransform * Util::toHomogeneousForm(axisZ));
+    zeroPoint = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_objectTransform * Util::toHomogeneousForm(zeroPoint));
+
+
+
+    DrawLine(toViewPlane(zeroPoint), toViewPlane(axisX*5.f), COLOR(X_COL));
+    DrawLine(toViewPlane(zeroPoint), toViewPlane(axisY*5.f), COLOR(Y_COL));
+    DrawLine(toViewPlane(zeroPoint), toViewPlane(axisZ*5.f), COLOR(Z_COL));
 
 }
 
@@ -372,13 +422,13 @@ void Renderer::SwapBuffers()
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
-void Renderer::ClearColorBuffer(const glm::vec3& color)
+void Renderer::ClearColorBuffer()
 {
     for (int i = 0; i < m_width; i++)
     {
         for (int j = 0; j < m_height; j++)
         {
-            putPixel(i, j, color);
+            putPixel(i, j, m_bgColor);
         }
     }
 }
@@ -392,6 +442,40 @@ void Renderer::Viewport(int w, int h)
     m_width = w;
     m_height = h;
     delete[] colorBuffer;
+    delete[] zBuffer;
     colorBuffer = new float[3 * h*w];
+    zBuffer = new float[h*w];
     createOpenGLBuffer();
+}
+
+
+glm::vec3 Renderer::GetBgColor()
+{
+    return m_bgColor;
+}
+
+void Renderer::SetBgColor(glm::vec3 newBgColor)
+{
+    m_bgColor = newBgColor;
+}
+
+glm::vec3 Renderer::GetPolygonColor()
+{
+    return m_polygonColor;
+}
+
+void Renderer::SetPolygonColor(glm::vec3 newMeshColor)
+{
+    m_polygonColor = newMeshColor;
+}
+
+void Renderer::ClearDepthBuffer()
+{
+    for (int i = 0; i < m_width; i++)
+    {
+        for (int j = 0; j < m_height; j++)
+        {
+            putZ(i, j, 0.f);
+        }
+    }
 }

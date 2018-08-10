@@ -21,12 +21,13 @@ Camera::Camera() : m_cameraTransform(I_MATRIX), m_cameraProjection(I_MATRIX)
 
 Camera::Camera(const glm::vec4& eye, const glm::vec4& at, const glm::vec4& up) : m_cameraTransform(I_MATRIX), m_cameraProjection(I_MATRIX)
 {
-    LookAt(eye, at, up);
     m_cameraModel = (PModel) new CamMeshModel(eye);
+    LookAt(eye, at, up);
 }
 
 Camera::~Camera()
 {
+    delete m_cameraModel;
 }
 
 const glm::mat4x4& Camera::GetTransformation()
@@ -41,22 +42,30 @@ const glm::mat4x4& Camera::GetProjection()
 
 void Camera::LookAt(const glm::vec3 & eye, const glm::vec3 & at, const glm::vec3 & up)
 {
-    glm::vec3   eyeAtDirection                /*forward*/  = glm::normalize(eye - at);
+    glm::vec3   eyeAtDirection                /*forward*/  = Util::isVecEqual(eye - at, glm::vec3(0, 0, 0)) ? eye - at : -glm::normalize(eye - at);
     glm::vec3   fromUpAlongCameraTop                       = glm::cross(up, eyeAtDirection);
-    glm::vec3   fromUpAlongCameraTopDirection /*left*/     = glm::normalize(fromUpAlongCameraTop);
+    glm::vec3   fromUpAlongCameraTopDirection /*left*/     = Util::isVecEqual(fromUpAlongCameraTop, glm::vec3(0, 0, 0)) ? fromUpAlongCameraTop : glm::normalize(fromUpAlongCameraTop);
     glm::vec3   cameraView                    /*up*/       = glm::cross(eyeAtDirection, fromUpAlongCameraTopDirection);
-    glm::vec3   cameraViewDirection                        = glm::normalize(cameraView);
+    glm::vec3   cameraViewDirection                        = Util::isVecEqual(cameraView, glm::vec3(0, 0, 0)) ? cameraView : glm::normalize(cameraView);
     glm::vec4   homogenousComponent                        = glm::vec4(HOMOGENEOUS_VECTOR4);
     glm::mat4x4 cameraViewTransformation                   = glm::mat4x4(Util::expandToVec4(fromUpAlongCameraTopDirection),
                                                                          Util::expandToVec4(cameraViewDirection),
                                                                          Util::expandToVec4(eyeAtDirection),
                                                                          homogenousComponent);
 
-    cameraViewTransformation[3][0] -= eye.x;
-    cameraViewTransformation[3][1] -= eye.y;
-    cameraViewTransformation[3][2] -= eye.z;
 
-    m_cameraTransform = cameraViewTransformation;
+
+    glm::mat4x4 cameraTransformation = transpose(cameraViewTransformation);
+
+    cameraTransformation[3][0] = -fromUpAlongCameraTopDirection.x * eye.x - fromUpAlongCameraTopDirection.y * eye.y - fromUpAlongCameraTopDirection.z * eye.z;
+    cameraTransformation[3][1] = -cameraView.x * eye.x - cameraView.y * eye.y - cameraView.z * eye.z;
+    cameraTransformation[3][2] = -eyeAtDirection.x * eye.x - eyeAtDirection.y * eye.y - eyeAtDirection.z * eye.z;
+
+    m_cameraTransform = cameraTransformation;
+
+    cameraViewTransformation = inverse(cameraTransformation);
+
+    getCameraModel()->SetModelTransformation(cameraViewTransformation);
 }
 
 void Camera::SetTransformation(const glm::mat4x4 & transform)
@@ -105,15 +114,17 @@ void Camera::Frustum(const PROJ_PARAMS projParams)
 
 void Camera::Perspective(const PERSPECTIVE_PARAMS perspectiveParams)
 {
-
+    if(perspectiveParams.fovy == PI / 2.f || perspectiveParams.fovy == 3.f * PI / 2.f) throw true;
+    
     PROJ_PARAMS projParams  = { 0 };
-    float       height      = perspectiveParams.zNear * tan(TO_RADIAN(perspectiveParams.fovy) / 2.0f);
-    float       width       = height * perspectiveParams.aspect;
+
+    float       height = perspectiveParams.zNear * tan(perspectiveParams.fovy / 2.0f);
+    float       width = height * perspectiveParams.aspect;
 
     projParams.left         = -width;
     projParams.right        = width;
-    projParams.bottom       = -height;
     projParams.top          = height;
+    projParams.bottom       = -height;
     projParams.zNear        = perspectiveParams.zNear;
     projParams.zFar         = perspectiveParams.zFar;
 

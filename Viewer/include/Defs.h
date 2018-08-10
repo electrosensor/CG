@@ -12,7 +12,8 @@
 
 #define DISABLED                         -1
 #define PI                               3.141592653589793238462643383279502884L
-#define INDEX(width,x,y,c)               ((x)+(y)*(width))*3+(c)
+#define COLOR_BUF_INDEX(width,x,y,c)     ((x)+(y)*(width))*3+(c)
+#define Z_BUF_INDEX(width,x,y)           ((x)+(y)*(width))
 #define FACE_ELEMENTS                    3
 #define TO_RADIAN(angle)                 ((angle) * PI / 180.0f)
 #define ZERO_MATRIX                      { {0,0,0,0},{ 0,0,0,0 },{ 0,0,0,0 },{ 0,0,0,0 } }
@@ -35,6 +36,7 @@
 
 typedef enum _R_COLOR
 {
+    CLEAR,
     WHITE,
     BLACK,
     GREEN,
@@ -46,6 +48,26 @@ typedef enum _R_COLOR
     Y_COL,
     Z_COL
 }R_COLOR;
+
+typedef enum _AXES
+{
+    X,
+    Y,
+    Z
+}AXIS;
+
+typedef enum _ROTATION_REL
+{
+    RR_WORLD,
+    RR_SELF
+}ROTATION_REL;
+
+typedef enum _FRAME_TYPE
+{
+    FT_CAMERA,
+    FT_MODEL,
+    FT_WORLD
+}FRAME_TYPE;
 
 
 #define SET_PROJ_PARAMS(projParams)                                           \

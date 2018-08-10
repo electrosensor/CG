@@ -25,13 +25,18 @@ private:
     int m_activeCamera;
     glm::mat4x4 m_worldTransformation;
 
+    glm::vec3 m_polygonColor;
+    glm::vec3 m_bgColor;
+
     bool m_bDrawVecNormal;
+    float m_vnScaleFactor;
     bool m_bDrawFaceNormal;
+    float m_fnScaleFactor;
     bool m_bShowBorderCube;
 
 public:
     Scene() : m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamera(DISABLED), m_worldTransformation(I_MATRIX), m_bDrawVecNormal(false) { ; }
-    Scene(Renderer *renderer) : renderer(renderer), m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamera(DISABLED), m_worldTransformation(I_MATRIX), m_bDrawVecNormal(false) { ; }
+    Scene(Renderer *renderer) : renderer(renderer), m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamera(DISABLED), m_worldTransformation(I_MATRIX), m_bDrawVecNormal(false), m_vnScaleFactor(2.f), m_fnScaleFactor(2.f), m_bgColor(Util::getColor(CLEAR)), m_polygonColor(Util::getColor(WHITE)){ ; }
 
     // Loads an obj file into the scene.
     void LoadOBJModel(string fileName);
@@ -76,6 +81,10 @@ public:
     void TranslateActiveCameraYAxis(float value);
     void TranslateActiveCameraZAxis(float value);
 
+    void RotateActiveCameraWorldXAxis(float angle);
+    void RotateActiveCameraWorldYAxis(float angle);
+    void RotateActiveCameraWorldZAxis(float angle);
+   
     void RotateActiveCameraXAxis(float angle);
     void RotateActiveCameraYAxis(float angle);
     void RotateActiveCameraZAxis(float angle);
@@ -85,6 +94,12 @@ public:
 
     int  GetActiveModelIdx();
     void SetActiveModelIdx(unsigned int modelIdx);
+
+    float GetvnScale();
+    void SetvnScale(float scale);
+
+    float  GetfnScale();
+    void SetfnScale(float scale);
 
     unsigned int  AddPrimitiveModel(PRIM_MODEL primitiveModel); //TO_DO develop good API
     void NextModel();
@@ -107,4 +122,8 @@ public:
     void showBorderCube(bool bShowBorderCube) { m_bShowBorderCube = bShowBorderCube; }
 
     bool shouldRenderCamera(int cameraIndex);
+    glm::vec3 GetBgColor();
+    void SetBgColor(glm::vec3 newBgColor);
+    glm::vec3 GetPolygonColor();
+    void SetPolygonColor(glm::vec3 newMeshColor);
 };

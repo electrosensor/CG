@@ -55,6 +55,8 @@ glm::vec3 Util::getColor(R_COLOR color)
 {
     switch (color)
     {
+    case CLEAR:
+        return { 0.4f, 0.55f, 0.60f };
     case WHITE:
         return { 1.0f, 1.0f, 1.0f };
     case BLACK:
@@ -74,7 +76,7 @@ glm::vec3 Util::getColor(R_COLOR color)
     case Y_COL:
         return { 153.f / 255.f,204.f / 255.f,0.f };
     case Z_COL:
-        return {51.f / 255.f, 102.f / 255, 1.f};
+        return {11.f / 255.f, 62.f / 255, 215.f / 255 };
 
         
     default:

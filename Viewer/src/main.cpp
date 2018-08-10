@@ -66,7 +66,8 @@ int main(int argc, char **argv)
 		scene.Draw();
         // Start the ImGui frame
 		StartFrame();
-        renderer.ClearColorBuffer(GetClearColor());
+        renderer.ClearColorBuffer();
+        renderer.ClearDepthBuffer();
 		// imgui stuff here
 		DrawImguiMenus(io,&scene);
         // Rendering + user rendering - finishing the ImGui frame
@@ -167,8 +168,8 @@ ImGuiIO& SetupDearImgui(GLFWwindow* window)
 	ImGui_ImplOpenGL3_Init();
 
 	// Setup style
-	ImGui::StyleColorsDark();
-	//ImGui::StyleColorsClassic();
+// 	ImGui::StyleColorsDark();
+    ImGui::StyleColorsClassic();
 
 	// Load Fonts
 	// - If no fonts are loaded, dear imgui will use the default font. You can also load multiple fonts and use ImGui::PushFont()/PopFont() to select them. 
@@ -211,7 +212,8 @@ void RenderFrame(GLFWwindow* window, Renderer* renderer)
 	// put renderer code here
 	// #######################################
 	renderer->Viewport(displayW, displayH);
-	renderer->ClearColorBuffer(GetClearColor());
+	renderer->ClearColorBuffer();
+    renderer->ClearDepthBuffer();
 	// #######################################
 	
 	// Actual rendering of ImGui. ImGui only creates buffers and textures, 
