@@ -129,7 +129,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         ImGui::SliderAngle("rotation angle", &rotAngle, 1.0f, 180.0f);
 
         static int currentFrame = FRAME_TYPE::FT_CAMERA;
-        static int currentAxis = AXIS::Y;
+        static int currentAxis = AXES::Y;
         static int currentRel = ROTATION_REL::RR_WORLD;
         static const char AxisList[6] = { 'X','\0','Y','\0','Z','\0' };
         static const char Relations[11] = { 'W','o','r','l','d','\0',
@@ -156,9 +156,9 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
                         {
                             switch (currentAxis)
                             {
-                            case AXIS::X: scene->RotateActiveCameraWorldXAxis(rotAngle * direction); break;
-                            case AXIS::Y: scene->RotateActiveCameraWorldYAxis(rotAngle * direction); break;
-                            case AXIS::Z: scene->RotateActiveCameraWorldZAxis(rotAngle * direction); break;
+                            case AXES::X: scene->RotateActiveCameraWorldXAxis(rotAngle * direction); break;
+                            case AXES::Y: scene->RotateActiveCameraWorldYAxis(rotAngle * direction); break;
+                            case AXES::Z: scene->RotateActiveCameraWorldZAxis(rotAngle * direction); break;
                             default: break;
                             }
                         } break;
@@ -166,9 +166,9 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
                         {
                             switch (currentAxis)
                             {
-                            case AXIS::X: scene->RotateActiveCameraXAxis(rotAngle * direction); break;
-                            case AXIS::Y: scene->RotateActiveCameraYAxis(rotAngle * direction); break;
-                            case AXIS::Z: scene->RotateActiveCameraZAxis(rotAngle * direction); break;
+                            case AXES::X: scene->RotateActiveCameraXAxis(rotAngle * direction); break;
+                            case AXES::Y: scene->RotateActiveCameraYAxis(rotAngle * direction); break;
+                            case AXES::Z: scene->RotateActiveCameraZAxis(rotAngle * direction); break;
                             default: break;
                             }
                         } break;
@@ -183,9 +183,9 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
                         {
                             switch (currentAxis)
                             {
-                            case AXIS::X: scene->RotateActiveModelXAxis(rotAngle * direction); break;
-                            case AXIS::Y: scene->RotateActiveModelYAxis(rotAngle * direction); break;
-                            case AXIS::Z: scene->RotateActiveModelZAxis(rotAngle * direction); break;
+                            case AXES::X: scene->RotateActiveModelXAxis(rotAngle * direction); break;
+                            case AXES::Y: scene->RotateActiveModelYAxis(rotAngle * direction); break;
+                            case AXES::Z: scene->RotateActiveModelZAxis(rotAngle * direction); break;
                             default: break;
                             }
                         } break;
@@ -386,7 +386,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         };
         ImGui::SliderAngle("Fovy", &perspParam.fovy, 1);
         ImGui::SliderFloat("Near", &perspParam.zNear, 0.1, 10);
-        ImGui::SliderFloat("Far", &perspParam.zFar, 0.2, 20);
+        ImGui::SliderFloat("Far",  &perspParam.zFar, 0.2, 20);
 
         try
         {
@@ -478,9 +478,9 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         scene->SetvnScale(normals[0]);
         scene->SetfnScale(normals[1]);
 
-        bool bShowVertNorms = normals[0] > 0.1f ? true : false;
-        bool bShowFaceNorms = normals[1] > 0.1f ? true : false;
-        bool bShowBorderCube = false;
+        bool        bShowVertNorms  = normals[0] > 0.1f ? true : false;
+        bool        bShowFaceNorms  = normals[1] > 0.1f ? true : false;
+        static bool bShowBorderCube = false;
         
         scene->showVerticesNormals(bShowVertNorms);
         scene->showFacesNormals(bShowFaceNorms);

@@ -47,7 +47,7 @@ private:
     glm::vec3 m_bgColor;
     glm::vec3 m_polygonColor;
 
-    glm::uvec2 toViewPlane(const glm::vec3& point);
+    glm::vec2 toViewPlane(const glm::vec3& point);
 
     void getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, OUT float* pDx, OUT float* pDy);
     void yStepErrorUpdate(float dx, float dy, float& error, int& y, const int& ystep);
@@ -55,11 +55,12 @@ public:
     Renderer();
     Renderer(int w, int h);
     ~Renderer();
+    glm::vec3 processPipeline(const glm::vec3& point, PIPE_TYPE pipeType = FULL);
     // Local initializations of your implementation
     void Init();
 
     // Draws a line by Bresenham algorithm: 
-    void DrawLine(const glm::uvec2& p1, const glm::uvec2& p2, const glm::vec3& color);
+    void DrawLine(const glm::vec2& p1, const glm::vec2& p2, const glm::vec3& color);
 
     void drawVerticesNormals(const vector<glm::vec3>& vertices, const vector<glm::vec3>& normals, float normScaleRate);
     // Draws wireframe triangles to the color buffer

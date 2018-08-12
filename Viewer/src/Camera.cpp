@@ -116,10 +116,10 @@ void Camera::Perspective(const PERSPECTIVE_PARAMS perspectiveParams)
 {
     if(perspectiveParams.fovy == PI / 2.f || perspectiveParams.fovy == 3.f * PI / 2.f) throw true;
     
-    PROJ_PARAMS projParams  = { 0 };
+    PROJ_PARAMS projParams = { 0 };
 
-    float       height = perspectiveParams.zNear * tan(perspectiveParams.fovy / 2.0f);
-    float       width = height * perspectiveParams.aspect;
+    float height = perspectiveParams.zNear * tan(perspectiveParams.fovy / 2.0f);
+    float width  = height * perspectiveParams.aspect;
 
     projParams.left         = -width;
     projParams.right        = width;

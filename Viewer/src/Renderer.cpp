@@ -24,6 +24,24 @@ Renderer::~Renderer()
     delete[] zBuffer;
 }
 
+
+glm::vec3 Renderer::processPipeline(const glm::vec3& point, PIPE_TYPE pipeType /*= FULL*/)
+{
+    switch (pipeType)
+    {
+    case FULL:
+        return Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(point));
+    case AXIS:
+        return Util::toCartesianForm(m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(point));
+    case MODEL:
+        return Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_objectTransform * Util::toHomogeneousForm(point));
+    default:
+        return { 0,0,0 };
+    }
+
+    
+}
+
 void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNormals /*= false*/, const glm::vec3* modelCentroid /*= NULL*/, float normScaleRate /*= 1*/, bool bIsCamera /*= false*/)
 {
     vector<glm::vec3>::const_iterator it = vertices->begin();
@@ -50,9 +68,9 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNo
         glm::vec3 nrm3 = p3;
 
 
-        p1 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(p1));
-        p2 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(p2));
-        p3 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(p3));
+        p1 = processPipeline(p1);
+        p2 = processPipeline(p2);
+        p3 = processPipeline(p3);
 
         DrawLine(toViewPlane(p1), toViewPlane(p2), m_polygonColor);
         DrawLine(toViewPlane(p2), toViewPlane(p3), m_polygonColor);
@@ -68,12 +86,12 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNo
 
             glm::vec3 normalizedFaceNormal = Util::isVecEqual(faceNormal, glm::vec3(0, 0, 0)) ? faceNormal : glm::normalize(faceNormal);
 
-            normalizedFaceNormal = Util::toHomogeneousForm(glm::mat4x4(SCALING_MATRIX4(normScaleRate))*Util::toHomogeneousForm(normalizedFaceNormal));
+            normalizedFaceNormal *= normScaleRate;
 
             //normalizedFaceNormal *= fnScale;
-            glm::vec3 nP1 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(faceCenter));
-            glm::vec3 nP2 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(faceCenter + normalizedFaceNormal));
-            
+            glm::vec3 nP1 = processPipeline(faceCenter);
+            glm::vec3 nP2 = processPipeline(faceCenter + normalizedFaceNormal);
+
             DrawLine(toViewPlane(nP1), toViewPlane(nP2), COLOR(LIME));
         }
     }
@@ -88,10 +106,10 @@ void Renderer::drawVerticesNormals(const vector<glm::vec3>& vertices, const vect
 
         glm::vec3 normalizedVertexNormal = Util::isVecEqual(vertexNormal, glm::vec3(0, 0, 0)) ? vertexNormal : glm::normalize(vertexNormal);
 
-        normalizedVertexNormal = Util::toHomogeneousForm(glm::mat4x4(SCALING_MATRIX4(normScaleRate))*Util::toHomogeneousForm(normalizedVertexNormal));
+        normalizedVertexNormal *= normScaleRate;
 
-        glm::vec3 nP1 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(vertex));
-        glm::vec3 nP2 = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(vertex + normalizedVertexNormal));
+        glm::vec3 nP1 = processPipeline(vertex);
+        glm::vec3 nP2 = processPipeline(vertex + normalizedVertexNormal);
 
         DrawLine(toViewPlane(nP1), toViewPlane(nP2), COLOR(RED));
     }
@@ -101,14 +119,14 @@ void Renderer::drawBordersCube(CUBE_LINES borderCube)
 {
     for each (std::pair<glm::vec3, glm::vec3> line in borderCube.line)
     {
-        glm::vec3 pStart = Util::toCartesianForm(m_cameraProjection * m_cameraTransform *  m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(line.first));
-        glm::vec3 pEnd   = Util::toCartesianForm(m_cameraProjection * m_cameraTransform *  m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(line.second));
+        glm::vec3 pStart = processPipeline(line.first);
+        glm::vec3 pEnd   = processPipeline(line.second);
 
         DrawLine(toViewPlane(pStart), toViewPlane(pEnd), COLOR(BLUE));
     }
 }
 
-glm::uvec2 Renderer::toViewPlane(const glm::vec3& point)
+glm::vec2 Renderer::toViewPlane(const glm::vec3& point)
 {
     // convert to raster space 
 
@@ -135,7 +153,7 @@ glm::uvec2 Renderer::toViewPlane(const glm::vec3& point)
 //                 end
 
     }
-    return glm::vec2(screenPoint.x, screenPoint.y);
+    return glm::vec2((int)screenPoint.x, (int)screenPoint.y);
 }
 
 
@@ -171,7 +189,7 @@ void Renderer::putZ(int x, int y, float d)
     zBuffer[Z_BUF_INDEX(m_width, x, y)] = d;
 }
 
-void Renderer::DrawLine(const glm::uvec2& p1, const glm::uvec2& p2, const glm::vec3& color)
+void Renderer::DrawLine(const glm::vec2& p1, const glm::vec2& p2, const glm::vec3& color)
 {
     float dx, dy;
 
@@ -281,11 +299,10 @@ void Renderer::drawAxis()
     glm::vec3 axisZ     = m_worldTransformation[2];
     glm::vec3 zeroPoint = { 0,0,0 };
 
-    axisX     = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(axisX));
-    axisY     = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(axisY));
-    axisZ     = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(axisZ));
-    zeroPoint = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(zeroPoint));
-
+    axisX     = processPipeline(axisX,     AXIS);
+    axisY     = processPipeline(axisY,     AXIS);
+    axisZ     = processPipeline(axisZ,     AXIS);
+    zeroPoint = processPipeline(zeroPoint, AXIS);
 
 
     DrawLine(toViewPlane(zeroPoint), toViewPlane(axisX*5.f), COLOR(X_COL));
@@ -301,10 +318,10 @@ void Renderer::drawModelAxis()
     glm::vec3 axisZ = { 0,0,1 };
     glm::vec3 zeroPoint = { m_objectTransform[0][3],m_objectTransform[1][3],m_objectTransform[2][3] };
 
-    axisX = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_objectTransform * Util::toHomogeneousForm(axisX));
-    axisY = Util::toCartesianForm(m_cameraProjection * m_cameraTransform  * m_objectTransform * Util::toHomogeneousForm(axisY));
-    axisZ = Util::toCartesianForm(m_cameraProjection * m_cameraTransform  * m_objectTransform * Util::toHomogeneousForm(axisZ));
-    zeroPoint = Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_objectTransform * Util::toHomogeneousForm(zeroPoint));
+    axisX     = processPipeline(axisX,     MODEL);
+    axisY     = processPipeline(axisY,     MODEL);
+    axisZ     = processPipeline(axisZ,     MODEL);
+    zeroPoint = processPipeline(zeroPoint, MODEL);
 
 
 

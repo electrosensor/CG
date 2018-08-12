@@ -106,7 +106,7 @@ unsigned int Scene::AddCamera(const glm::vec4& eye, const glm::vec4& at, const g
 {
     Camera* newCamera = new Camera(eye, at, up);
     m_cameras.push_back(newCamera);
-    return m_cameras.size() - 1;
+    return (unsigned)m_cameras.size() - 1;
 }
 
 void Scene::SetPerspectiveProjection(PERSPECTIVE_PARAMS projParams)
@@ -176,7 +176,7 @@ void Scene::DeleteActiveCamera()
     if (m_activeCamera != DISABLED)
     {
         m_cameras.erase(m_cameras.begin() + m_activeCamera);
-        m_activeCamera = m_cameras.size() - 1;
+        m_activeCamera = (unsigned) m_cameras.size() - 1;
     }
 }
 
@@ -477,7 +477,7 @@ unsigned int Scene::AddPrimitiveModel(PRIM_MODEL primitiveModel)
 {
     Model* newModel = new PrimMeshModel(primitiveModel);
     m_models.push_back(newModel);
-    return m_models.size() - 1;
+    return (unsigned)m_models.size() - 1;
 }
 
 void Scene::NextModel()
@@ -493,7 +493,7 @@ void Scene::DeleteActiveModel()
     if (m_activeModel != DISABLED)
     {
         m_models.erase(m_models.begin() + m_activeModel);
-        m_activeModel = m_models.size() - 1;
+        m_activeModel = (unsigned)m_models.size() - 1;
     }
 }
 

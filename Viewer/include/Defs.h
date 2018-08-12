@@ -34,7 +34,7 @@
 #define NORMALIZE_COORDS(value,min,max)  (((NORM_ZERO_TO_ONE(value,min,max)*2) - 1))
 
 
-typedef enum _R_COLOR
+ enum R_COLOR
 {
     CLEAR,
     WHITE,
@@ -47,14 +47,15 @@ typedef enum _R_COLOR
     X_COL,
     Y_COL,
     Z_COL
-}R_COLOR;
+};
+
 
 typedef enum _AXES
 {
     X,
     Y,
     Z
-}AXIS;
+}AXES;
 
 typedef enum _ROTATION_REL
 {
@@ -134,4 +135,12 @@ typedef struct _CUBE_LINES
 {
     std::pair<glm::vec3, glm::vec3> line[12];
 }CUBE_LINES, *PCUBE_LINES;
+
+typedef enum _PIPE_TYPE
+{
+    FULL = 0,
+    AXIS,
+    MODEL
+
+}PIPE_TYPE, *PPIPE_TYPE;
 
