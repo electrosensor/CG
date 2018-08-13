@@ -24,8 +24,8 @@ private:
 
 
     // Draws a pixel in location p with color color
-    void putPixel(int i, int j, const glm::vec3& color );
-    void putPixel(int x, int y, bool steep, const glm::vec3& color);
+    void putPixel(int i, int j, const glm::vec4& color );
+    void putPixel(int x, int y, bool steep, const glm::vec4& color);
     void putZ(int x, int y, float d);
     // creates float array of dimension [3,w,h]
     void createBuffers(int w, int h);
@@ -44,10 +44,10 @@ private:
     glm::mat4x4 m_objectTransform;
     glm::mat4x4 m_normalTransform;
 
-    glm::vec3 m_bgColor;
-    glm::vec3 m_polygonColor;
+    glm::vec4 m_bgColor;
+    glm::vec4 m_polygonColor;
 
-    glm::vec2 toViewPlane(const glm::vec3& point);
+    glm::vec2 toViewPlane(const glm::vec4& point);
 
     void getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, OUT float* pDx, OUT float* pDy);
     void yStepErrorUpdate(float dx, float dy, float& error, int& y, const int& ystep);
@@ -55,18 +55,18 @@ public:
     Renderer();
     Renderer(int w, int h);
     ~Renderer();
-    glm::vec3 processPipeline(const glm::vec3& point, PIPE_TYPE pipeType = FULL);
+    glm::vec4 processPipeline(const glm::vec4& point, PIPE_TYPE pipeType = FULL);
     // Local initializations of your implementation
     void Init();
 
     // Draws a line by Bresenham algorithm: 
-    void DrawLine(const glm::vec2& p1, const glm::vec2& p2, const glm::vec3& color);
+    void DrawLine(const glm::vec2& p1, const glm::vec2& p2, const glm::vec4& color);
 
-    void drawVerticesNormals(const vector<glm::vec3>& vertices, const vector<glm::vec3>& normals, float normScaleRate);
+    void drawVerticesNormals(const vector<glm::vec4>& vertices, const vector<glm::vec4>& normals, float normScaleRate);
     // Draws wireframe triangles to the color buffer
-    void DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNormals = false, const glm::vec3* modelCentroid = NULL, float normScaleRate = 1, bool bIsCamera = false);
+    void DrawTriangles(const vector<glm::vec4>* vertices, bool bDrawFaceNormals = false, const glm::vec4* modelCentroid = NULL, float normScaleRate = 1, bool bIsCamera = false);
     // Draws surrounding border cube;
-    void drawBordersCube(CUBE_LINES borderCube);
+    void drawBordersCube(CUBE borderCube);
     // Sets the camera transformations with relation to world coordinates
     void SetCameraTransform(const glm::mat4x4& cTransform);
 
@@ -87,19 +87,16 @@ public:
     // Resize the buffer.
     void Viewport(int w, int h);
 
-    glm::vec3 GetBgColor();
+    glm::vec4 GetBgColor();
 
-    void SetBgColor(glm::vec3 newBgColor);
+    void SetBgColor(glm::vec4 newBgColor);
 
-    glm::vec3 GetPolygonColor();
+    glm::vec4 GetPolygonColor();
 
-    void SetPolygonColor(glm::vec3 newMeshColor);
+    void SetPolygonColor(glm::vec4 newMeshColor);
 
     // Clears the z buffer to zero.
     void ClearDepthBuffer();
-
-    // Draw wide vertical and horizontal lines on the screen
-    void SetDemoBuffer();
 
     void setWorldTransformation(glm::mat4x4 m_worldTransformation);
 private:

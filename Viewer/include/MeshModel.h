@@ -18,17 +18,17 @@ class MeshModel : public Model
 	protected :
 
         size_t m_verticesSize;
-        glm::vec3 *m_vertices;
+        glm::vec4 *m_vertices;
         size_t m_vertexNormSize;
-		glm::vec3 *m_vertexPositions;
+		glm::vec4 *m_vertexPositions;
 		size_t m_vertexPosSize;
-        glm::vec3 *m_vertexNormals;
+        glm::vec4 *m_vertexNormals;
 
 		// Add more attributes.
         glm::mat4x4 m_modelTransformation;
 		glm::mat4x4 m_worldTransformation;
 		glm::mat4x4 m_normalTransformation;
-        glm::vec3   m_modelCentroid;
+        glm::vec4   m_modelCentroid;
 
 	public:
 		MeshModel(const string& fileName);
@@ -43,8 +43,8 @@ class MeshModel : public Model
 		void SetNormalTransformation(glm::mat4x4& transformation);
 
 		void LoadFile(const string& fileName);
-		pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >* Draw();
-        glm::vec3 getCentroid() { return  m_modelCentroid; }
+		pair<vector<glm::vec4>, pair<vector<glm::vec4>, vector<glm::vec4> > >* Draw();
+        glm::vec4 getCentroid() { return  m_modelCentroid; }
 
 
 
@@ -92,15 +92,15 @@ public:
         return m_camCoords;
     }
 
-    pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >* Draw()
+    pair<vector<glm::vec4>, pair<vector<glm::vec4>, vector<glm::vec4> > >* Draw()
     {
-        pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >* verticesData = new pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >();
-        vector<glm::vec3> camModelVertices; //AVIAD TODO CHECK
-        pair<vector<glm::vec3>, vector<glm::vec3> > dummy;
+        pair<vector<glm::vec4>, pair<vector<glm::vec4>, vector<glm::vec4> > >* verticesData = new pair<vector<glm::vec4>, pair<vector<glm::vec4>, vector<glm::vec4> > >();
+        vector<glm::vec4> camModelVertices; //AVIAD TODO CHECK
+        pair<vector<glm::vec4>, vector<glm::vec4> > dummy;
 
         for (size_t i = 0; i < m_vertexPosSize; i++)
         {
-            glm::vec3 vertex = Util::toCartesianForm(glm::mat4x4(SCALING_MATRIX4(0.3f))*Util::toHomogeneousForm(m_vertexPositions[i])) ;
+            glm::vec4 vertex = glm::mat4x4(SCALING_MATRIX4(0.3f))*m_vertexPositions[i];
             camModelVertices.push_back(vertex);
         }
 

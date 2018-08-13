@@ -77,7 +77,7 @@ glm::vec2 vec2fFromStream(std::istream& issLine)
 MeshModel::MeshModel(const string& fileName) : m_modelTransformation(I_MATRIX),
 											   m_normalTransformation(I_MATRIX),
                                                m_worldTransformation(I_MATRIX),
-                                               m_modelCentroid(0,0,0)
+                                               m_modelCentroid(HOMOGENEOUS_VECTOR4)
 {
 	LoadFile(fileName);
     setModelRenderingState(true);
@@ -132,14 +132,14 @@ void MeshModel::LoadFile(const string& fileName)
 	}
 
 	vector<FaceIdx> faces;
-	vector<glm::vec3> vertices;
-    vector<glm::vec3> normals;
+	vector<glm::vec4> vertices;
+    vector<glm::vec4> normals;
 
-    glm::vec3 maxCoords = { -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max() };
-    glm::vec3 minCoords = {  std::numeric_limits<float>::max(),  std::numeric_limits<float>::max(),  std::numeric_limits<float>::max() };
-    glm::vec3 normalizedVec;
+    glm::vec4 maxCoords = { -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max() , 1 };
+    glm::vec4 minCoords = {  std::numeric_limits<float>::max(),  std::numeric_limits<float>::max(),  std::numeric_limits<float>::max() , 1 };
+    glm::vec4 normalizedVec = HOMOGENEOUS_VECTOR4;
     unsigned int numVertices = 0;
-    glm::vec3 modelCentroid = { 0,0,0 };
+    glm::vec4 modelCentroid = HOMOGENEOUS_VECTOR4;
 	// while not end of file
 	while (!ifile.eof())
 	{
@@ -156,7 +156,7 @@ void MeshModel::LoadFile(const string& fileName)
 		// based on the type parse data
 		if (lineType == "v")
         {
-            glm::vec3 parsedVec = vec3fFromStream(issLine);
+            glm::vec4 parsedVec = Util::toHomogeneousForm(vec3fFromStream(issLine));
             
             minCoords.x = (minCoords.x > parsedVec.x) ? parsedVec.x : minCoords.x;
             minCoords.y = (minCoords.y > parsedVec.y) ? parsedVec.y : minCoords.y;
@@ -165,7 +165,7 @@ void MeshModel::LoadFile(const string& fileName)
             maxCoords.x = (maxCoords.x < parsedVec.x) ? parsedVec.x : maxCoords.x;
             maxCoords.y = (maxCoords.y < parsedVec.y) ? parsedVec.y : maxCoords.y;
             maxCoords.z = (maxCoords.z < parsedVec.z) ? parsedVec.z : maxCoords.z;
-            
+           
             m_modelCentroid += parsedVec;
             
             numVertices++;
@@ -174,7 +174,7 @@ void MeshModel::LoadFile(const string& fileName)
 		}
         else if (lineType == "vn")
         {
-            normals.push_back(vec3fFromStream(issLine));
+            normals.push_back(Util::toHomogeneousForm(vec3fFromStream(issLine)));
         }
 		else if (lineType == "f")
 		{
@@ -200,11 +200,11 @@ void MeshModel::LoadFile(const string& fileName)
 
 
     m_verticesSize    = vertices.size();
-    m_vertices        = new glm::vec3[m_verticesSize];
+    m_vertices        = new glm::vec4[m_verticesSize];
 	m_vertexPosSize   = faces.size()*FACE_ELEMENTS;
-	m_vertexPositions = new glm::vec3[m_vertexPosSize];
+	m_vertexPositions = new glm::vec4[m_vertexPosSize];
     m_vertexNormSize  = normals.size();
-    m_vertexNormals   = new glm::vec3[m_vertexNormSize];
+    m_vertexNormals   = new glm::vec4[m_vertexNormSize];
 
 
 
@@ -233,7 +233,7 @@ void MeshModel::LoadFile(const string& fileName)
             float x = m_vertices[currentVertexIdx - 1].x;
             float y = m_vertices[currentVertexIdx - 1].y;
             float z = m_vertices[currentVertexIdx - 1].z;
-			m_vertexPositions[posIdx++] = glm::vec3(x, y, z);
+			m_vertexPositions[posIdx++] = glm::vec4(x, y, z , 1);
 		}
 	}
     
@@ -260,28 +260,28 @@ void MeshModel::LoadFile(const string& fileName)
 
 }
 
-std::pair<std::vector<glm::vec3>, std::pair<std::vector<glm::vec3>, std::vector<glm::vec3> > >* MeshModel::Draw()
+std::pair<std::vector<glm::vec4>, std::pair<std::vector<glm::vec4>, std::vector<glm::vec4> > >* MeshModel::Draw()
 {
-    std::pair<std::vector<glm::vec3>, std::pair<std::vector<glm::vec3>, std::vector<glm::vec3> > >* verticesData = new std::pair<std::vector<glm::vec3>, std::pair<std::vector<glm::vec3>, std::vector<glm::vec3> > >();
-    vector<glm::vec3> meshModelVertexPositions;
-    vector<glm::vec3> meshModelVertices;
-    vector<glm::vec3> meshModelVerticesNormals;
+    std::pair<std::vector<glm::vec4>, std::pair<std::vector<glm::vec4>, std::vector<glm::vec4> > >* verticesData = new std::pair<std::vector<glm::vec4>, std::pair<std::vector<glm::vec4>, std::vector<glm::vec4> > >();
+    vector<glm::vec4> meshModelVertexPositions;
+    vector<glm::vec4> meshModelVertices;
+    vector<glm::vec4> meshModelVerticesNormals;
 
 	for (size_t i = 0; i < m_vertexPosSize; i++)
 	{
-		glm::vec3 vertexPosition = m_vertexPositions[i];
+		glm::vec4 vertexPosition = m_vertexPositions[i];
         meshModelVertexPositions.push_back(vertexPosition);
 	}
    
     for (size_t i = 0; i < m_verticesSize; i++)
     {
-        glm::vec3 vertex = m_vertices[i];
+        glm::vec4 vertex = m_vertices[i];
         meshModelVertices.push_back(vertex);
     }
 
     for (size_t i = 0; i < m_vertexNormSize; i++)
     {
-        glm::vec3 normal = m_vertexNormals[i];
+        glm::vec4 normal = m_vertexNormals[i];
         meshModelVerticesNormals.push_back(normal);
     }
 

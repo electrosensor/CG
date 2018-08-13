@@ -24,7 +24,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
     // Tip: if we don't call ImGui::Begin()/ImGui::End() the widgets automatically appears in a window called "Debug".
     {
         ImGui::Begin("Main menu");
-        static int world[3] = { 1,1,1 };
+        static int world[4] = { 1,1,1 };
         ImGui::InputInt3("World transformation: (x,y,z)", world);
         ImGui::Text("World transformation: (%d, %d, %d)", world[0], world[1], world[2]);
         if (ImGui::Button("Set world transformation"))
@@ -125,7 +125,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         ImGui::Text("---------------- Camera Control: ----------------");
 
         ImGui::Text("Rotate:");
-        static float rotAngle = PI / 36.0f;
+        static float rotAngle = static_cast<float>( PI / 36.0f );
         ImGui::SliderAngle("rotation angle", &rotAngle, 1.0f, 180.0f);
 
         static int currentFrame = FRAME_TYPE::FT_CAMERA;
@@ -144,7 +144,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         ImGui::Combo("Axis", &currentAxis, AxisList);
         if (!ImGui::IsMouseHoveringAnyWindow() && io.MouseDown[0] && io.MouseDelta.x)
         {
-            int direction = io.MouseDelta.x / abs(io.MouseDelta.x);
+            int direction = static_cast<int>(io.MouseDelta.x / abs(io.MouseDelta.x));
 
             switch (currentFrame)
             {
@@ -343,7 +343,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             projParams.right = 1,
             projParams.bottom = -1,
             projParams.top = 1,
-            projParams.zNear = 0.1,
+            projParams.zNear = 0.1f,
             projParams.zFar = 2,
         };
         ImGui::SliderFloat("Left", &projParams.left, -5.0, 5.0);
@@ -379,14 +379,14 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 
         static PERSPECTIVE_PARAMS perspParam =
         {
-            perspParam.fovy = TO_RADIAN(325),
+            perspParam.fovy = static_cast<float>(TO_RADIAN(325)),
             perspParam.aspect = 1/*ImGui::GetWindowWidth() / ImGui::GetWindowHeight()*/,
             perspParam.zNear = 0.5f,
             perspParam.zFar = 2.f
         };
         ImGui::SliderAngle("Fovy", &perspParam.fovy, 1);
-        ImGui::SliderFloat("Near", &perspParam.zNear, 0.1, 10);
-        ImGui::SliderFloat("Far",  &perspParam.zFar, 0.2, 20);
+        ImGui::SliderFloat("Near", &perspParam.zNear, 0.1f, 10.f);
+        ImGui::SliderFloat("Far",  &perspParam.zFar, 0.2f, 20.f);
 
         try
         {
@@ -513,16 +513,16 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         ImGui::Begin("Color menu");
 
         ImGui::Text("-------------- Background: --------------");
-        glm::vec3 currentBgCol = scene->GetBgColor();
+        glm::vec4 currentBgCol = scene->GetBgColor();
         static float bg[3] = { currentBgCol.x ,currentBgCol.y ,currentBgCol.z };
         ImGui::ColorEdit3("BG", bg);
-        scene->SetBgColor({ bg[0], bg[1], bg[2] });
+        scene->SetBgColor({ bg[0], bg[1], bg[2], 1 });
 
         ImGui::Text("-------------- Polygons: --------------");
-        glm::vec3 currentPolygonCol = scene->GetPolygonColor();
+        glm::vec4 currentPolygonCol = scene->GetPolygonColor();
         static float polygon[3] = { currentPolygonCol.x ,currentPolygonCol.y ,currentPolygonCol.z };
         ImGui::ColorEdit3("Polygon", polygon);
-        scene->SetPolygonColor({ polygon[0], polygon[1], polygon[2]});
+        scene->SetPolygonColor({ polygon[0], polygon[1], polygon[2], 1 });
         ImGui::End();
 
     }

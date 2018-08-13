@@ -17,7 +17,6 @@
 #define FACE_ELEMENTS                    3
 #define TO_RADIAN(angle)                 ((angle) * PI / 180.0f)
 #define ZERO_MATRIX                      { {0,0,0,0},{ 0,0,0,0 },{ 0,0,0,0 },{ 0,0,0,0 } }
-#define FLATTEN_MATRIX                   { {1,0,0,0},{ 0,1,0,0 },{ 0,0,0,0 },{ 0,0,0,1 } }
 #define I_MATRIX                         { {1,0,0,0},{ 0,1,0,0 },{ 0,0,1,0 },{ 0,0,0,1 } }
 #define SCALING_MATRIX4(value)           { {(value),0,0,0},{ 0,(value),0,0 },{ 0,0,(value),0 },{ 0,0,0,1 } }
 #define TRANSLATION_MATRIX(x, y, z)      { {1,0,0,0},{ 0,1,0,0 },{ 0,0,1,0 },{ (x),(y),(z),1 } }
@@ -131,10 +130,10 @@ typedef struct _PERSPECTIVE_PARAMS
     float zFar;
 }PERSPECTIVE_PARAMS, *PPERSPECTIVE_PARAMS;
 
-typedef struct _CUBE_LINES
+typedef struct _CUBE
 {
-    std::pair<glm::vec3, glm::vec3> line[12];
-}CUBE_LINES, *PCUBE_LINES;
+    std::pair<glm::vec4, glm::vec4> line[12];
+}CUBE, *PCUBE;
 
 typedef enum _PIPE_TYPE
 {
@@ -143,4 +142,5 @@ typedef enum _PIPE_TYPE
     MODEL
 
 }PIPE_TYPE, *PPIPE_TYPE;
+
 

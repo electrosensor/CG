@@ -25,48 +25,38 @@ Renderer::~Renderer()
 }
 
 
-glm::vec3 Renderer::processPipeline(const glm::vec3& point, PIPE_TYPE pipeType /*= FULL*/)
+glm::vec4 Renderer::processPipeline(const glm::vec4& point, PIPE_TYPE pipeType /*= FULL*/)
 {
     switch (pipeType)
     {
     case FULL:
-        return Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * Util::toHomogeneousForm(point));
+        return m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * point;
     case AXIS:
-        return Util::toCartesianForm(m_cameraProjection * m_cameraTransform * Util::toHomogeneousForm(point));
+        return m_cameraProjection * m_cameraTransform * point;
     case MODEL:
-        return Util::toCartesianForm(m_cameraProjection * m_cameraTransform * m_objectTransform * Util::toHomogeneousForm(point));
+        return m_cameraProjection * m_cameraTransform * m_objectTransform * point;
     default:
-        return { 0,0,0 };
+        return HOMOGENEOUS_VECTOR4;
     }
 
     
 }
 
-void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNormals /*= false*/, const glm::vec3* modelCentroid /*= NULL*/, float normScaleRate /*= 1*/, bool bIsCamera /*= false*/)
+void Renderer::DrawTriangles(const vector<glm::vec4>* vertices, bool bDrawFaceNormals /*= false*/, const glm::vec4* modelCentroid /*= NULL*/, float normScaleRate /*= 1*/, bool bIsCamera /*= false*/)
 {
-    vector<glm::vec3>::const_iterator it = vertices->begin();
-
-// 
-//     glm::mat4x4 objectTransform;
-//     if (bIsCamera) 
-//     {
-//         m_cameraTransform = glm::mat4(I_MATRIX);
-// 
-//     }
-
+    vector<glm::vec4>::const_iterator it = vertices->begin();
     
     while (it != vertices->end())
     {
-        glm::vec3 p1 = *(it++);
+        glm::vec4 p1 = *(it++);
         if (it == vertices->end()) break;
-        glm::vec3 p2 = *(it++);
+        glm::vec4 p2 = *(it++);
         if (it == vertices->end()) break;
-        glm::vec3 p3 = *(it++);
+        glm::vec4 p3 = *(it++);
 
-        glm::vec3 nrm1 = p1;
-        glm::vec3 nrm2 = p2;
-        glm::vec3 nrm3 = p3;
-
+        glm::vec4 nrm1 = p1;
+        glm::vec4 nrm2 = p2;
+        glm::vec4 nrm3 = p3;
 
         p1 = processPipeline(p1);
         p2 = processPipeline(p2);
@@ -78,57 +68,63 @@ void Renderer::DrawTriangles(const vector<glm::vec3>* vertices, bool bDrawFaceNo
 
         if (bDrawFaceNormals)
         {
-            glm::vec3 subs1 = nrm3 - nrm1;
-            glm::vec3 subs2 = nrm2 - nrm1;
-            glm::vec3 faceNormal = glm::cross(subs1, subs2);
+            glm::vec4 subs1      = nrm3 - nrm1;
+            glm::vec4 subs2      = nrm2 - nrm1;
+                      subs1.w    = 1;
+                      subs2.w    = 1;
 
-            glm::vec3 faceCenter = (nrm1 + nrm2 + nrm3) / 3.0f;
+            glm::vec4 faceNormal = Util::Cross(subs1, subs2);
 
-            glm::vec3 normalizedFaceNormal = Util::isVecEqual(faceNormal, glm::vec3(0, 0, 0)) ? faceNormal : glm::normalize(faceNormal);
+            glm::vec4 faceCenter   = (nrm1 + nrm2 + nrm3) / 3.0f;
+                      faceCenter.w = 1;
 
-            normalizedFaceNormal *= normScaleRate;
+            glm::vec4 normalizedFaceNormal = Util::isVecEqual(faceNormal, glm::vec4(0, 0, 0, 1)) ? faceNormal : glm::normalize(faceNormal);
+
+            normalizedFaceNormal = glm::mat4x4(SCALING_MATRIX4(normScaleRate)) * normalizedFaceNormal;
 
             //normalizedFaceNormal *= fnScale;
-            glm::vec3 nP1 = processPipeline(faceCenter);
-            glm::vec3 nP2 = processPipeline(faceCenter + normalizedFaceNormal);
+            glm::vec4 nP1 = processPipeline(faceCenter);
+            glm::vec4 nP2 = processPipeline(faceCenter + normalizedFaceNormal);
 
             DrawLine(toViewPlane(nP1), toViewPlane(nP2), COLOR(LIME));
         }
     }
 }
 
-void Renderer::drawVerticesNormals(const vector<glm::vec3>& vertices, const vector<glm::vec3>& normals, float normScaleRate)
+void Renderer::drawVerticesNormals(const vector<glm::vec4>& vertices, const vector<glm::vec4>& normals, float normScaleRate)
 {
     for (int i = 0; i < normals.size() && i < vertices.size(); i++)
     {
-        glm::vec3 vertex       = vertices[i];
-        glm::vec3 vertexNormal = normals[i];
+        glm::vec4 vertex       = vertices[i];
+        glm::vec4 vertexNormal = normals[i];
 
-        glm::vec3 normalizedVertexNormal = Util::isVecEqual(vertexNormal, glm::vec3(0, 0, 0)) ? vertexNormal : glm::normalize(vertexNormal);
+        glm::vec4 normalizedVertexNormal = Util::isVecEqual(vertexNormal, HOMOGENEOUS_VECTOR4) ? vertexNormal : glm::normalize(vertexNormal);
 
-        normalizedVertexNormal *= normScaleRate;
+        normalizedVertexNormal = glm::mat4x4(SCALING_MATRIX4(normScaleRate)) * normalizedVertexNormal;
 
-        glm::vec3 nP1 = processPipeline(vertex);
-        glm::vec3 nP2 = processPipeline(vertex + normalizedVertexNormal);
+        glm::vec4 nP1 = processPipeline(vertex);
+        glm::vec4 nP2 = processPipeline(vertex + normalizedVertexNormal);
 
         DrawLine(toViewPlane(nP1), toViewPlane(nP2), COLOR(RED));
     }
 }
 
-void Renderer::drawBordersCube(CUBE_LINES borderCube)
+void Renderer::drawBordersCube(CUBE borderCube)
 {
-    for each (std::pair<glm::vec3, glm::vec3> line in borderCube.line)
+    for each (std::pair<glm::vec4, glm::vec4> line in borderCube.line)
     {
-        glm::vec3 pStart = processPipeline(line.first);
-        glm::vec3 pEnd   = processPipeline(line.second);
+        glm::vec4 pStart = processPipeline(line.first);
+        glm::vec4 pEnd   = processPipeline(line.second);
 
         DrawLine(toViewPlane(pStart), toViewPlane(pEnd), COLOR(BLUE));
     }
 }
 
-glm::vec2 Renderer::toViewPlane(const glm::vec3& point)
+glm::vec2 Renderer::toViewPlane(const glm::vec4& pointParam)
 {
     // convert to raster space 
+
+    glm::vec3 point = Util::toCartesianForm(pointParam);
 
     glm::vec2 screenPoint;
 
@@ -173,7 +169,7 @@ void Renderer::SetObjectMatrices(const glm::mat4x4 & oTransform, const glm::mat4
     m_normalTransform = nTransform;
 }
 
-void Renderer::putPixel(int i, int j, const glm::vec3& color)
+void Renderer::putPixel(int i, int j, const glm::vec4& color)
 {
     if (i < 0) return; if (i >= m_width) return;
     if (j < 0) return; if (j >= m_height) return;
@@ -189,7 +185,7 @@ void Renderer::putZ(int x, int y, float d)
     zBuffer[Z_BUF_INDEX(m_width, x, y)] = d;
 }
 
-void Renderer::DrawLine(const glm::vec2& p1, const glm::vec2& p2, const glm::vec3& color)
+void Renderer::DrawLine(const glm::vec2& p1, const glm::vec2& p2, const glm::vec4& color)
 {
     float dx, dy;
 
@@ -218,7 +214,7 @@ void Renderer::DrawLine(const glm::vec2& p1, const glm::vec2& p2, const glm::vec
     }
 }
 
-void Renderer::putPixel(int x, int y, bool steep, const glm::vec3& color)
+void Renderer::putPixel(int x, int y, bool steep, const glm::vec4& color)
 {
     if (steep)
     {
@@ -239,38 +235,11 @@ void Renderer::createBuffers(int w, int h)
     {
         for (int j = 0; j < h; j++)
         {
-            putPixel(i, j, glm::vec3(0.0f, 0.0f, 0.0f));
+            putPixel(i, j, HOMOGENEOUS_VECTOR4);
             putZ(i, j, 0.f);
         }
     }
 }
-
-void Renderer::SetDemoBuffer()
-{
-    int r = 5;
-    // Wide red vertical line
-    glm::vec4 red = glm::vec4(1, 0, 0, 1);
-    for (int i = 0; i<m_height; i++)
-    {
-        for (int r0 = 0; r0 < r; r0++)
-        {
-            putPixel((m_width / 2) + r0, i, red);
-            putPixel((m_width / 2) - r0, i, red);
-        }
-    }
-    // Wide magenta horizontal line
-    glm::vec4 magenta = glm::vec4(1, 0, 1, 1);
-    for (int i = 0; i<m_width; i++)
-    {
-        for (int r0 = 0; r0 < r; r0++)
-        {
-            putPixel(i, (m_height / 2) + r0, magenta);
-            putPixel(i, (m_height / 2) - r0, magenta);
-        }
-
-    }
-}
-
 
 void Renderer::setWorldTransformation(glm::mat4x4 worldTransformation)
 {
@@ -294,29 +263,37 @@ void Renderer::orderPoints(float& x1, float& x2, float& y1, float& y2)
 
 void Renderer::drawAxis()
 {
-    glm::vec3 axisX     = m_worldTransformation[0];
-    glm::vec3 axisY     = m_worldTransformation[1];
-    glm::vec3 axisZ     = m_worldTransformation[2];
-    glm::vec3 zeroPoint = { 0,0,0 };
+    glm::vec4 axisX     = m_worldTransformation[0];
+    glm::vec4 axisY     = m_worldTransformation[1];
+    glm::vec4 axisZ     = m_worldTransformation[2];
+              axisX.w   = 1;
+              axisY.w   = 1;
+              axisZ.w   = 1;
+
+    glm::vec4 zeroPoint = HOMOGENEOUS_VECTOR4;
 
     axisX     = processPipeline(axisX,     AXIS);
     axisY     = processPipeline(axisY,     AXIS);
     axisZ     = processPipeline(axisZ,     AXIS);
     zeroPoint = processPipeline(zeroPoint, AXIS);
 
+    axisX = glm::mat4x4(SCALING_MATRIX4(5))*axisX;
+    axisY = glm::mat4x4(SCALING_MATRIX4(5))*axisY;
+    axisZ = glm::mat4x4(SCALING_MATRIX4(5))*axisZ;
 
-    DrawLine(toViewPlane(zeroPoint), toViewPlane(axisX*5.f), COLOR(X_COL));
-    DrawLine(toViewPlane(zeroPoint), toViewPlane(axisY*5.f), COLOR(Y_COL));
-    DrawLine(toViewPlane(zeroPoint), toViewPlane(axisZ*5.f), COLOR(Z_COL));
+
+    DrawLine(toViewPlane(zeroPoint), toViewPlane(axisX), COLOR(X_COL));
+    DrawLine(toViewPlane(zeroPoint), toViewPlane(axisY), COLOR(Y_COL));
+    DrawLine(toViewPlane(zeroPoint), toViewPlane(axisZ), COLOR(Z_COL));
 
 }
 
 void Renderer::drawModelAxis()
 {
-    glm::vec3 axisX = { 1,0,0 };
-    glm::vec3 axisY = { 0,1,0 };
-    glm::vec3 axisZ = { 0,0,1 };
-    glm::vec3 zeroPoint = { m_objectTransform[0][3],m_objectTransform[1][3],m_objectTransform[2][3] };
+    glm::vec4 axisX = { 1,0,0,1 };
+    glm::vec4 axisY = { 0,1,0,1 };
+    glm::vec4 axisZ = { 0,0,1,1 };
+    glm::vec4 zeroPoint = { m_objectTransform[0][3],m_objectTransform[1][3],m_objectTransform[2][3] , 1 };
 
     axisX     = processPipeline(axisX,     MODEL);
     axisY     = processPipeline(axisY,     MODEL);
@@ -466,22 +443,22 @@ void Renderer::Viewport(int w, int h)
 }
 
 
-glm::vec3 Renderer::GetBgColor()
+glm::vec4 Renderer::GetBgColor()
 {
     return m_bgColor;
 }
 
-void Renderer::SetBgColor(glm::vec3 newBgColor)
+void Renderer::SetBgColor(glm::vec4 newBgColor)
 {
     m_bgColor = newBgColor;
 }
 
-glm::vec3 Renderer::GetPolygonColor()
+glm::vec4 Renderer::GetPolygonColor()
 {
     return m_polygonColor;
 }
 
-void Renderer::SetPolygonColor(glm::vec3 newMeshColor)
+void Renderer::SetPolygonColor(glm::vec4 newMeshColor)
 {
     m_polygonColor = newMeshColor;
 }

@@ -25,8 +25,8 @@ private:
     int m_activeCamera;
     glm::mat4x4 m_worldTransformation;
 
-    glm::vec3 m_polygonColor;
-    glm::vec3 m_bgColor;
+    glm::vec4 m_polygonColor;
+    glm::vec4 m_bgColor;
 
     bool m_bDrawVecNormal;
     float m_vnScaleFactor;
@@ -35,8 +35,12 @@ private:
     bool m_bShowBorderCube;
 
 public:
-    Scene() : m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamera(DISABLED), m_worldTransformation(I_MATRIX), m_bDrawVecNormal(false) { ; }
-    Scene(Renderer *renderer) : renderer(renderer), m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamera(DISABLED), m_worldTransformation(I_MATRIX), m_bDrawVecNormal(false), m_vnScaleFactor(2.f), m_fnScaleFactor(2.f), m_bgColor(Util::getColor(CLEAR)), m_polygonColor(Util::getColor(WHITE)){ ; }
+    Scene() = delete;
+    Scene(Renderer *renderer) : renderer(renderer), m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamera(DISABLED), m_bDrawVecNormal(false), m_vnScaleFactor(2.f), m_fnScaleFactor(2.f), m_bgColor(Util::getColor(CLEAR)), m_polygonColor(Util::getColor(WHITE))
+    {
+        m_worldTransformation = I_MATRIX ;
+        m_worldTransformation[3].w = 1;
+    }
 
     // Loads an obj file into the scene.
     void LoadOBJModel(string fileName);
@@ -122,8 +126,8 @@ public:
     void showBorderCube(bool bShowBorderCube) { m_bShowBorderCube = bShowBorderCube; }
 
     bool shouldRenderCamera(int cameraIndex);
-    glm::vec3 GetBgColor();
-    void SetBgColor(glm::vec3 newBgColor);
-    glm::vec3 GetPolygonColor();
-    void SetPolygonColor(glm::vec3 newMeshColor);
+    glm::vec4 GetBgColor();
+    void SetBgColor(glm::vec4 newBgColor);
+    glm::vec4 GetPolygonColor();
+    void SetPolygonColor(glm::vec4 newMeshColor);
 };

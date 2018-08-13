@@ -24,6 +24,6 @@ public:
     //Color handling
 
 
-    static glm::vec3 getColor(R_COLOR color);
+    static glm::vec4 getColor(R_COLOR color);
 };
 

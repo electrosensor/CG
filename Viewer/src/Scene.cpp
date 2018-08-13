@@ -36,7 +36,7 @@ void Scene::Draw()
 
     for each (Model* model in m_models)
     {
-        const pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >* modelVertices;
+        const pair<vector<glm::vec4>, pair<vector<glm::vec4>, vector<glm::vec4> > >* modelVertices;
         
         modelVertices = model->Draw();
         renderer->SetObjectMatrices(model->GetModelTransformation(), model->GetNormalTransformation());
@@ -73,7 +73,7 @@ void Scene::Draw()
 
             renderer->SetObjectMatrices(cameraModelTransformation, glm::mat4x4(I_MATRIX));
 
-            const pair<vector<glm::vec3>, pair<vector<glm::vec3>, vector<glm::vec3> > >* camVertices = camModel->Draw();
+            const pair<vector<glm::vec4>, pair<vector<glm::vec4>, vector<glm::vec4> > >* camVertices = camModel->Draw();
 
             renderer->DrawTriangles(&camVertices->first, FALSE, NULL, 1, IS_CAMERA);
             delete camVertices;
@@ -432,22 +432,22 @@ bool Scene::shouldRenderCamera(int cameraIndex)
 }
 
 
-glm::vec3 Scene::GetBgColor()
+glm::vec4 Scene::GetBgColor()
 {
     return m_bgColor;
 }
 
-void Scene::SetBgColor(glm::vec3 newBgColor)
+void Scene::SetBgColor(glm::vec4 newBgColor)
 {
     m_bgColor = newBgColor;
 }
 
-glm::vec3 Scene::GetPolygonColor()
+glm::vec4 Scene::GetPolygonColor()
 {
     return m_polygonColor;
 }
 
-void Scene::SetPolygonColor(glm::vec3 newMeshColor)
+void Scene::SetPolygonColor(glm::vec4 newMeshColor)
 {
     m_polygonColor = newMeshColor;
 }
