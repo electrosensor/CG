@@ -6,13 +6,16 @@
 // open file dialog cross platform https://github.com/mlabbe/nativefiledialog
 #include <nfd.h>
 
+using namespace std;
+using namespace glm;
+
 bool showDemoWindow = false;
 bool modelControlWindow = false;
 bool colorMenu = false;
 bool showFile = false;
-glm::vec4 clearColor = glm::vec4(0.4f, 0.55f, 0.60f, 1.00f);
+vec4 clearColor = vec4(0.4f, 0.55f, 0.60f, 1.00f);
 
-const glm::vec4& GetClearColor()
+const vec4& GetClearColor()
 {
     return clearColor;
 }
@@ -31,7 +34,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         {
             scene->SetWorldTransformation(HOMOGENEOUS_MATRIX4(world[0], world[1], world[2], 1.0f));
         }
-        static glm::mat4x4 worldTransformation = glm::mat4x4(0);
+        static mat4x4 worldTransformation = mat4x4(0);
         worldTransformation = scene->GetWorldTransformation();
         string sWorldTransform = "";
         for (int i = 0; i < 4; i++)
@@ -100,13 +103,13 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         ImGui::SameLine();
         if (ImGui::Checkbox("Show Camera", &bShowCamera))
         {
-            if (scene->getActiveCamera() != NULL) {
+            if (scene->getActiveCamera() != nullptr) {
                 scene->getActiveCamera()->getCameraModel()->setModelRenderingState(bShowCamera);
             }
         }
 
 
-        static glm::mat4x4 activeCameraTransformation = glm::mat4x4(0);
+        static mat4x4 activeCameraTransformation = mat4x4(0);
         activeCameraTransformation = scene->GetActiveCameraTransformation();
         string sCameraTransform = "";
         for (int i = 0; i < 4; i++)
@@ -125,11 +128,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         ImGui::Text("---------------- Camera Control: ----------------");
 
         ImGui::Text("Rotate:");
-        static float rotAngle = static_cast<float>( PI / 36.0f );
+        static auto rotAngle = static_cast<float>( PI / 36.0f );
         ImGui::SliderAngle("rotation angle", &rotAngle, 1.0f, 180.0f);
 
         static int currentFrame = FRAME_TYPE::FT_CAMERA;
-        static int currentAxis = AXES::Y;
+        static AXES currentAxis = AXES::Y;
         static int currentRel = ROTATION_REL::RR_WORLD;
         static const char AxisList[6] = { 'X','\0','Y','\0','Z','\0' };
         static const char Relations[11] = { 'W','o','r','l','d','\0',
@@ -141,10 +144,10 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
                                       };
         ImGui::Combo("Frame", &currentFrame, Frames);
         ImGui::Combo("Relation", &currentRel, Relations);
-        ImGui::Combo("Axis", &currentAxis, AxisList);
+        ImGui::Combo("Axis", (int*) &currentAxis, AxisList);
         if (!ImGui::IsMouseHoveringAnyWindow() && io.MouseDown[0] && io.MouseDelta.x)
         {
-            int direction = static_cast<int>(io.MouseDelta.x / abs(io.MouseDelta.x));
+            auto direction = static_cast<int>(io.MouseDelta.x / abs(io.MouseDelta.x));
 
             switch (currentFrame)
             {
@@ -154,23 +157,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
                     {
                         case ROTATION_REL::RR_WORLD:
                         {
-                            switch (currentAxis)
-                            {
-                            case AXES::X: scene->RotateActiveCameraWorldXAxis(rotAngle * direction); break;
-                            case AXES::Y: scene->RotateActiveCameraWorldYAxis(rotAngle * direction); break;
-                            case AXES::Z: scene->RotateActiveCameraWorldZAxis(rotAngle * direction); break;
-                            default: break;
-                            }
+                            scene->RotateActiveCameraWorldAxis(rotAngle * direction, currentAxis);
                         } break;
                         case ROTATION_REL::RR_SELF:
                         {
-                            switch (currentAxis)
-                            {
-                            case AXES::X: scene->RotateActiveCameraXAxis(rotAngle * direction); break;
-                            case AXES::Y: scene->RotateActiveCameraYAxis(rotAngle * direction); break;
-                            case AXES::Z: scene->RotateActiveCameraZAxis(rotAngle * direction); break;
-                            default: break;
-                            }
+                            scene->RotateActiveCameraAxis(rotAngle * direction, currentAxis);
                         } break;
                         default: break;
                     }
@@ -181,13 +172,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
                     {
                         case ROTATION_REL::RR_SELF:
                         {
-                            switch (currentAxis)
-                            {
-                            case AXES::X: scene->RotateActiveModelXAxis(rotAngle * direction); break;
-                            case AXES::Y: scene->RotateActiveModelYAxis(rotAngle * direction); break;
-                            case AXES::Z: scene->RotateActiveModelZAxis(rotAngle * direction); break;
-                            default: break;
-                            }
+                            scene->RotateActiveModelAxis(rotAngle * direction, currentAxis);
                         } break;
                         default: break;
                     }
@@ -246,11 +231,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             {
                 case FRAME_TYPE::FT_CAMERA:
                 {
-                    scene->TranslateActiveCameraXAxis(-moveFactor);
+                    scene->TranslateActiveCameraAxis(-moveFactor, AXES::X);
                 } break;
                 case FRAME_TYPE::FT_MODEL:
                 {
-                    scene->TranslateActiveModelXAxis(-moveFactor);
+                    scene->TranslateActiveModelAxis(-moveFactor, AXES::X);
                 } break;
                 default: break;
             }
@@ -262,11 +247,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             {
             case FRAME_TYPE::FT_CAMERA:
             {
-                scene->TranslateActiveCameraXAxis(moveFactor);
+                scene->TranslateActiveCameraAxis(moveFactor, AXES::X);
             } break;
             case FRAME_TYPE::FT_MODEL:
             {
-                scene->TranslateActiveModelXAxis(moveFactor);
+                scene->TranslateActiveModelAxis(moveFactor, AXES::X);
             } break;
             default: break;
             }
@@ -277,11 +262,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             {
             case FRAME_TYPE::FT_CAMERA:
             {
-                scene->TranslateActiveCameraYAxis(moveFactor);
+                scene->TranslateActiveCameraAxis(moveFactor, AXES::Y);
             } break;
             case FRAME_TYPE::FT_MODEL:
             {
-                scene->TranslateActiveModelYAxis(moveFactor);
+                scene->TranslateActiveModelAxis(moveFactor, AXES::Y);
             } break;
             default: break;
             }
@@ -293,11 +278,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             {
             case FRAME_TYPE::FT_CAMERA:
             {
-                scene->TranslateActiveCameraYAxis(-moveFactor);
+                scene->TranslateActiveCameraAxis(-moveFactor, AXES::Y);
             } break;
             case FRAME_TYPE::FT_MODEL:
             {
-                scene->TranslateActiveModelYAxis(-moveFactor);
+                scene->TranslateActiveModelAxis(-moveFactor, AXES::Y);
             } break;
             default: break;
             }
@@ -308,11 +293,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             {
             case FRAME_TYPE::FT_CAMERA:
             {
-                scene->TranslateActiveCameraZAxis(moveFactor);
+                scene->TranslateActiveCameraAxis(moveFactor, AXES::Z);
             } break;
             case FRAME_TYPE::FT_MODEL:
             {
-                scene->TranslateActiveModelZAxis(moveFactor);
+                scene->TranslateActiveModelAxis(moveFactor, AXES::Z);
             } break;
             default: break;
             }
@@ -324,11 +309,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             {
             case FRAME_TYPE::FT_CAMERA:
             {
-                scene->TranslateActiveCameraZAxis(-moveFactor);
+                scene->TranslateActiveCameraAxis(-moveFactor, AXES::Z);
             } break;
             case FRAME_TYPE::FT_MODEL:
             {
-                scene->TranslateActiveModelZAxis(-moveFactor);
+                scene->TranslateActiveModelAxis(-moveFactor, AXES::Z);
             } break;
             default: break;
             }
@@ -406,7 +391,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             bIsProjError = false;
         }
 
-        static glm::mat4x4 activeCameraProjection;
+        static mat4x4 activeCameraProjection;
         activeCameraProjection = scene->GetActiveCameraProjection();
         string sCameraProjection = "";
         for (int i = 0; i < 4; i++)
@@ -457,7 +442,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         }
         ImGui::Text("Active model: %d", scene->GetActiveModelIdx());
 
-        static glm::mat4x4 activeModelTransformation;
+        static mat4x4 activeModelTransformation;
         activeModelTransformation = scene->GetActiveModelTransformation();
         string sModelTransformation = "";
         for (int i = 0; i < 4; i++)
@@ -513,13 +498,13 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         ImGui::Begin("Color menu");
 
         ImGui::Text("-------------- Background: --------------");
-        glm::vec4 currentBgCol = scene->GetBgColor();
+        vec4 currentBgCol = scene->GetBgColor();
         static float bg[3] = { currentBgCol.x ,currentBgCol.y ,currentBgCol.z };
         ImGui::ColorEdit3("BG", bg);
         scene->SetBgColor({ bg[0], bg[1], bg[2], 1 });
 
         ImGui::Text("-------------- Polygons: --------------");
-        glm::vec4 currentPolygonCol = scene->GetPolygonColor();
+        vec4 currentPolygonCol = scene->GetPolygonColor();
         static float polygon[3] = { currentPolygonCol.x ,currentPolygonCol.y ,currentPolygonCol.z };
         ImGui::ColorEdit3("Polygon", polygon);
         scene->SetPolygonColor({ polygon[0], polygon[1], polygon[2], 1 });
@@ -536,8 +521,8 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             {
                 if (ImGui::MenuItem("Open", "CTRL+O"))
                 {
-                    nfdchar_t *outPath = NULL;
-                    nfdresult_t result = NFD_OpenDialog("obj;png,jpg", NULL, &outPath);
+                    nfdchar_t *outPath = nullptr;
+                    nfdresult_t result = NFD_OpenDialog("obj;png,jpg", nullptr, &outPath);
                     if (result == NFD_OKAY) {
                         ImGui::Text("Hello from another window!");
                         scene->LoadOBJModel(outPath);

@@ -64,7 +64,7 @@ public:
 
     void drawVerticesNormals(const vector<glm::vec4>& vertices, const vector<glm::vec4>& normals, float normScaleRate);
     // Draws wireframe triangles to the color buffer
-    void DrawTriangles(const vector<glm::vec4>* vertices, bool bDrawFaceNormals = false, const glm::vec4* modelCentroid = NULL, float normScaleRate = 1, bool bIsCamera = false);
+    void DrawTriangles(const vector<glm::vec4>& vertices, bool bDrawFaceNormals = false, const glm::vec4* modelCentroid = nullptr, float normScaleRate = 1, bool bIsCamera = false);
     // Draws surrounding border cube;
     void drawBordersCube(CUBE borderCube);
     // Sets the camera transformations with relation to world coordinates

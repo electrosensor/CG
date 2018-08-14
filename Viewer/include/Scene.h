@@ -81,17 +81,11 @@ public:
 
     void ScaleActiveCamera(float value);
 
-    void TranslateActiveCameraXAxis(float value);
-    void TranslateActiveCameraYAxis(float value);
-    void TranslateActiveCameraZAxis(float value);
+    void TranslateActiveCameraAxis(float value, AXES axis);
 
-    void RotateActiveCameraWorldXAxis(float angle);
-    void RotateActiveCameraWorldYAxis(float angle);
-    void RotateActiveCameraWorldZAxis(float angle);
+    void RotateActiveCameraWorldAxis(float angle, AXES axis);
    
-    void RotateActiveCameraXAxis(float angle);
-    void RotateActiveCameraYAxis(float angle);
-    void RotateActiveCameraZAxis(float angle);
+    void RotateActiveCameraAxis(float angle, AXES axis);
     
 
     //Models API:
@@ -111,15 +105,11 @@ public:
 
     glm::mat4x4 GetActiveModelTransformation();
     
-    void TranslateActiveModelXAxis(float value);
-    void TranslateActiveModelYAxis(float value);
-    void TranslateActiveModelZAxis(float value);
+    void TranslateActiveModelAxis(float value, AXES axis);
 
     void ScaleActiveModel(float value);
 
-    void RotateActiveModelXAxis(float angle);
-    void RotateActiveModelYAxis(float angle);
-    void RotateActiveModelZAxis(float angle);
+    void RotateActiveModelAxis(float angle, AXES axis);
     
     void showFacesNormals(bool bDrawFaceNormal) { m_bDrawFaceNormal = bDrawFaceNormal; }
     void showVerticesNormals(bool bDrawVecNormal) { m_bDrawVecNormal = bDrawVecNormal; }

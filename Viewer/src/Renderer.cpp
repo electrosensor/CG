@@ -5,6 +5,8 @@
 #include "Util.h"
 #include "Defs.h"
 
+using namespace std;
+using namespace glm;
 
 Renderer::Renderer() : m_width(DEFAULT_WIDTH), m_height(DEFAULT_HEIGHT)
 {
@@ -25,7 +27,7 @@ Renderer::~Renderer()
 }
 
 
-glm::vec4 Renderer::processPipeline(const glm::vec4& point, PIPE_TYPE pipeType /*= FULL*/)
+vec4 Renderer::processPipeline(const vec4& point, PIPE_TYPE pipeType /*= FULL*/)
 {
     switch (pipeType)
     {
@@ -42,21 +44,21 @@ glm::vec4 Renderer::processPipeline(const glm::vec4& point, PIPE_TYPE pipeType /
     
 }
 
-void Renderer::DrawTriangles(const vector<glm::vec4>* vertices, bool bDrawFaceNormals /*= false*/, const glm::vec4* modelCentroid /*= NULL*/, float normScaleRate /*= 1*/, bool bIsCamera /*= false*/)
+void Renderer::DrawTriangles(const vector<vec4>& vertices, bool bDrawFaceNormals /*= false*/, const vec4* modelCentroid /*= NULL*/, float normScaleRate /*= 1*/, bool bIsCamera /*= false*/)
 {
-    vector<glm::vec4>::const_iterator it = vertices->begin();
+    auto it = vertices.begin();
     
-    while (it != vertices->end())
+    while (it != vertices.end())
     {
-        glm::vec4 p1 = *(it++);
-        if (it == vertices->end()) break;
-        glm::vec4 p2 = *(it++);
-        if (it == vertices->end()) break;
-        glm::vec4 p3 = *(it++);
+        auto p1 = *(it++);
+        if (it == vertices.end()) break;
+        auto p2 = *(it++);
+        if (it == vertices.end()) break;
+        auto p3 = *(it++);
 
-        glm::vec4 nrm1 = p1;
-        glm::vec4 nrm2 = p2;
-        glm::vec4 nrm3 = p3;
+        auto nrm1 = p1;
+        auto nrm2 = p2;
+        auto nrm3 = p3;
 
         p1 = processPipeline(p1);
         p2 = processPipeline(p2);
@@ -68,72 +70,71 @@ void Renderer::DrawTriangles(const vector<glm::vec4>* vertices, bool bDrawFaceNo
 
         if (bDrawFaceNormals)
         {
-            glm::vec4 subs1      = nrm3 - nrm1;
-            glm::vec4 subs2      = nrm2 - nrm1;
+            auto subs1      = nrm3 - nrm1;
+            auto subs2      = nrm2 - nrm1;
                       subs1.w    = 1;
                       subs2.w    = 1;
 
-            glm::vec4 faceNormal = Util::Cross(subs1, subs2);
+            auto faceNormal = Util::Cross(subs1, subs2);
 
-            glm::vec4 faceCenter   = (nrm1 + nrm2 + nrm3) / 3.0f;
+            auto faceCenter   = (nrm1 + nrm2 + nrm3) / 3.0f;
                       faceCenter.w = 1;
 
-            glm::vec4 normalizedFaceNormal = Util::isVecEqual(faceNormal, glm::vec4(0, 0, 0, 1)) ? faceNormal : glm::normalize(faceNormal);
+            auto normalizedFaceNormal = Util::isVecEqual(faceNormal, vec4(0, 0, 0, 1)) ? faceNormal : normalize(faceNormal);
 
-            normalizedFaceNormal = glm::mat4x4(SCALING_MATRIX4(normScaleRate)) * normalizedFaceNormal;
+            normalizedFaceNormal = mat4x4(SCALING_MATRIX4(normScaleRate)) * normalizedFaceNormal;
 
             //normalizedFaceNormal *= fnScale;
-            glm::vec4 nP1 = processPipeline(faceCenter);
-            glm::vec4 nP2 = processPipeline(faceCenter + normalizedFaceNormal);
+            auto nP1 = processPipeline(faceCenter);
+            auto nP2 = processPipeline(faceCenter + normalizedFaceNormal);
 
             DrawLine(toViewPlane(nP1), toViewPlane(nP2), COLOR(LIME));
         }
     }
 }
 
-void Renderer::drawVerticesNormals(const vector<glm::vec4>& vertices, const vector<glm::vec4>& normals, float normScaleRate)
+void Renderer::drawVerticesNormals(const vector<vec4>& vertices, const vector<vec4>& normals, float normScaleRate)
 {
     for (int i = 0; i < normals.size() && i < vertices.size(); i++)
     {
-        glm::vec4 vertex       = vertices[i];
-        glm::vec4 vertexNormal = normals[i];
+        vec4 vertex       = vertices[i];
+        vec4 vertexNormal = normals[i];
 
-        glm::vec4 normalizedVertexNormal = Util::isVecEqual(vertexNormal, HOMOGENEOUS_VECTOR4) ? vertexNormal : glm::normalize(vertexNormal);
+        vec4 normalizedVertexNormal = Util::isVecEqual(vertexNormal, HOMOGENEOUS_VECTOR4) ? vertexNormal : normalize(vertexNormal);
 
-        normalizedVertexNormal = glm::mat4x4(SCALING_MATRIX4(normScaleRate)) * normalizedVertexNormal;
-
-        glm::vec4 nP1 = processPipeline(vertex);
-        glm::vec4 nP2 = processPipeline(vertex + normalizedVertexNormal);
+        normalizedVertexNormal = mat4x4(SCALING_MATRIX4(normScaleRate)) * normalizedVertexNormal;
+        
+        vec4 nP1 = processPipeline(vertex);
+        vec4 nP2 = processPipeline(vertex + normalizedVertexNormal);
 
         DrawLine(toViewPlane(nP1), toViewPlane(nP2), COLOR(RED));
     }
 }
 
+
 void Renderer::drawBordersCube(CUBE borderCube)
 {
-    for each (std::pair<glm::vec4, glm::vec4> line in borderCube.line)
+    for each (std::pair<vec4, vec4> line in borderCube.line)
     {
-        glm::vec4 pStart = processPipeline(line.first);
-        glm::vec4 pEnd   = processPipeline(line.second);
-
+        auto[pStart, pEnd] = make_tuple(processPipeline(line.first), processPipeline(line.second));
         DrawLine(toViewPlane(pStart), toViewPlane(pEnd), COLOR(BLUE));
     }
 }
 
-glm::vec2 Renderer::toViewPlane(const glm::vec4& pointParam)
+vec2 Renderer::toViewPlane(const vec4& pointParam)
 {
     // convert to raster space 
 
-    glm::vec3 point = Util::toCartesianForm(pointParam);
+    vec3 point = Util::toCartesianForm(pointParam);
 
-    glm::vec2 screenPoint;
+    vec2 screenPoint;
 
     screenPoint.x = ((point.x + 1) * m_width  / 2.0f);
     screenPoint.y = ((point.y + 1) * m_height / 2.0f);
 
     screenPoint.x = round((screenPoint.x - (m_width  / 2.0f)) * (250.0f / m_width ) + (m_width  / 2.0f));
     screenPoint.y = round((screenPoint.y - (m_height / 2.0f)) * (250.0f / m_height) + (m_height / 2.0f));
-    if (/*m_bzBuffer*/1)
+    if (/*m_bzBuffer*/true)
     {
 //             for every pixel(x, y);
 //                 PutZ(x, y, MaxZ);
@@ -149,27 +150,27 @@ glm::vec2 Renderer::toViewPlane(const glm::vec4& pointParam)
 //                 end
 
     }
-    return glm::vec2((int)screenPoint.x, (int)screenPoint.y);
+    return vec2((int)screenPoint.x, (int)screenPoint.y);
 }
 
 
-void Renderer::SetCameraTransform(const glm::mat4x4 & cTransform)
+void Renderer::SetCameraTransform(const mat4x4 & cTransform)
 {
     m_cameraTransform = cTransform;
 }
 
-void Renderer::SetProjection(const glm::mat4x4 & projection)
+void Renderer::SetProjection(const mat4x4 & projection)
 {
     m_cameraProjection = projection;
 }
 
-void Renderer::SetObjectMatrices(const glm::mat4x4 & oTransform, const glm::mat4x4 & nTransform)
+void Renderer::SetObjectMatrices(const mat4x4 & oTransform, const mat4x4 & nTransform)
 {
     m_objectTransform = oTransform;
     m_normalTransform = nTransform;
 }
 
-void Renderer::putPixel(int i, int j, const glm::vec4& color)
+void Renderer::putPixel(int i, int j, const vec4& color)
 {
     if (i < 0) return; if (i >= m_width) return;
     if (j < 0) return; if (j >= m_height) return;
@@ -185,7 +186,7 @@ void Renderer::putZ(int x, int y, float d)
     zBuffer[Z_BUF_INDEX(m_width, x, y)] = d;
 }
 
-void Renderer::DrawLine(const glm::vec2& p1, const glm::vec2& p2, const glm::vec4& color)
+void Renderer::DrawLine(const vec2& p1, const vec2& p2, const vec4& color)
 {
     float dx, dy;
 
@@ -202,11 +203,11 @@ void Renderer::DrawLine(const glm::vec2& p1, const glm::vec2& p2, const glm::vec
     
     float error = dx / 2.0f;
     const int ystep = (y1 < y2) ? 1 : -1;
-    int y = (int)y1;
+    auto y = (int)y1;
 
-    const int maxX = (int)x2;
+    const auto maxX = (int)x2;
 
-    for (int x = (int)x1; x < maxX; x++)
+    for (auto x = (int)x1; x < maxX; x++)
     {
         putPixel(x, y, bSteep, color);
 
@@ -214,7 +215,7 @@ void Renderer::DrawLine(const glm::vec2& p1, const glm::vec2& p2, const glm::vec
     }
 }
 
-void Renderer::putPixel(int x, int y, bool steep, const glm::vec4& color)
+void Renderer::putPixel(int x, int y, bool steep, const vec4& color)
 {
     if (steep)
     {
@@ -241,7 +242,7 @@ void Renderer::createBuffers(int w, int h)
     }
 }
 
-void Renderer::setWorldTransformation(glm::mat4x4 worldTransformation)
+void Renderer::setWorldTransformation(mat4x4 worldTransformation)
 {
     m_worldTransformation = worldTransformation;
 }
@@ -263,23 +264,23 @@ void Renderer::orderPoints(float& x1, float& x2, float& y1, float& y2)
 
 void Renderer::drawAxis()
 {
-    glm::vec4 axisX     = m_worldTransformation[0];
-    glm::vec4 axisY     = m_worldTransformation[1];
-    glm::vec4 axisZ     = m_worldTransformation[2];
+    vec4 axisX     = m_worldTransformation[0];
+    vec4 axisY     = m_worldTransformation[1];
+    vec4 axisZ     = m_worldTransformation[2];
               axisX.w   = 1;
               axisY.w   = 1;
               axisZ.w   = 1;
 
-    glm::vec4 zeroPoint = HOMOGENEOUS_VECTOR4;
+    vec4 zeroPoint = HOMOGENEOUS_VECTOR4;
 
     axisX     = processPipeline(axisX,     AXIS);
     axisY     = processPipeline(axisY,     AXIS);
     axisZ     = processPipeline(axisZ,     AXIS);
     zeroPoint = processPipeline(zeroPoint, AXIS);
 
-    axisX = glm::mat4x4(SCALING_MATRIX4(5))*axisX;
-    axisY = glm::mat4x4(SCALING_MATRIX4(5))*axisY;
-    axisZ = glm::mat4x4(SCALING_MATRIX4(5))*axisZ;
+    axisX = mat4x4(SCALING_MATRIX4(5))*axisX;
+    axisY = mat4x4(SCALING_MATRIX4(5))*axisY;
+    axisZ = mat4x4(SCALING_MATRIX4(5))*axisZ;
 
 
     DrawLine(toViewPlane(zeroPoint), toViewPlane(axisX), COLOR(X_COL));
@@ -290,10 +291,10 @@ void Renderer::drawAxis()
 
 void Renderer::drawModelAxis()
 {
-    glm::vec4 axisX = { 1,0,0,1 };
-    glm::vec4 axisY = { 0,1,0,1 };
-    glm::vec4 axisZ = { 0,0,1,1 };
-    glm::vec4 zeroPoint = { m_objectTransform[0][3],m_objectTransform[1][3],m_objectTransform[2][3] , 1 };
+    vec4 axisX = { 1,0,0,1 };
+    vec4 axisY = { 0,1,0,1 };
+    vec4 axisZ = { 0,0,1,1 };
+    vec4 zeroPoint = { m_objectTransform[0][3],m_objectTransform[1][3],m_objectTransform[2][3] , 1 };
 
     axisX     = processPipeline(axisX,     MODEL);
     axisY     = processPipeline(axisY,     MODEL);
@@ -349,7 +350,7 @@ void Renderer::initOpenGLRendering()
     // Makes this buffer the current one.
     glBindBuffer(GL_ARRAY_BUFFER, buffer);
     // This is the opengl way for doing malloc on the gpu. 
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vtc)+sizeof(tex), NULL, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vtc)+sizeof(tex), nullptr, GL_STATIC_DRAW);
     // memcopy vtc to buffer[0,sizeof(vtc)-1]
     glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(vtc), vtc);
     // memcopy tex to buffer[sizeof(vtc),sizeof(vtc)+sizeof(tex)]
@@ -361,7 +362,7 @@ void Renderer::initOpenGLRendering()
     // Tells the shader where to look for the vertex position data, and the data dimensions.
     GLint  vPosition = glGetAttribLocation( program, "vPosition" );
     glEnableVertexAttribArray( vPosition );
-    glVertexAttribPointer( vPosition,2,GL_FLOAT,GL_FALSE,0,0 );
+    glVertexAttribPointer( vPosition,2,GL_FLOAT,GL_FALSE,0,nullptr );
     // Same for texture coordinates data.
     GLint  vTexCoord = glGetAttribLocation( program, "vTexCoord" );
     glEnableVertexAttribArray( vTexCoord );
@@ -396,7 +397,7 @@ void Renderer::createOpenGLBuffer()
     // Makes glScreenTex (which was allocated earlier) the current texture.
     glBindTexture(GL_TEXTURE_2D, glScreenTex);
     // malloc for a texture on the gpu.
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, m_width, m_height, 0, GL_RGB, GL_FLOAT, NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, m_width, m_height, 0, GL_RGB, GL_FLOAT, nullptr);
     glViewport(0, 0, m_width, m_height);
 }
 
@@ -443,22 +444,22 @@ void Renderer::Viewport(int w, int h)
 }
 
 
-glm::vec4 Renderer::GetBgColor()
+vec4 Renderer::GetBgColor()
 {
     return m_bgColor;
 }
 
-void Renderer::SetBgColor(glm::vec4 newBgColor)
+void Renderer::SetBgColor(vec4 newBgColor)
 {
     m_bgColor = newBgColor;
 }
 
-glm::vec4 Renderer::GetPolygonColor()
+vec4 Renderer::GetPolygonColor()
 {
     return m_polygonColor;
 }
 
-void Renderer::SetPolygonColor(glm::vec4 newMeshColor)
+void Renderer::SetPolygonColor(vec4 newMeshColor)
 {
     m_polygonColor = newMeshColor;
 }

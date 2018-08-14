@@ -1,33 +1,36 @@
 #include "Util.h"
 #include <limits>
 
-glm::vec4 Util::toHomogeneousForm(const glm::vec3& normalForm)
+using namespace std;
+using namespace glm;
+
+vec4 Util::toHomogeneousForm(const vec3& normalForm)
 {
-	return glm::vec4(normalForm.x, normalForm.y, normalForm.z, 1);
+	return vec4(normalForm.x, normalForm.y, normalForm.z, 1);
 }
 
-glm::vec4 Util::expandToVec4(const glm::vec3 & vector)
+vec4 Util::expandToVec4(const vec3 & vector)
 {
-	return glm::vec4(vector.x, vector.y, vector.z, 0);
+	return vec4(vector.x, vector.y, vector.z, 0);
 }
 
-glm::vec3 Util::toCartesianForm(const glm::vec4& homogeneousForm)
+vec3 Util::toCartesianForm(const vec4& homogeneousForm)
 {
     assert(homogeneousForm.w != 0);
-	return glm::vec3(homogeneousForm.x / homogeneousForm[3], homogeneousForm.y / homogeneousForm[3], homogeneousForm.z / homogeneousForm[3]);
+	return vec3(homogeneousForm.x / homogeneousForm[3], homogeneousForm.y / homogeneousForm[3], homogeneousForm.z / homogeneousForm[3]);
 }
 
-glm::vec4 Util::Cross(const glm::vec4 & lVector4, const glm::vec4 & rVector4)
+vec4 Util::Cross(const vec4 & lVector4, const vec4 & rVector4)
 {
-    return toHomogeneousForm(glm::cross(toCartesianForm(lVector4), toCartesianForm(rVector4)));
+    return toHomogeneousForm(cross(toCartesianForm(lVector4), toCartesianForm(rVector4)));
 }
 
-glm::vec3 Util::findCentralVec(glm::vec3 p1, glm::vec3 p2, glm::vec3 p3)
+vec3 Util::findCentralVec(vec3 p1, vec3 p2, vec3 p3)
 {
     return 0.5f*(p2 + p3) - p1;  
 }
 
-bool Util::isVecEqual(glm::vec3 v1, glm::vec3 v2)
+bool Util::isVecEqual(vec3 v1, vec3 v2)
 {
     bool bEquals = true;
 
@@ -40,7 +43,7 @@ bool Util::isVecEqual(glm::vec3 v1, glm::vec3 v2)
 
 }
 
-bool Util::isVecEqual(glm::vec4 v1, glm::vec4 v2)
+bool Util::isVecEqual(vec4 v1, vec4 v2)
 {
     bool bEquals = true;
 
@@ -52,7 +55,7 @@ bool Util::isVecEqual(glm::vec4 v1, glm::vec4 v2)
     return bEquals;
 }
 
-glm::vec4 Util::getColor(R_COLOR color)
+vec4 Util::getColor(R_COLOR color)
 {
     switch (color)
     {

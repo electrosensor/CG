@@ -7,8 +7,8 @@
 #include <fstream>
 #include <sstream>
 
-
 using namespace std;
+using namespace glm;
 
 // A struct for processing a single line in a wafefront obj file:
 // https://en.wikipedia.org/wiki/Wavefront_.obj_file
@@ -60,18 +60,18 @@ struct FaceIdx
 	}
 };
 
-glm::vec3 vec3fFromStream(std::istream& issLine)
+vec3 vec3fFromStream(std::istream& issLine)
 {
 	float x, y, z;
 	issLine >> x >> std::ws >> y >> std::ws >> z;
-	return glm::vec3(x, y, z);
+	return vec3(x, y, z);
 }
 
-glm::vec2 vec2fFromStream(std::istream& issLine)
+vec2 vec2fFromStream(std::istream& issLine)
 {
 	float x, y;
 	issLine >> x >> std::ws >> y;
-	return glm::vec2(x, y);
+	return vec2(x, y);
 }
 
 MeshModel::MeshModel(const string& fileName) : m_modelTransformation(I_MATRIX),
@@ -91,32 +91,32 @@ MeshModel::~MeshModel()
     delete[] m_vertexNormals;
 }
 
-void MeshModel::SetWorldTransformation(glm::mat4x4 & transformation)
+void MeshModel::SetWorldTransformation(mat4x4 & transformation)
 {
 	m_worldTransformation = transformation;
 }
 
-const glm::mat4x4& MeshModel::GetWorldTransformation()
+const mat4x4& MeshModel::GetWorldTransformation()
 {
 	return m_worldTransformation;
 }
 
-void MeshModel::SetNormalTransformation(glm::mat4x4 & transformation)
+void MeshModel::SetNormalTransformation(mat4x4 & transformation)
 {
 	m_normalTransformation = transformation;
 }
 
-const glm::mat4x4 & MeshModel::GetNormalTransformation()
+const mat4x4 & MeshModel::GetNormalTransformation()
 {
 	return m_normalTransformation;
 }
 
-void MeshModel::SetModelTransformation(glm::mat4x4& transformation)
+void MeshModel::SetModelTransformation(mat4x4& transformation)
 {
     m_modelTransformation = transformation;
 }
 
-const glm::mat4x4& MeshModel::GetModelTransformation()
+const mat4x4& MeshModel::GetModelTransformation()
 {
     return m_modelTransformation;
 }
@@ -132,14 +132,14 @@ void MeshModel::LoadFile(const string& fileName)
 	}
 
 	vector<FaceIdx> faces;
-	vector<glm::vec4> vertices;
-    vector<glm::vec4> normals;
+	vector<vec4> vertices;
+    vector<vec4> normals;
 
-    glm::vec4 maxCoords = { -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max() , 1 };
-    glm::vec4 minCoords = {  std::numeric_limits<float>::max(),  std::numeric_limits<float>::max(),  std::numeric_limits<float>::max() , 1 };
-    glm::vec4 normalizedVec = HOMOGENEOUS_VECTOR4;
+    vec4 maxCoords = { -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max() , 1 };
+    vec4 minCoords = {  std::numeric_limits<float>::max(),  std::numeric_limits<float>::max(),  std::numeric_limits<float>::max() , 1 };
+    vec4 normalizedVec = HOMOGENEOUS_VECTOR4;
     unsigned int numVertices = 0;
-    glm::vec4 modelCentroid = HOMOGENEOUS_VECTOR4;
+    vec4 modelCentroid = HOMOGENEOUS_VECTOR4;
 	// while not end of file
 	while (!ifile.eof())
 	{
@@ -156,7 +156,7 @@ void MeshModel::LoadFile(const string& fileName)
 		// based on the type parse data
 		if (lineType == "v")
         {
-            glm::vec4 parsedVec = Util::toHomogeneousForm(vec3fFromStream(issLine));
+            vec4 parsedVec = Util::toHomogeneousForm(vec3fFromStream(issLine));
             
             minCoords.x = (minCoords.x > parsedVec.x) ? parsedVec.x : minCoords.x;
             minCoords.y = (minCoords.y > parsedVec.y) ? parsedVec.y : minCoords.y;
@@ -180,7 +180,7 @@ void MeshModel::LoadFile(const string& fileName)
 		{
 			faces.push_back(issLine);
 		}
-		else if (lineType == "#" || lineType == "")
+		else if (lineType == "#" || lineType.empty())
 		{
 			// comment / empty line
 		}
@@ -200,11 +200,11 @@ void MeshModel::LoadFile(const string& fileName)
 
 
     m_verticesSize    = vertices.size();
-    m_vertices        = new glm::vec4[m_verticesSize];
+    m_vertices        = new vec4[m_verticesSize];
 	m_vertexPosSize   = faces.size()*FACE_ELEMENTS;
-	m_vertexPositions = new glm::vec4[m_vertexPosSize];
+	m_vertexPositions = new vec4[m_vertexPosSize];
     m_vertexNormSize  = normals.size();
-    m_vertexNormals   = new glm::vec4[m_vertexNormSize];
+    m_vertexNormals   = new vec4[m_vertexNormSize];
 
 
 
@@ -233,7 +233,7 @@ void MeshModel::LoadFile(const string& fileName)
             float x = m_vertices[currentVertexIdx - 1].x;
             float y = m_vertices[currentVertexIdx - 1].y;
             float z = m_vertices[currentVertexIdx - 1].z;
-			m_vertexPositions[posIdx++] = glm::vec4(x, y, z , 1);
+			m_vertexPositions[posIdx++] = vec4(x, y, z , 1);
 		}
 	}
     
@@ -260,37 +260,23 @@ void MeshModel::LoadFile(const string& fileName)
 
 }
 
-std::pair<std::vector<glm::vec4>, std::pair<std::vector<glm::vec4>, std::vector<glm::vec4> > >* MeshModel::Draw()
+void MeshModel::Draw(tuple<vector<vec4>, vector<vec4>, vector<vec4> >& modelData)
 {
-    std::pair<std::vector<glm::vec4>, std::pair<std::vector<glm::vec4>, std::vector<glm::vec4> > >* verticesData = new std::pair<std::vector<glm::vec4>, std::pair<std::vector<glm::vec4>, std::vector<glm::vec4> > >();
-    vector<glm::vec4> meshModelVertexPositions;
-    vector<glm::vec4> meshModelVertices;
-    vector<glm::vec4> meshModelVerticesNormals;
-
 	for (size_t i = 0; i < m_vertexPosSize; i++)
 	{
-		glm::vec4 vertexPosition = m_vertexPositions[i];
-        meshModelVertexPositions.push_back(vertexPosition);
+        get<TUPLE_POSITIONS>(modelData).push_back(m_vertexPositions[i]);
 	}
    
     for (size_t i = 0; i < m_verticesSize; i++)
     {
-        glm::vec4 vertex = m_vertices[i];
-        meshModelVertices.push_back(vertex);
+        get<TUPLE_VERTICES>(modelData).push_back(m_vertices[i]);
     }
 
     for (size_t i = 0; i < m_vertexNormSize; i++)
     {
-        glm::vec4 normal = m_vertexNormals[i];
-        meshModelVerticesNormals.push_back(normal);
+        get<TUPLE_VNORMALS>(modelData).push_back(m_vertexNormals[i]);
     }
-
-    verticesData->first         = meshModelVertexPositions;
-    verticesData->second.first  = meshModelVertices;
-    verticesData->second.second = meshModelVerticesNormals;
-
-	return verticesData;
-}
+};
 
 string* PrimMeshModel::setPrimModelFilePath(PRIM_MODEL primModel)
 {
@@ -309,3 +295,15 @@ string* PrimMeshModel::setPrimModelFilePath(PRIM_MODEL primModel)
 	return m_pPrimModelString;
 }
 
+void CamMeshModel::Draw(tuple<vector<vec4>, vector<vec4>, vector<vec4> >& modelData)
+{
+    vector<vec4> camModelVertices;
+
+    for (size_t i = 0; i < m_vertexPosSize; i++)
+    {
+        vec4 vertex = mat4x4(SCALING_MATRIX4(0.3f))*m_vertexPositions[i];
+        camModelVertices.push_back(vertex);
+    }
+
+    get<TUPLE_POSITIONS>(modelData) = camModelVertices;
+}

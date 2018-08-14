@@ -6,9 +6,6 @@
 #include "Util.h"
 
 
-using namespace std;
-
-
 /*
  * MeshModel class. Mesh model object represents a triangle mesh (loaded fron an obj file).
  * 
@@ -34,17 +31,17 @@ class MeshModel : public Model
 		MeshModel(const string& fileName);
 		~MeshModel();
 
-        const glm::mat4x4& GetModelTransformation();
-		const glm::mat4x4& GetWorldTransformation();
-		const glm::mat4x4& GetNormalTransformation();
+        const glm::mat4x4& GetModelTransformation() override;
+		const glm::mat4x4& GetWorldTransformation() override;
+		const glm::mat4x4& GetNormalTransformation() override;
 
-        void SetModelTransformation(glm::mat4x4& transformation);
-		void SetWorldTransformation(glm::mat4x4& transformation);
-		void SetNormalTransformation(glm::mat4x4& transformation);
+        void SetModelTransformation(glm::mat4x4& transformation) override;
+		void SetWorldTransformation(glm::mat4x4& transformation) override;
+		void SetNormalTransformation(glm::mat4x4& transformation) override;
 
 		void LoadFile(const string& fileName);
-		pair<vector<glm::vec4>, pair<vector<glm::vec4>, vector<glm::vec4> > >* Draw();
-        glm::vec4 getCentroid() { return  m_modelCentroid; }
+		void Draw(tuple<vector<glm::vec4>, vector<glm::vec4>, vector<glm::vec4> >& modelData) override;
+        glm::vec4 getCentroid() override { return  m_modelCentroid; }
 
 
 
@@ -63,9 +60,9 @@ public:
 	}
 
 private:
-	string* setPrimModelFilePath(PRIM_MODEL primModel);
+    std::string* setPrimModelFilePath(PRIM_MODEL primModel);
 
-	string* m_pPrimModelString;
+    std::string* m_pPrimModelString;
 };
 
 
@@ -92,23 +89,7 @@ public:
         return m_camCoords;
     }
 
-    pair<vector<glm::vec4>, pair<vector<glm::vec4>, vector<glm::vec4> > >* Draw()
-    {
-        pair<vector<glm::vec4>, pair<vector<glm::vec4>, vector<glm::vec4> > >* verticesData = new pair<vector<glm::vec4>, pair<vector<glm::vec4>, vector<glm::vec4> > >();
-        vector<glm::vec4> camModelVertices; //AVIAD TODO CHECK
-        pair<vector<glm::vec4>, vector<glm::vec4> > dummy;
-
-        for (size_t i = 0; i < m_vertexPosSize; i++)
-        {
-            glm::vec4 vertex = glm::mat4x4(SCALING_MATRIX4(0.3f))*m_vertexPositions[i];
-            camModelVertices.push_back(vertex);
-        }
-
-        verticesData->first = camModelVertices;
-        verticesData->second = dummy;
-
-        return verticesData;
-    }
+    void Draw(tuple<vector<glm::vec4>, vector<glm::vec4>, vector<glm::vec4> >& modelData) override;
 
 
 };

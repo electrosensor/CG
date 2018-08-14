@@ -139,14 +139,14 @@ GLFWwindow* SetupGlfwWindow(int w, int h, const char* window_name)
 {
 	glfwSetErrorCallback(GlfwErrorCallback);
 	if (!glfwInit())
-		return NULL;
+		return nullptr;
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #if __APPLE__
 	glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
-	GLFWwindow* window = glfwCreateWindow(w, h, window_name, NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(w, h, window_name, nullptr, nullptr);
 	glfwMakeContextCurrent(window);
 	glfwSwapInterval(1); // Enable vsync
 						 // very importent!! initialization of glad

@@ -2,6 +2,8 @@
 
 #include <string>
 #include <stdlib.h>
+#include <tuple>
+
 
 #define DEFAULT_HEIGHT                   720
 #define DEFAULT_WIDTH                    1280
@@ -26,12 +28,16 @@
 #define ROTATING_MATRIX_Y_AXIS(angle)    { {cos(angle),0,-sin(angle),0},{ 0,1,0,0 },{ sin(angle),0,cos(angle),0 },{ 0,0,0,1 } }
 #define ROTATING_MATRIX_Z_AXIS(angle)    { {cos(angle),sin(angle),0,0},{ -sin(angle),cos(angle),0,0 },{ 0,0,1,0 },{ 0,0,0,1 } }
 #define PERSPECTIVE_MATRIX(d)            { {1,0,0,0},{ 0,1,0,0 },{ 0,0,1,1.0f/(d) },{ 0,0,0,0 } }
+#define DEFAULT_CAMERA_POSITION          { { 2.f, 2.f, 2.f, 1.0f }, { 0, 0, 0, 1.0f }, { 0, 1, 0, 1.0f } }
 
 #define MAX(a,b)                         (((a) > (b)) ? (a) : (b))
 #define MIN(a,b)                         (((a) < (b)) ? (a) : (b))
 #define NORM_ZERO_TO_ONE(value,min,max)  ((value) - (min)) / ((max) - (min))
 #define NORMALIZE_COORDS(value,min,max)  (((NORM_ZERO_TO_ONE(value,min,max)*2) - 1))
 
+#define TUPLE_POSITIONS                  (0)
+#define TUPLE_VERTICES                   (1)
+#define TUPLE_VNORMALS                   (2)
 
  enum R_COLOR
 {
