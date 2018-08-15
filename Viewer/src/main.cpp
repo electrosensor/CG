@@ -101,13 +101,13 @@ RETURN_CODE processCmdLineOptions(PUINT32 height, PUINT32 width, int argCount, c
 		return RC_FAILURE;
 	}
 
-	//either argvec[0] and [2] must -w and -h in any order
-	if (!(!memcmp(argVec[1], "-w", 2) && (!memcmp(argVec[3], "-h", 2))) ||
-		 (!memcmp(argVec[1], "-h", 2) && (!memcmp(argVec[3], "-w", 2))))
-	{
-		fprintf(stderr, "bad params\n");
-		return RC_FAILURE;
-	}
+// 	//either argvec[0] and [2] must -w and -h in any order
+// 	if ((memcmp(argVec[1], "-w", 2) || (memcmp(argVec[3], "-h", 2))) ||
+// 		 (!memcmp(argVec[1], "-h", 2) && (!memcmp(argVec[3], "-w", 2))))
+// 	{
+// 		fprintf(stderr, "bad params\n");
+// 		return RC_FAILURE;
+// 	}
 
 	if (!memcmp(argVec[1], "-w", 2))
 	{

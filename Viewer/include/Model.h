@@ -21,11 +21,12 @@ public:
 
     bool isModelRenderingActive()                               { return m_bShouldRender; }
     void setModelRenderingState(bool bIsRenderingStateActive)   { m_bShouldRender = bIsRenderingStateActive; }
-    CUBE& getBordersCube()                                { return m_cubeLines; }
+    CUBE& getBordersCube()                                      { return m_cubeLines; }
     virtual glm::vec4 getCentroid() = 0;
 
     glm::vec4 m_minCoords;
     glm::vec4 m_maxCoords;
+
 
 protected:
     bool m_bShouldRender;
@@ -35,31 +36,31 @@ protected:
     {
         INIT_CUBE_COORDS(m_maxCoords, m_minCoords);
                                                                 
-        glm::vec4      RNB = { cRight , cBottom , cNear ,  1  };  //            _________________________RFT=m_maxCoords(x,y,z)
-        glm::vec4      RFB = { cRight , cBottom , cFar  ,  1  };  //           /LFT___________________  /|
-        glm::vec4      LFB = { cLeft  , cBottom , cFar  ,  1  };  //          / / ___________________/ / |
-        glm::vec4      LNB = { cLeft  , cBottom , cNear ,  1  };  //         / / /| |               / /  |
-        glm::vec4      RNT = { cRight , cTop    , cNear ,  1  };  //        / / / | |              / / . |
-        glm::vec4      RFT = { cRight , cTop    , cFar  ,  1  };  //       / / /| | |             / / /| |
-        glm::vec4      LFT = { cLeft  , cTop    , cFar  ,  1  };  //      / / / | | |            / / / | |
-        glm::vec4      LNT = { cLeft  , cTop    , cNear ,  1  };  //     / / /  | | |           / / /| | |
+        glm::vec4 RNB       = { cRight , cBottom , cNear ,  1 };  //            _________________________RFT=m_maxCoords(x,y,z)
+        glm::vec4 RFB       = { cRight , cBottom , cFar  ,  1 };  //           /LFT___________________  /|
+        glm::vec4 LFB       = { cLeft  , cBottom , cFar  ,  1 };  //          / / ___________________/ / |
+        glm::vec4 LNB       = { cLeft  , cBottom , cNear ,  1 };  //         / / /| |               / /  |
+        glm::vec4 RNT       = { cRight , cTop    , cNear ,  1 };  //        / / / | |              / / . |
+        glm::vec4 RFT       = { cRight , cTop    , cFar  ,  1 };  //       / / /| | |             / / /| |
+        glm::vec4 LFT       = { cLeft  , cTop    , cFar  ,  1 };  //      / / / | | |            / / / | |
+        glm::vec4 LNT       = { cLeft  , cTop    , cNear ,  1 };  //     / / /  | | |           / / /| | |
                                                                   //    / /_/__________________/ / / | | |
-        cubeLines.line[0 ] =            { RNB, RFB };             //   /LNT___________________ _/ /  | | |
-        cubeLines.line[1 ] =            { RNB, LNB };             //   | ____________________RNT| |  | | |
-        cubeLines.line[2 ] =            { RNB, RNT };             //   | | |    | | |_________| | |__| | |
-        cubeLines.line[3 ] =            { RFB, LFB };             //   | | |    | |___________| | |____| |
-        cubeLines.line[4 ] =            { RFB, RFT };             //   | | |   / /LFB_________| | |_  / /RFB
-        cubeLines.line[5 ] =            { LFB, LNB };             //   | | |  / / /           | | |/ / /
-        cubeLines.line[6 ] =            { LFB, LFT };             //   | | | / / /            | | | / /
-        cubeLines.line[7 ] =            { LNB, LNT };             //   | | |/ / /             | | |/ /
-        cubeLines.line[8 ] =            { RNT, LNT };             //   | | | / /              | | ' /
-        cubeLines.line[9 ] =            { RNT, RFT };             //   | | |/_/_______________| |  /
-        cubeLines.line[10] =            { RFT, LFT };             //   | |____________________| | /
-        cubeLines.line[11] =            { LFT, LNT };             //   |________________________|/
+        cubeLines.lines[0 ] =            { RNB, RFB };            //   /LNT___________________ _/ /  | | |
+        cubeLines.lines[1 ] =            { RNB, LNB };            //   | ____________________RNT| |  | | |
+        cubeLines.lines[2 ] =            { RNB, RNT };            //   | | |    | | |_________| | |__| | |
+        cubeLines.lines[3 ] =            { RFB, LFB };            //   | | |    | |___________| | |____| |
+        cubeLines.lines[4 ] =            { RFB, RFT };            //   | | |   / /LFB_________| | |_  / /RFB
+        cubeLines.lines[5 ] =            { LFB, LNB };            //   | | |  / / /           | | |/ / /
+        cubeLines.lines[6 ] =            { LFB, LFT };            //   | | | / / /            | | | / /
+        cubeLines.lines[7 ] =            { LNB, LNT };            //   | | |/ / /             | | |/ /
+        cubeLines.lines[8 ] =            { RNT, LNT };            //   | | | / /              | | ' /
+        cubeLines.lines[9 ] =            { RNT, RFT };            //   | | |/_/_______________| |  /
+        cubeLines.lines[10] =            { RFT, LFT };            //   | |____________________| | /
+        cubeLines.lines[11] =            { LFT, LNT };            //   |________________________|/
                                                                   //   LNB=m_minCoords(u,v,w)   RNB   
     }
 
 
 };
 
-typedef Model* PModel;
+using PModel = Model*;

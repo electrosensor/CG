@@ -17,7 +17,7 @@ vec4 Util::expandToVec4(const vec3 & vector)
 vec3 Util::toCartesianForm(const vec4& homogeneousForm)
 {
     assert(homogeneousForm.w != 0);
-	return vec3(homogeneousForm.x / homogeneousForm[3], homogeneousForm.y / homogeneousForm[3], homogeneousForm.z / homogeneousForm[3]);
+	return vec3(homogeneousForm.x / homogeneousForm.w, homogeneousForm.y / homogeneousForm.w, homogeneousForm.z / homogeneousForm.w);
 }
 
 vec4 Util::Cross(const vec4 & lVector4, const vec4 & rVector4)

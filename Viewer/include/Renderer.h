@@ -19,14 +19,16 @@ private:
     float *colorBuffer;
     // width*height
     float *zBuffer;
+
+    
     // Screen dimensions
     int m_width, m_height;
 
 
     // Draws a pixel in location p with color color
-    void putPixel(int i, int j, const glm::vec4& color );
-    void putPixel(int x, int y, bool steep, const glm::vec4& color);
-    void putZ(int x, int y, float d);
+    void putPixel(int i, int j, float d, const glm::vec4& color );
+    void putPixel(int x, int y, bool steep, float d, const glm::vec4& color);
+    bool putZ(int x, int y, float d);
     // creates float array of dimension [3,w,h]
     void createBuffers(int w, int h);
     //##############################
@@ -47,9 +49,9 @@ private:
     glm::vec4 m_bgColor;
     glm::vec4 m_polygonColor;
 
-    glm::vec2 toViewPlane(const glm::vec4& point);
+    glm::vec3 toViewPlane(const glm::vec4& point);
 
-    void getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, OUT float* pDx, OUT float* pDy);
+    void getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, IN float d1, IN float d2, OUT float* pDx, OUT float* pDy, OUT float* pDd);
     void yStepErrorUpdate(float dx, float dy, float& error, int& y, const int& ystep);
 public:
     Renderer();
@@ -60,7 +62,7 @@ public:
     void Init();
 
     // Draws a line by Bresenham algorithm: 
-    void DrawLine(const glm::vec2& p1, const glm::vec2& p2, const glm::vec4& color);
+    void DrawLine(const glm::ivec3& p1, const glm::ivec3& p2, const glm::vec4& color);
 
     void drawVerticesNormals(const vector<glm::vec4>& vertices, const vector<glm::vec4>& normals, float normScaleRate);
     // Draws wireframe triangles to the color buffer
@@ -100,7 +102,7 @@ public:
 
     void setWorldTransformation(glm::mat4x4 m_worldTransformation);
 private:
-    void orderPoints(float& x1, float& x2, float& y1, float& y2);
+    void orderPoints(float& x1, float& x2, float& y1, float& y2, float& d1, float& d2);
     bool isSlopeBiggerThanOne(float x1, float x2, float y1, float y2) { return (fabs(y2 - y1) > fabs(x2 - x1)); }
 public:
     void drawAxis();

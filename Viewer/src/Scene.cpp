@@ -49,7 +49,6 @@ void Scene::Draw()
 
     for each (Model* model in m_models)
     {
-        /*const tuple<vec4,vec4,vec4>* modelVertices;*/
         tuple modelData(vPositions, vVertices, vVerticesNormals);
         model->Draw(modelData);
         tie(vPositions, vVertices, vVerticesNormals) = modelData;

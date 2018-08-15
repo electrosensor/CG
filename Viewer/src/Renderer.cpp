@@ -4,6 +4,7 @@
 #include <imgui/imgui.h>
 #include "Util.h"
 #include "Defs.h"
+#include "glm/common.hpp"
 
 using namespace std;
 using namespace glm;
@@ -48,6 +49,10 @@ void Renderer::DrawTriangles(const vector<vec4>& vertices, bool bDrawFaceNormals
 {
     auto it = vertices.begin();
     
+    static int maxX = std::numeric_limits<int>::lowest();
+    static int maxY = std::numeric_limits<int>::lowest();
+    static int maxZ = std::numeric_limits<int>::lowest();
+
     while (it != vertices.end())
     {
         auto p1 = *(it++);
@@ -68,28 +73,36 @@ void Renderer::DrawTriangles(const vector<vec4>& vertices, bool bDrawFaceNormals
         DrawLine(toViewPlane(p2), toViewPlane(p3), m_polygonColor);
         DrawLine(toViewPlane(p3), toViewPlane(p1), m_polygonColor);
 
+        maxX = MAX(maxX, (MAX(p1.x, p2.x)));
+        maxY = MAX(maxY, (MAX(p1.y, p2.y)));
+        maxZ = MAX(maxZ, (MAX(p1.z, p2.z)));
+
         if (bDrawFaceNormals)
         {
-            auto subs1      = nrm3 - nrm1;
-            auto subs2      = nrm2 - nrm1;
-                      subs1.w    = 1;
-                      subs2.w    = 1;
 
-            auto faceNormal = Util::Cross(subs1, subs2);
+            auto nrm1_3 = Util::toCartesianForm(nrm1);
+            auto nrm2_3 = Util::toCartesianForm(nrm2);
+            auto nrm3_3 = Util::toCartesianForm(nrm3);
 
-            auto faceCenter   = (nrm1 + nrm2 + nrm3) / 3.0f;
-                      faceCenter.w = 1;
+            auto subs1 = nrm3_3 - nrm1_3;
+            auto subs2 = nrm2_3 - nrm1_3;
 
-            auto normalizedFaceNormal = Util::isVecEqual(faceNormal, vec4(0, 0, 0, 1)) ? faceNormal : normalize(faceNormal);
+            auto faceNormal = cross(subs1, subs2);
 
-            normalizedFaceNormal = mat4x4(SCALING_MATRIX4(normScaleRate)) * normalizedFaceNormal;
+            auto faceCenter   = (nrm1_3 + nrm2_3 + nrm3_3) / 3.0f;
+
+            auto normalizedFaceNormal = Util::isVecEqual(faceNormal, vec3(0)) ? faceNormal : normalize(faceNormal);
+
+            normalizedFaceNormal *= normScaleRate;
 
             //normalizedFaceNormal *= fnScale;
-            auto nP1 = processPipeline(faceCenter);
-            auto nP2 = processPipeline(faceCenter + normalizedFaceNormal);
+            auto nP1 = processPipeline(Util::toHomogeneousForm(faceCenter));
+            auto nP2 = processPipeline(Util::toHomogeneousForm(faceCenter + normalizedFaceNormal));
 
             DrawLine(toViewPlane(nP1), toViewPlane(nP2), COLOR(LIME));
         }
+
+        printf("max: %f\n%f\n%f\n%f\n%f\n%f\n", p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
     }
 }
 
@@ -97,15 +110,15 @@ void Renderer::drawVerticesNormals(const vector<vec4>& vertices, const vector<ve
 {
     for (int i = 0; i < normals.size() && i < vertices.size(); i++)
     {
-        vec4 vertex       = vertices[i];
-        vec4 vertexNormal = normals[i];
+        auto vertex       = Util::toCartesianForm(vertices[i]);
+        auto vertexNormal = Util::toCartesianForm(normals[i]);
 
-        vec4 normalizedVertexNormal = Util::isVecEqual(vertexNormal, HOMOGENEOUS_VECTOR4) ? vertexNormal : normalize(vertexNormal);
+        auto normalizedVertexNormal = Util::isVecEqual(vertexNormal, vec3(0)) ? vertexNormal : normalize(vertexNormal);
 
-        normalizedVertexNormal = mat4x4(SCALING_MATRIX4(normScaleRate)) * normalizedVertexNormal;
+        normalizedVertexNormal *= normScaleRate;
         
-        vec4 nP1 = processPipeline(vertex);
-        vec4 nP2 = processPipeline(vertex + normalizedVertexNormal);
+        auto nP1 = processPipeline(Util::toHomogeneousForm(vertex));
+        auto nP2 = processPipeline(Util::toHomogeneousForm(vertex + normalizedVertexNormal));
 
         DrawLine(toViewPlane(nP1), toViewPlane(nP2), COLOR(RED));
     }
@@ -114,26 +127,24 @@ void Renderer::drawVerticesNormals(const vector<vec4>& vertices, const vector<ve
 
 void Renderer::drawBordersCube(CUBE borderCube)
 {
-    for each (std::pair<vec4, vec4> line in borderCube.line)
+    for (auto line : borderCube.lines)
     {
-        auto[pStart, pEnd] = make_tuple(processPipeline(line.first), processPipeline(line.second));
-        DrawLine(toViewPlane(pStart), toViewPlane(pEnd), COLOR(BLUE));
+        DrawLine(toViewPlane(processPipeline(line.first)), toViewPlane(processPipeline(line.second)), COLOR(BLUE));
     }
 }
 
-vec2 Renderer::toViewPlane(const vec4& pointParam)
+glm::vec3 Renderer::toViewPlane(const glm::vec4& point)
 {
     // convert to raster space 
-
-    vec3 point = Util::toCartesianForm(pointParam);
-
-    vec2 screenPoint;
+    vec3 screenPoint;
 
     screenPoint.x = ((point.x + 1) * m_width  / 2.0f);
     screenPoint.y = ((point.y + 1) * m_height / 2.0f);
+    screenPoint.z = ((point.z + 1) * m_height * m_width / 2.0f);
 
     screenPoint.x = round((screenPoint.x - (m_width  / 2.0f)) * (250.0f / m_width ) + (m_width  / 2.0f));
     screenPoint.y = round((screenPoint.y - (m_height / 2.0f)) * (250.0f / m_height) + (m_height / 2.0f));
+    screenPoint.z = round((screenPoint.z - ((m_height * m_width) / 2.0f)) * (250.0f / m_height * m_width)) + ((m_height * m_width) / 2.0f);
     if (/*m_bzBuffer*/true)
     {
 //             for every pixel(x, y);
@@ -150,7 +161,7 @@ vec2 Renderer::toViewPlane(const vec4& pointParam)
 //                 end
 
     }
-    return vec2((int)screenPoint.x, (int)screenPoint.y);
+    return vec3((int)screenPoint.x, (int)screenPoint.y, (int)screenPoint.z);
 }
 
 
@@ -170,60 +181,344 @@ void Renderer::SetObjectMatrices(const mat4x4 & oTransform, const mat4x4 & nTran
     m_normalTransform = nTransform;
 }
 
-void Renderer::putPixel(int i, int j, const vec4& color)
+void Renderer::putPixel(int i, int j, float d, const vec4& color)
 {
     if (i < 0) return; if (i >= m_width) return;
     if (j < 0) return; if (j >= m_height) return;
-    colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 0)] = color.x;
-    colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 1)] = color.y;
-    colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 2)] = color.z;
-}
-
-void Renderer::putZ(int x, int y, float d)
-{
-    if (x < 0) return; if (x >= m_width) return;
-    if (y < 0) return; if (y >= m_height) return;
-    zBuffer[Z_BUF_INDEX(m_width, x, y)] = d;
-}
-
-void Renderer::DrawLine(const vec2& p1, const vec2& p2, const vec4& color)
-{
-    float dx, dy;
-
-    float x1 = p1.x;
-    float x2 = p2.x;
-    float y1 = p1.y;
-    float y2 = p2.y;
- 
-    const bool bSteep = isSlopeBiggerThanOne(x1, x2, y1, y2);
-    
-    orderPoints(x1, x2, y1, y2);
-
-    getDeltas(x1, x2, y1, y2, &dx, &dy);
-    
-    float error = dx / 2.0f;
-    const int ystep = (y1 < y2) ? 1 : -1;
-    auto y = (int)y1;
-
-    const auto maxX = (int)x2;
-
-    for (auto x = (int)x1; x < maxX; x++)
+    if (putZ(i, j, d))
     {
-        putPixel(x, y, bSteep, color);
-
-        yStepErrorUpdate(dx, dy, error, y, ystep);
+        colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 0)] = color.x;
+        colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 1)] = color.y;
+        colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 2)] = color.z;
     }
+
 }
 
-void Renderer::putPixel(int x, int y, bool steep, const vec4& color)
+bool Renderer::putZ(int x, int y, float d)
+{
+    if (x < 0 || x >= m_width || y < 0 || y >= m_height)
+    {
+        return false;
+    }
+    
+    if (zBuffer[Z_BUF_INDEX(m_width, x, y)] - d > std::numeric_limits<float>::epsilon())
+    {
+//               fprintf(stderr, "FALSE - x,y:%d,%d Index is %d, zBuffer value is %f, depth value is %f\n", x, y, Z_BUF_INDEX(m_width, x, y), zBuffer[Z_BUF_INDEX(m_width, x, y)], d);
+//         printf("zBuffer for (%d,%d) = %f, and depth is %f\n", x, y, zBuffer[Z_BUF_INDEX(m_width, x, y)], d);
+        return false;
+    }
+    zBuffer[Z_BUF_INDEX(m_width, x, y)] = d;
+//     fprintf(stderr, "TRUE - x,y:%d,%d Index is %d, zBuffer value is %f, depth value is %f\n", x, y, Z_BUF_INDEX(m_width, x, y), zBuffer[Z_BUF_INDEX(m_width, x, y)], d);
+    return true;
+}
+
+void Renderer::DrawLine(const glm::ivec3& p1, const glm::ivec3& p2, const glm::vec4& color)
+{
+
+    int x0 = p1.x;
+    int y0 = p1.y;
+    int x1 = p2.x;
+    int y1 = p2.y;
+    int z1 = p2.z;
+    int z0 = p1.z;
+    int resSize = 1;
+    int dx = abs(x1 - x0);
+    int sx = x0 < x1 ? resSize : -resSize;
+    int dy = abs(y1 - y0);
+    int sy = y0 < y1 ? resSize : -resSize;
+    int dz = abs(z1 - z0);
+    int sz = z0 < z1 ? resSize : -resSize;
+    int dm = MAX(dx, MAX(dy, dz)), i = dm;
+    x1 = y1 = z1 = dm / 2;
+
+    for (; ; )
+    {
+        putPixel(x0, y0, z0, color); //Printing points here
+        if (i <= 0) break;
+        x1 -= dx; if (x1 < 0) { x1 += dm; x0 += sx; }
+        y1 -= dy; if (y1 < 0) { y1 += dm; y0 += sy; }
+        z1 -= dz; if (z1 < 0) { z1 += dm; z0 += sz; }
+        i -= resSize;
+    }
+
+//     float dd, dy, dx;
+// 
+//           float x1 = p1.x;
+//           float x2 = p2.x;
+//           
+//           float y1 = p1.y;
+//           float y2 = p2.y;
+//       
+//           float d1 = p1.z;
+//           float d2 = p2.z;
+//        
+//           const bool bSteep = isSlopeBiggerThanOne(x1, x2, y1, y2);
+//           
+//           orderPoints(x1, x2, y1, y2, d1, d2);
+//       
+//           getDeltas(x1, x2, y1, y2, d1, d2, &dx, &dy, &dd);
+//           
+//           float errorX = dx / 2.0f;
+//           float errorY = dy / 2.0f;
+//           float errorD = dd / 2.0f;
+// 
+//           const int xstep = (x1 < x2) ? 1 : -1;
+//           const int ystep = (y1 < y2) ? 1 : -1;
+//           const int dstep = (d1 < d2) ? 1 : -1;
+// 
+//           auto y = (int)y1;
+//           auto d = (int)d1;
+//           auto x = (int)x1;
+//       
+//           const auto maxX = MAX(x2,MAX( y2, d2));
+//       
+//           for (auto x = (int)x1; x < maxX; x++)
+//           {
+//               putPixel(x, y, d, bSteep, color);
+//       
+//               yStepErrorUpdate(dx, dy, errorX, y, ystep);
+//           }
+//     int x1 = p1.x;
+//     int x2 = p2.x;
+//     int y1 = p1.y;
+//     int y2 = p2.y;
+//     float d1 = p1.z;
+//     float d2 = p2.z;
+// 
+//     int dx = abs(x2 - x1);
+//     int dy = abs(y2 - y1);
+//     int dz = abs(d2 - d1);
+// 
+// 
+//     int stepX = x1 < x2 ? 1 : -1;
+//     int stepY = y1 < y2 ? 1 : -1;
+//     int stepZ = d1 < d2 ? 1 : -1;
+// 
+//     int dMax = MAX(dx, MAX(dy, dz));
+// 
+// 
+//     x1 = y1 = d1 = dMax / 2;
+// 
+//            for (int i = dMax;;) {  /* loop */
+//                putPixel(x1, y1, d1, color);
+//                if (i-- == 0) break;
+//                if (x1 < 0) { x2 += dMax; x1 += stepX; }
+//                if (y1 < 0) { y2 += dMax; y1 += stepY; }
+//                if (d1 < 0) { d2 += dMax; d1 += stepZ; }
+//            }
+
+//     for (int i = 0; i < dMax; i++)
+//     {
+//         putPixel(x1, y1, d1, color);
+//         if (x1 < 0) { x2 += dMax; x1 += stepX; }
+//         if (y1 < 0) { y2 += dMax; y1 += stepY; }
+//         if (d1 < 0) { d2 += dMax; d1 += stepZ; }
+//     }
+// //     }
+// 
+//     
+//    
+//     void plotLine3d(int x0, int y0, int z0, int x1, int y1, int z1)
+//     {
+//         int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+//         int dy = abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+//         int dz = abs(z1 - z0), sz = z0 < z1 ? 1 : -1;
+//         int dm = max(dx, dy, dz), i = dm; /* maximum difference */
+//         x1 = y1 = z1 = dm / 2; /* error offset */
+// 
+//         for (;;) {  /* loop */
+//             setPixel(x0, y0, z0);
+//             if (i-- == 0) break;
+//              if (x1 < 0) { x1 += dm; x0 += sx; }
+//              if (y1 < 0) { y1 += dm; y0 += sy; }
+//              if (z1 < 0) { z1 += dm; z0 += sz; }
+//         }
+//     }
+
+
+    /*
+    
+
+   if ~exist('precision','var') | isempty(precision) | round(precision) == 0
+      precision = 0;
+      P1 = round(P1);
+      P2 = round(P2);
+   else
+      precision = round(precision);
+      P1 = round(P1*(10^precision));
+      P2 = round(P2*(10^precision));
+   end
+
+   d = max(abs(P2-P1)+1);
+   X = zeros(1, d);
+   Y = zeros(1, d);
+   Z = zeros(1, d);
+
+   x1 = P1(1);
+   y1 = P1(2);
+   z1 = P1(3);
+
+   x2 = P2(1);
+   y2 = P2(2);
+   z2 = P2(3);
+
+   dx = x2 - x1;
+   dy = y2 - y1;
+   dz = z2 - z1;
+
+   ax = abs(dx)*2;
+   ay = abs(dy)*2;
+   az = abs(dz)*2;
+
+   sx = sign(dx);
+   sy = sign(dy);
+   sz = sign(dz);
+
+   x = x1;
+   y = y1;
+   z = z1;
+   idx = 1;
+
+   if(ax>=max(ay,az))			% x dominant
+      yd = ay - ax/2;
+      zd = az - ax/2;
+
+      while(1)
+         X(idx) = x;
+         Y(idx) = y;
+         Z(idx) = z;
+         idx = idx + 1;
+
+         if(x == x2)		% end
+            break;
+         end
+
+         if(yd >= 0)		% move along y
+            y = y + sy;
+            yd = yd - ax;
+         end
+
+         if(zd >= 0)		% move along z
+            z = z + sz;
+            zd = zd - ax;
+         end
+
+         x  = x  + sx;		% move along x
+         yd = yd + ay;
+         zd = zd + az;
+      end
+   elseif(ay>=max(ax,az))		% y dominant
+      xd = ax - ay/2;
+      zd = az - ay/2;
+
+      while(1)
+         X(idx) = x;
+         Y(idx) = y;
+         Z(idx) = z;
+         idx = idx + 1;
+
+         if(y == y2)		% end
+            break;
+         end
+
+         if(xd >= 0)		% move along x
+            x = x + sx;
+            xd = xd - ay;
+         end
+
+         if(zd >= 0)		% move along z
+            z = z + sz;
+            zd = zd - ay;
+         end
+
+         y  = y  + sy;		% move along y
+         xd = xd + ax;
+         zd = zd + az;
+      end
+   elseif(az>=max(ax,ay))		% z dominant
+      xd = ax - az/2;
+      yd = ay - az/2;
+
+      while(1)
+         X(idx) = x;
+         Y(idx) = y;
+         Z(idx) = z;
+         idx = idx + 1;
+
+         if(z == z2)		% end
+            break;
+         end
+
+         if(xd >= 0)		% move along x
+            x = x + sx;
+            xd = xd - az;
+         end
+
+         if(yd >= 0)		% move along y
+            y = y + sy;
+            yd = yd - az;
+         end
+
+         z  = z  + sz;		% move along z
+         xd = xd + ax;
+         yd = yd + ay;
+      end
+   end
+
+   if precision ~= 0
+      X = X/(10^precision);
+      Y = Y/(10^precision);
+      Z = Z/(10^precision);
+   end
+
+   return;
+    
+    
+    */
+//     float dx, dy, dd;
+// 
+//     float x1 = p1.x;
+//     float x2 = p2.x;
+//     
+//     float y1 = p1.y;
+//     float y2 = p2.y;
+// 
+//     float d1 = p1.z;
+//     float d2 = p2.z;
+//  
+//     const bool bSteep = isSlopeBiggerThanOne(x1, x2, y1, y2);
+//     
+//     orderPoints(x1, x2, y1, y2);
+// 
+//     getDeltas(x1, x2, y1, y2, d1, d2, &dx, &dy, &dd);
+//     
+//     float errorX = dx / 2.0f;
+//     float errorD = dd / 2.0f;
+//     const int ystep = (y1 < y2) ? 1 : -1;
+//     const int dstep = (d1 < d2) ? 1 : -1;
+//     auto y = (int)y1;
+//     auto d = (int)d1;
+// 
+//     const auto maxX = (int)x2;
+// 
+//     for (auto x = (int)x1; x < maxX; x++)
+//     {
+//         putPixel(x, y, d, bSteep, color);
+// 
+//         yStepErrorUpdate(dx, dy, errorX, y, ystep);
+//         yStepErrorUpdate(dx, dd, errorD, d, dstep);
+//     }
+}
+
+void Renderer::putPixel(int x, int y, bool steep, float d, const vec4& color)
 {
     if (steep)
     {
-        putPixel(y, x, color);
+        putPixel(y, x, d, color);
     }
     else
     {
-        putPixel(x, y, color);
+        putPixel(x, y, d, color);
     }
 }
 
@@ -231,15 +526,23 @@ void Renderer::createBuffers(int w, int h)
 {
     createOpenGLBuffer(); //Do not remove this line.
     colorBuffer = new float[3*w*h];
-    zBuffer = new float[w*h];
+    zBuffer     = new float[w*h];
     for (int i = 0; i < w; i++)
     {
         for (int j = 0; j < h; j++)
         {
-            putPixel(i, j, HOMOGENEOUS_VECTOR4);
-            putZ(i, j, 0.f);
+            putPixel(i, j, std::numeric_limits<float>::lowest(), HOMOGENEOUS_VECTOR4);
         }
     }
+
+    for (int i = 0; i < w; i++)
+    {
+        for (int j = 0; j < h; j++)
+        {
+            zBuffer[Z_BUF_INDEX(m_width, i, j)] = std::numeric_limits<float>::lowest();
+        }
+    }
+
 }
 
 void Renderer::setWorldTransformation(mat4x4 worldTransformation)
@@ -247,29 +550,31 @@ void Renderer::setWorldTransformation(mat4x4 worldTransformation)
     m_worldTransformation = worldTransformation;
 }
 
-void Renderer::orderPoints(float& x1, float& x2, float& y1, float& y2)
+void Renderer::orderPoints(float& x1, float& x2, float& y1, float& y2, float& d1, float& d2)
 {
     if (isSlopeBiggerThanOne(x1, x2, y1, y2))
     {
         std::swap(x1, y1);
         std::swap(x2, y2);
+        std::swap(x1, d1);
     }
 
     if (x1 > x2)
     {
         std::swap(x1, x2);
         std::swap(y1, y2);
+        std::swap(d1, d2);
     }
 }
 
 void Renderer::drawAxis()
 {
-    vec4 axisX     = m_worldTransformation[0];
-    vec4 axisY     = m_worldTransformation[1];
-    vec4 axisZ     = m_worldTransformation[2];
-              axisX.w   = 1;
-              axisY.w   = 1;
-              axisZ.w   = 1;
+    vec4 axisX = m_worldTransformation[0];
+    vec4 axisY = m_worldTransformation[1];
+    vec4 axisZ = m_worldTransformation[2];
+    axisX.w = 1;
+    axisY.w = 1;
+    axisZ.w = 1;
 
     vec4 zeroPoint = HOMOGENEOUS_VECTOR4;
 
@@ -277,10 +582,10 @@ void Renderer::drawAxis()
     axisY     = processPipeline(axisY,     AXIS);
     axisZ     = processPipeline(axisZ,     AXIS);
     zeroPoint = processPipeline(zeroPoint, AXIS);
-
-    axisX = mat4x4(SCALING_MATRIX4(5))*axisX;
-    axisY = mat4x4(SCALING_MATRIX4(5))*axisY;
-    axisZ = mat4x4(SCALING_MATRIX4(5))*axisZ;
+// 
+//     axisX = mat4x4(SCALING_MATRIX4(5))*axisX;
+//     axisY = mat4x4(SCALING_MATRIX4(5))*axisY;
+//     axisZ = mat4x4(SCALING_MATRIX4(5))*axisZ;
 
 
     DrawLine(toViewPlane(zeroPoint), toViewPlane(axisX), COLOR(X_COL));
@@ -374,10 +679,11 @@ void Renderer::initOpenGLRendering()
     glUniform1i(glGetUniformLocation(program, "texture"),0);
 }
 
-void Renderer::getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, OUT float* pDx, OUT float* pDy)
+void Renderer::getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, IN float d1, IN float d2, OUT float* pDx, OUT float* pDy, OUT float* pDd)
 {
-    *pDx = x2 - x1;
+    *pDx = fabs(x2 - x1);
     *pDy = fabs(y2 - y1);
+    *pDd = fabs(d2 - d1);
 }
 
 void Renderer::yStepErrorUpdate(float dx, float dy, float& error, int& y, const int& ystep)
@@ -423,9 +729,14 @@ void Renderer::ClearColorBuffer()
     {
         for (int j = 0; j < m_height; j++)
         {
-            putPixel(i, j, m_bgColor);
+            putZ(i, j, numeric_limits<float>::lowest());
+            colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 0)] = m_bgColor.x;
+            colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 1)] = m_bgColor.y;
+            colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 2)] = m_bgColor.z;
         }
     }
+
+
 }
 
 void Renderer::Viewport(int w, int h)
@@ -470,7 +781,7 @@ void Renderer::ClearDepthBuffer()
     {
         for (int j = 0; j < m_height; j++)
         {
-            putZ(i, j, 0.f);
+            putZ(i, j, numeric_limits<float>::lowest());
         }
     }
 }

@@ -138,7 +138,7 @@ typedef struct _PERSPECTIVE_PARAMS
 
 typedef struct _CUBE
 {
-    std::pair<glm::vec4, glm::vec4> line[12];
+    std::pair<glm::vec4, glm::vec4> lines[12];
 }CUBE, *PCUBE;
 
 typedef enum _PIPE_TYPE
