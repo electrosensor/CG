@@ -26,8 +26,8 @@ private:
 
 
     // Draws a pixel in location p with color color
-    void putPixel(int i, int j, float d, const glm::vec4& color );
-    void putPixel(int x, int y, bool steep, float d, const glm::vec4& color);
+    void putPixel(int i, int j, /*float d,*/ const glm::vec4& color );
+    void putPixel(int x, int y, bool steep, /*float d,*/ const glm::vec4& color);
     bool putZ(int x, int y, float d);
     // creates float array of dimension [3,w,h]
     void createBuffers(int w, int h);

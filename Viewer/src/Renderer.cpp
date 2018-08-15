@@ -45,6 +45,11 @@ vec4 Renderer::processPipeline(const vec4& point, PIPE_TYPE pipeType /*= FULL*/)
     
 }
 
+void Renderer::Init()
+{
+
+}
+
 void Renderer::DrawTriangles(const vector<vec4>& vertices, bool bDrawFaceNormals /*= false*/, const vec4* modelCentroid /*= NULL*/, float normScaleRate /*= 1*/, bool bIsCamera /*= false*/)
 {
     auto it = vertices.begin();
@@ -93,16 +98,17 @@ void Renderer::DrawTriangles(const vector<vec4>& vertices, bool bDrawFaceNormals
 
             auto normalizedFaceNormal = Util::isVecEqual(faceNormal, vec3(0)) ? faceNormal : normalize(faceNormal);
 
-            normalizedFaceNormal *= normScaleRate;
+            normalizedFaceNormal.x *= normScaleRate;
+            normalizedFaceNormal.y *= normScaleRate;
+            normalizedFaceNormal.z *= normScaleRate;
 
-            //normalizedFaceNormal *= fnScale;
             auto nP1 = processPipeline(Util::toHomogeneousForm(faceCenter));
             auto nP2 = processPipeline(Util::toHomogeneousForm(faceCenter + normalizedFaceNormal));
 
             DrawLine(toViewPlane(nP1), toViewPlane(nP2), COLOR(LIME));
         }
 
-        printf("max: %f\n%f\n%f\n%f\n%f\n%f\n", p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+        //printf("max: %f\n%f\n%f\n%f\n%f\n%f\n", p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
     }
 }
 
@@ -115,8 +121,10 @@ void Renderer::drawVerticesNormals(const vector<vec4>& vertices, const vector<ve
 
         auto normalizedVertexNormal = Util::isVecEqual(vertexNormal, vec3(0)) ? vertexNormal : normalize(vertexNormal);
 
-        normalizedVertexNormal *= normScaleRate;
-        
+        normalizedVertexNormal.x *= normScaleRate;
+        normalizedVertexNormal.y *= normScaleRate;
+        normalizedVertexNormal.z *= normScaleRate;
+
         auto nP1 = processPipeline(Util::toHomogeneousForm(vertex));
         auto nP2 = processPipeline(Util::toHomogeneousForm(vertex + normalizedVertexNormal));
 
@@ -140,11 +148,11 @@ glm::vec3 Renderer::toViewPlane(const glm::vec4& point)
 
     screenPoint.x = ((point.x + 1) * m_width  / 2.0f);
     screenPoint.y = ((point.y + 1) * m_height / 2.0f);
-    screenPoint.z = ((point.z + 1) * m_height * m_width / 2.0f);
+ //   screenPoint.z = ((point.z + 1) * (m_height + m_width) / 2.0f);
 
     screenPoint.x = round((screenPoint.x - (m_width  / 2.0f)) * (250.0f / m_width ) + (m_width  / 2.0f));
     screenPoint.y = round((screenPoint.y - (m_height / 2.0f)) * (250.0f / m_height) + (m_height / 2.0f));
-    screenPoint.z = round((screenPoint.z - ((m_height * m_width) / 2.0f)) * (250.0f / m_height * m_width)) + ((m_height * m_width) / 2.0f);
+ //   screenPoint.z = round((screenPoint.z - ((m_height + m_width) / 2.0f)) * (250.0f / m_height + m_width)) + ((m_height + m_width) / 2.0f);
     if (/*m_bzBuffer*/true)
     {
 //             for every pixel(x, y);
@@ -181,16 +189,16 @@ void Renderer::SetObjectMatrices(const mat4x4 & oTransform, const mat4x4 & nTran
     m_normalTransform = nTransform;
 }
 
-void Renderer::putPixel(int i, int j, float d, const vec4& color)
+void Renderer::putPixel(int i, int j, /*float d,*/ const vec4& color)
 {
     if (i < 0) return; if (i >= m_width) return;
     if (j < 0) return; if (j >= m_height) return;
-    if (putZ(i, j, d))
-    {
+//     if (putZ(i, j, d))
+//     {
         colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 0)] = color.x;
         colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 1)] = color.y;
         colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 2)] = color.z;
-    }
+/*    }*/
 
 }
 
@@ -219,25 +227,25 @@ void Renderer::DrawLine(const glm::ivec3& p1, const glm::ivec3& p2, const glm::v
     int y0 = p1.y;
     int x1 = p2.x;
     int y1 = p2.y;
-    int z1 = p2.z;
-    int z0 = p1.z;
+//     int z1 = p2.z;
+//     int z0 = p1.z;
     int resSize = 1;
     int dx = abs(x1 - x0);
     int sx = x0 < x1 ? resSize : -resSize;
     int dy = abs(y1 - y0);
     int sy = y0 < y1 ? resSize : -resSize;
-    int dz = abs(z1 - z0);
-    int sz = z0 < z1 ? resSize : -resSize;
-    int dm = MAX(dx, MAX(dy, dz)), i = dm;
-    x1 = y1 = z1 = dm / 2;
+//     int dz = abs(z1 - z0);
+//     int sz = z0 < z1 ? resSize : -resSize;
+    int dm = MAX(dx, /*MAX(*/dy/*, dz)*/), i = dm;
+    x1 = y1 /*= z1*/ = dm / 2;
 
     for (; ; )
     {
-        putPixel(x0, y0, z0, color); //Printing points here
+        putPixel(x0, y0, /*z0,*/ color); //Printing points here
         if (i <= 0) break;
         x1 -= dx; if (x1 < 0) { x1 += dm; x0 += sx; }
         y1 -= dy; if (y1 < 0) { y1 += dm; y0 += sy; }
-        z1 -= dz; if (z1 < 0) { z1 += dm; z0 += sz; }
+/*        z1 -= dz; if (z1 < 0) { z1 += dm; z0 += sz; }*/
         i -= resSize;
     }
 
@@ -510,15 +518,15 @@ void Renderer::DrawLine(const glm::ivec3& p1, const glm::ivec3& p2, const glm::v
 //     }
 }
 
-void Renderer::putPixel(int x, int y, bool steep, float d, const vec4& color)
+void Renderer::putPixel(int x, int y, bool steep, /*float d,*/ const vec4& color)
 {
     if (steep)
     {
-        putPixel(y, x, d, color);
+        putPixel(y, x, /*d,*/ color);
     }
     else
     {
-        putPixel(x, y, d, color);
+        putPixel(x, y, /*d,*/ color);
     }
 }
 
@@ -531,7 +539,7 @@ void Renderer::createBuffers(int w, int h)
     {
         for (int j = 0; j < h; j++)
         {
-            putPixel(i, j, std::numeric_limits<float>::lowest(), HOMOGENEOUS_VECTOR4);
+            putPixel(i, j, /*std::numeric_limits<float>::lowest(),*/ HOMOGENEOUS_VECTOR4);
         }
     }
 
@@ -729,7 +737,6 @@ void Renderer::ClearColorBuffer()
     {
         for (int j = 0; j < m_height; j++)
         {
-            putZ(i, j, numeric_limits<float>::lowest());
             colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 0)] = m_bgColor.x;
             colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 1)] = m_bgColor.y;
             colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 2)] = m_bgColor.z;
