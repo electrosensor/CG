@@ -1,8 +1,5 @@
 #pragma once
-#include <vector>
-#include <glm/glm.hpp>
 #include "Defs.h"
-using namespace std;
 
 /*
  * Model class. An abstract class for all types of geometric data.
@@ -17,7 +14,7 @@ public:
     virtual void    SetModelTransformation(glm::mat4x4& transformation)                   = 0;
 	virtual void    SetWorldTransformation(glm::mat4x4& transformation)                   = 0;
 	virtual void    SetNormalTransformation(glm::mat4x4& transformation)                  = 0;
-	virtual void Draw(tuple<vector<glm::vec4>, vector<glm::vec4>, vector<glm::vec4> >& modelData) = 0;    
+	virtual void    Draw(std::tuple<std::vector<glm::vec4>, std::vector<glm::vec4>, std::vector<glm::vec4> >& modelData) = 0;
 
     bool isModelRenderingActive()                               { return m_bShouldRender; }
     void setModelRenderingState(bool bIsRenderingStateActive)   { m_bShouldRender = bIsRenderingStateActive; }

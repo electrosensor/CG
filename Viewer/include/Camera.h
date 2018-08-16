@@ -1,5 +1,5 @@
 #pragma once
-#include <glm/glm.hpp>
+
 #include "Defs.h"
 #include "Util.h"
 #include "MeshModel.h"

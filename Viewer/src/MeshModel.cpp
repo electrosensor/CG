@@ -1,11 +1,6 @@
 #include "MeshModel.h"
 #include "Util.h"
 #include "Defs.h"
-#include <vector>
-#include <string>
-#include <iostream>
-#include <fstream>
-#include <sstream>
 
 using namespace std;
 using namespace glm;
@@ -211,7 +206,6 @@ void MeshModel::LoadFile(const string& fileName)
     for (unsigned int i = 0; i < m_verticesSize; i++)
 
     {
-        
 
         normalizedVec.x = NORMALIZE_COORDS((vertices[i].x - m_modelCentroid.x), totalMin, totalMax);
         normalizedVec.y = NORMALIZE_COORDS((vertices[i].y - m_modelCentroid.y), totalMin, totalMax);
@@ -241,9 +235,6 @@ void MeshModel::LoadFile(const string& fileName)
     {
         m_vertexNormals[i] = normals[i];
     }
-
-    
-
     
     m_modelCentroid.x = NORMALIZE_COORDS(modelCentroid.x, totalMin, totalMax);
     m_modelCentroid.y = NORMALIZE_COORDS(modelCentroid.y, totalMin, totalMax);

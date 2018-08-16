@@ -10,14 +10,11 @@
 #include "Camera.h"
 #include "Defs.h"
 
-using namespace std;
-
-
 class Scene {
 private:
-    vector<Model*> m_models;
-    vector<Light*> m_lights;
-    vector<Camera*> m_cameras;
+    std::vector<Model*> m_models;
+    std::vector<Light*> m_lights;
+    std::vector<Camera*> m_cameras;
     Renderer *renderer;
 
     int m_activeModel;
@@ -43,7 +40,7 @@ public:
     }
 
     // Loads an obj file into the scene.
-    void LoadOBJModel(string fileName);
+    void LoadOBJModel(std::string fileName);
 
     // Draws the current scene.
     void Draw();

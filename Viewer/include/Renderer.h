@@ -1,12 +1,8 @@
 #pragma once
-#include <vector>
 #include <glad/glad.h>
-#include <glm/glm.hpp>
 #include <GLFW/glfw3.h>
 #include <imgui/imgui.h>
 #include "Defs.h"
-
-using namespace std;
 
 /*
  * Renderer class. This class takes care of all the rendering operations needed for rendering a full scene to the screen.
@@ -26,8 +22,8 @@ private:
 
 
     // Draws a pixel in location p with color color
-    void putPixel(int i, int j, /*float d,*/ const glm::vec4& color );
-    void putPixel(int x, int y, bool steep, /*float d,*/ const glm::vec4& color);
+    void putPixel(int i, int j, float d, const glm::vec4& color );
+    void putPixel(int x, int y, bool steep, float d, const glm::vec4& color);
     bool putZ(int x, int y, float d);
     // creates float array of dimension [3,w,h]
     void createBuffers(int w, int h);
@@ -52,7 +48,12 @@ private:
     glm::vec3 toViewPlane(const glm::vec4& point);
 
     void getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, IN float d1, IN float d2, OUT float* pDx, OUT float* pDy, OUT float* pDd);
+    void getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, OUT float* pDx, OUT float* pDy);
     void yStepErrorUpdate(float dx, float dy, float& error, int& y, const int& ystep);
+    bool m_bSolidModel;
+    void ProjectPolygon(std::vector<glm::vec3>& polygon);
+    void Fill_A_Triangle(const std::vector<glm::vec3>& polygon);
+    void Fill_V_Triangle(const std::vector<glm::vec3>& polygon);
 public:
     Renderer();
     Renderer(int w, int h);
@@ -62,11 +63,11 @@ public:
     void Init();
 
     // Draws a line by Bresenham algorithm: 
-    void DrawLine(const glm::ivec3& p1, const glm::ivec3& p2, const glm::vec4& color);
-
-    void drawVerticesNormals(const vector<glm::vec4>& vertices, const vector<glm::vec4>& normals, float normScaleRate);
+    void DrawLine(const glm::vec3& p1, const glm::vec3& p2, const glm::vec4& color);
+    void PolygonScanConversion(const std::vector<glm::vec3>& polygon, const glm::vec4& polygonColor = glm::vec4(1, 1, 1, 1));
+    void drawVerticesNormals(const std::vector<glm::vec4>& vertices, const std::vector<glm::vec4>& normals, float normScaleRate);
     // Draws wireframe triangles to the color buffer
-    void DrawTriangles(const vector<glm::vec4>& vertices, bool bDrawFaceNormals = false, const glm::vec4* modelCentroid = nullptr, float normScaleRate = 1, bool bIsCamera = false);
+    void DrawTriangles(const std::vector<glm::vec4>& vertices, bool bDrawFaceNormals = false, const glm::vec4* modelCentroid = nullptr, float normScaleRate = 1, bool bIsCamera = false);
     // Draws surrounding border cube;
     void drawBordersCube(CUBE borderCube);
     // Sets the camera transformations with relation to world coordinates
@@ -103,7 +104,7 @@ public:
     void setWorldTransformation(glm::mat4x4 m_worldTransformation);
 private:
     void orderPoints(float& x1, float& x2, float& y1, float& y2, float& d1, float& d2);
-    bool isSlopeBiggerThanOne(float x1, float x2, float y1, float y2) { return (fabs(y2 - y1) > fabs(x2 - x1)); }
+    bool isSlopeBiggerThanOne(float x1, float x2, float y1, float y2) { return (std::fabs(y2 - y1) > std::fabs(x2 - x1)); }
 public:
     void drawAxis();
     void drawModelAxis();

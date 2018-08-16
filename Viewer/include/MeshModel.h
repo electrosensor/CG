@@ -1,10 +1,9 @@
 #pragma once
-#include <glm/glm.hpp>
-#include <string>
+
+
 #include "Model.h"
 #include "Defs.h"
 #include "Util.h"
-
 
 /*
  * MeshModel class. Mesh model object represents a triangle mesh (loaded fron an obj file).
@@ -28,7 +27,7 @@ class MeshModel : public Model
         glm::vec4   m_modelCentroid;
 
 	public:
-		MeshModel(const string& fileName);
+		MeshModel(const std::string& fileName);
 		~MeshModel();
 
         const glm::mat4x4& GetModelTransformation() override;
@@ -39,8 +38,8 @@ class MeshModel : public Model
 		void SetWorldTransformation(glm::mat4x4& transformation) override;
 		void SetNormalTransformation(glm::mat4x4& transformation) override;
 
-		void LoadFile(const string& fileName);
-		void Draw(tuple<vector<glm::vec4>, vector<glm::vec4>, vector<glm::vec4> >& modelData) override;
+		void LoadFile(const std::string& fileName);
+		void Draw(std::tuple<std::vector<glm::vec4>, std::vector<glm::vec4>, std::vector<glm::vec4> >& modelData) override;
         glm::vec4 getCentroid() override { return  m_modelCentroid; }
 
 
@@ -89,7 +88,7 @@ public:
         return m_camCoords;
     }
 
-    void Draw(tuple<vector<glm::vec4>, vector<glm::vec4>, vector<glm::vec4> >& modelData) override;
+    void Draw(std::tuple<std::vector<glm::vec4>, std::vector<glm::vec4>, std::vector<glm::vec4> >& modelData) override;
 
 
 };

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <glm/glm.hpp>
 #include "Defs.h"
 #define COLOR(color) Util::getColor(color)
 

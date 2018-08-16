@@ -1,6 +1,5 @@
 #include "Scene.h"
 #include "MeshModel.h"
-#include <string>
 
 using namespace std;
 using namespace glm;

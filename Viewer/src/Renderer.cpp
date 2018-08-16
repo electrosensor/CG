@@ -69,18 +69,41 @@ void Renderer::DrawTriangles(const vector<vec4>& vertices, bool bDrawFaceNormals
         auto nrm1 = p1;
         auto nrm2 = p2;
         auto nrm3 = p3;
+//         printf("In1: x = %f, y = %f, z = %f\n", p1.x, p1.y, p3.z);
+//         printf("In2: x = %f, y = %f, z = %f\n", p2.x, p2.y, p3.z);
+//         printf("In3: x = %f, y = %f, z = %f\n", p3.x, p3.y, p3.z);
 
         p1 = processPipeline(p1);
         p2 = processPipeline(p2);
         p3 = processPipeline(p3);
+//         printf("Pipe1: x = %f, y = %f, z = %f\n", p1.x, p1.y, p3.z);
+//         printf("Pipe2: x = %f, y = %f, z = %f\n", p2.x, p2.y, p3.z);
+//         printf("Pipe3: x = %f, y = %f, z = %f\n", p3.x, p3.y, p3.z);
 
-        DrawLine(toViewPlane(p1), toViewPlane(p2), m_polygonColor);
-        DrawLine(toViewPlane(p2), toViewPlane(p3), m_polygonColor);
-        DrawLine(toViewPlane(p3), toViewPlane(p1), m_polygonColor);
 
-        maxX = MAX(maxX, (MAX(p1.x, p2.x)));
-        maxY = MAX(maxY, (MAX(p1.y, p2.y)));
-        maxZ = MAX(maxZ, (MAX(p1.z, p2.z)));
+        auto viewP1 = toViewPlane(p1);
+        auto viewP2 = toViewPlane(p2);
+        auto viewP3 = toViewPlane(p3);
+//         printf("View1: x = %f, y = %f, z = %f\n", viewP1.x, viewP1.y, viewP3.z);
+//         printf("View2: x = %f, y = %f, z = %f\n", viewP2.x, viewP2.y, viewP3.z);
+//         printf("View3: x = %f, y = %f, z = %f\n", viewP3.x, viewP3.y, viewP3.z);
+
+        if (/*m_bSolidModel*/1)
+        {
+            vector<vec3> polygonProjection({ viewP1, viewP2, viewP3 });
+            ProjectPolygon(polygonProjection);
+            PolygonScanConversion(polygonProjection);
+        }
+        else
+        {
+            DrawLine(viewP1, viewP2, m_polygonColor);
+            DrawLine(viewP2, viewP3, m_polygonColor);
+            DrawLine(viewP3, viewP1, m_polygonColor);
+        }
+//         maxX = MAX(maxX, (MAX(p1.x, p2.x)));
+//         maxY = MAX(maxY, (MAX(p1.y, p2.y)));
+//         maxZ = MAX(maxZ, (MAX(p1.z, p2.z)));
+
 
         if (bDrawFaceNormals)
         {
@@ -109,6 +132,33 @@ void Renderer::DrawTriangles(const vector<vec4>& vertices, bool bDrawFaceNormals
         }
 
         //printf("max: %f\n%f\n%f\n%f\n%f\n%f\n", p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
+    }
+}
+
+
+
+void Renderer::PolygonScanConversion(const std::vector<glm::vec3>& polygon, const glm::vec4& polygonColor /*= glm::vec4(1, 1, 1, 1)*/)
+{
+    vector<vec3> polygonVertex = polygon;
+    std::sort(polygonVertex.begin(), polygonVertex.end(), [](const vec3& p1, const vec3& p2)->bool { return (p1.y > p2.y); });
+
+    if (polygonVertex[1] == polygonVertex[2])
+    {
+        Fill_A_Triangle(polygonVertex);
+    }
+    else if (polygonVertex[0] == polygonVertex[1])
+    {
+        Fill_V_Triangle(polygonVertex);
+    }
+    else
+    {
+        vec3 splitPoint(
+            (int)(polygonVertex[0].x + ((float)(polygonVertex[1].y - polygonVertex[0].y) / (float)(polygonVertex[2].y - polygonVertex[0].y)) * (polygonVertex[2].x - polygonVertex[0].x)),
+                  polygonVertex[1].y,
+                  polygonVertex[0].z
+        );
+        Fill_A_Triangle({ polygonVertex[0], polygonVertex[1], splitPoint });
+        Fill_V_Triangle({ polygonVertex[1], splitPoint, polygonVertex[2] });
     }
 }
 
@@ -141,6 +191,7 @@ void Renderer::drawBordersCube(CUBE borderCube)
     }
 }
 
+
 glm::vec3 Renderer::toViewPlane(const glm::vec4& point)
 {
     // convert to raster space 
@@ -148,28 +199,13 @@ glm::vec3 Renderer::toViewPlane(const glm::vec4& point)
 
     screenPoint.x = ((point.x + 1) * m_width  / 2.0f);
     screenPoint.y = ((point.y + 1) * m_height / 2.0f);
- //   screenPoint.z = ((point.z + 1) * (m_height + m_width) / 2.0f);
+    screenPoint.z =   point.z + 1.f;
 
-    screenPoint.x = round((screenPoint.x - (m_width  / 2.0f)) * (250.0f / m_width ) + (m_width  / 2.0f));
-    screenPoint.y = round((screenPoint.y - (m_height / 2.0f)) * (250.0f / m_height) + (m_height / 2.0f));
- //   screenPoint.z = round((screenPoint.z - ((m_height + m_width) / 2.0f)) * (250.0f / m_height + m_width)) + ((m_height + m_width) / 2.0f);
-    if (/*m_bzBuffer*/true)
-    {
-//             for every pixel(x, y);
-//                 PutZ(x, y, MaxZ);
-//             for each polygon P
-//                 Q = Project(P);
-//             for each pixel(x, y) in Q
-//                 z : = Depth(Q, x, y);
-//             if (z < GetZ(x, y)) then
-//                 PutColor(x, y, Col(P));
-//             PutZ(x, y, z);
-//             end
-//                 end
-//                 end
+    screenPoint.x = round((screenPoint.x - (m_width  / 2.0f)) * (VIEW_SCALING / m_width ) + (m_width  / 2.0f));
+    screenPoint.y = round((screenPoint.y - (m_height / 2.0f)) * (VIEW_SCALING / m_height) + (m_height / 2.0f));
+//     screenPoint.z = screenPoint.z / 2.0f;
 
-    }
-    return vec3((int)screenPoint.x, (int)screenPoint.y, (int)screenPoint.z);
+    return vec3(screenPoint.x, screenPoint.y, screenPoint.z);
 }
 
 
@@ -189,16 +225,16 @@ void Renderer::SetObjectMatrices(const mat4x4 & oTransform, const mat4x4 & nTran
     m_normalTransform = nTransform;
 }
 
-void Renderer::putPixel(int i, int j, /*float d,*/ const vec4& color)
+void Renderer::putPixel(int i, int j, float d, const vec4& color)
 {
     if (i < 0) return; if (i >= m_width) return;
     if (j < 0) return; if (j >= m_height) return;
-//     if (putZ(i, j, d))
-//     {
+    if (putZ(i, j, d))
+    {
         colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 0)] = color.x;
         colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 1)] = color.y;
         colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 2)] = color.z;
-/*    }*/
+    }
 
 }
 
@@ -209,10 +245,10 @@ bool Renderer::putZ(int x, int y, float d)
         return false;
     }
     
-    if (zBuffer[Z_BUF_INDEX(m_width, x, y)] - d > std::numeric_limits<float>::epsilon())
+    if (d < zBuffer[Z_BUF_INDEX(m_width, x, y)])
     {
-//               fprintf(stderr, "FALSE - x,y:%d,%d Index is %d, zBuffer value is %f, depth value is %f\n", x, y, Z_BUF_INDEX(m_width, x, y), zBuffer[Z_BUF_INDEX(m_width, x, y)], d);
-//         printf("zBuffer for (%d,%d) = %f, and depth is %f\n", x, y, zBuffer[Z_BUF_INDEX(m_width, x, y)], d);
+//     fprintf(stderr, "FALSE - x,y:%d,%d Index is %d, zBuffer value is %f, depth value is %f\n", x, y, Z_BUF_INDEX(m_width, x, y), zBuffer[Z_BUF_INDEX(m_width, x, y)], d);
+//     printf("zBuffer for (%d,%d) = %f, and depth is %f\n", x, y, zBuffer[Z_BUF_INDEX(m_width, x, y)], d);
         return false;
     }
     zBuffer[Z_BUF_INDEX(m_width, x, y)] = d;
@@ -220,15 +256,16 @@ bool Renderer::putZ(int x, int y, float d)
     return true;
 }
 
-void Renderer::DrawLine(const glm::ivec3& p1, const glm::ivec3& p2, const glm::vec4& color)
+void Renderer::DrawLine(const glm::vec3& p1, const glm::vec3& p2, const glm::vec4& color)
 {
 
-    int x0 = p1.x;
-    int y0 = p1.y;
-    int x1 = p2.x;
-    int y1 = p2.y;
-//     int z1 = p2.z;
-//     int z0 = p1.z;
+    int x0 = static_cast<int>(round(p1.x));
+    int y0 = static_cast<int>(round(p1.y));
+    int x1 = static_cast<int>(round(p2.x));
+    int y1 = static_cast<int>(round(p2.y));
+
+    float zDepth = p1.z;
+
     int resSize = 1;
     int dx = abs(x1 - x0);
     int sx = x0 < x1 ? resSize : -resSize;
@@ -241,7 +278,7 @@ void Renderer::DrawLine(const glm::ivec3& p1, const glm::ivec3& p2, const glm::v
 
     for (; ; )
     {
-        putPixel(x0, y0, /*z0,*/ color); //Printing points here
+        putPixel(x0, y0, zDepth, color); //Printing points here
         if (i <= 0) break;
         x1 -= dx; if (x1 < 0) { x1 += dm; x0 += sx; }
         y1 -= dy; if (y1 < 0) { y1 += dm; y0 += sy; }
@@ -518,15 +555,15 @@ void Renderer::DrawLine(const glm::ivec3& p1, const glm::ivec3& p2, const glm::v
 //     }
 }
 
-void Renderer::putPixel(int x, int y, bool steep, /*float d,*/ const vec4& color)
+void Renderer::putPixel(int x, int y, bool steep, float d, const vec4& color)
 {
     if (steep)
     {
-        putPixel(y, x, /*d,*/ color);
+        putPixel(y, x, d, color);
     }
     else
     {
-        putPixel(x, y, /*d,*/ color);
+        putPixel(x, y, d, color);
     }
 }
 
@@ -539,18 +576,12 @@ void Renderer::createBuffers(int w, int h)
     {
         for (int j = 0; j < h; j++)
         {
-            putPixel(i, j, /*std::numeric_limits<float>::lowest(),*/ HOMOGENEOUS_VECTOR4);
+            colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 0)] = 0.f;
+            colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 1)] = 0.f;
+            colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 2)] = 0.f;
+            zBuffer[ (m_width, i, j)] = std::numeric_limits<float>::lowest();
         }
     }
-
-    for (int i = 0; i < w; i++)
-    {
-        for (int j = 0; j < h; j++)
-        {
-            zBuffer[Z_BUF_INDEX(m_width, i, j)] = std::numeric_limits<float>::lowest();
-        }
-    }
-
 }
 
 void Renderer::setWorldTransformation(mat4x4 worldTransformation)
@@ -595,10 +626,15 @@ void Renderer::drawAxis()
 //     axisY = mat4x4(SCALING_MATRIX4(5))*axisY;
 //     axisZ = mat4x4(SCALING_MATRIX4(5))*axisZ;
 
+    auto viewAxisX     = toViewPlane(axisX);
+    auto viewAxisY     = toViewPlane(axisY);
+    auto viewAxisZ     = toViewPlane(axisZ);
+    auto viewZeroPoint = toViewPlane(zeroPoint);
 
-    DrawLine(toViewPlane(zeroPoint), toViewPlane(axisX), COLOR(X_COL));
-    DrawLine(toViewPlane(zeroPoint), toViewPlane(axisY), COLOR(Y_COL));
-    DrawLine(toViewPlane(zeroPoint), toViewPlane(axisZ), COLOR(Z_COL));
+
+    DrawLine(viewZeroPoint, viewAxisX, COLOR(X_COL));
+    DrawLine(viewZeroPoint, viewAxisY, COLOR(Y_COL));
+    DrawLine(viewZeroPoint, viewAxisZ, COLOR(Z_COL));
 
 }
 
@@ -614,11 +650,14 @@ void Renderer::drawModelAxis()
     axisZ     = processPipeline(axisZ,     MODEL);
     zeroPoint = processPipeline(zeroPoint, MODEL);
 
+    auto viewAxisX     = toViewPlane(axisX);
+    auto viewAxisY     = toViewPlane(axisY);
+    auto viewAxisZ     = toViewPlane(axisZ);
+    auto viewZeroPoint = toViewPlane(zeroPoint);
 
-
-    DrawLine(toViewPlane(zeroPoint), toViewPlane(axisX*5.f), COLOR(X_COL));
-    DrawLine(toViewPlane(zeroPoint), toViewPlane(axisY*5.f), COLOR(Y_COL));
-    DrawLine(toViewPlane(zeroPoint), toViewPlane(axisZ*5.f), COLOR(Z_COL));
+    DrawLine(viewZeroPoint, viewAxisX, COLOR(X_COL));
+    DrawLine(viewZeroPoint, viewAxisY, COLOR(Y_COL));
+    DrawLine(viewZeroPoint, viewAxisZ, COLOR(Z_COL));
 
 }
 
@@ -694,6 +733,12 @@ void Renderer::getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, IN 
     *pDd = fabs(d2 - d1);
 }
 
+void Renderer::getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, OUT float* pDx, OUT float* pDy)
+{
+    *pDx = fabs(x2 - x1);
+    *pDy = fabs(y2 - y1);
+}
+
 void Renderer::yStepErrorUpdate(float dx, float dy, float& error, int& y, const int& ystep)
 {
     error -= dy;
@@ -701,6 +746,81 @@ void Renderer::yStepErrorUpdate(float dx, float dy, float& error, int& y, const 
     {
         y += ystep;
         error += dx;
+    }
+}
+
+void Renderer::ProjectPolygon(std::vector<glm::vec3>& polygon)
+{
+    
+}
+
+void Renderer::Fill_A_Triangle(const std::vector<glm::vec3>& polygon)
+{
+    pair<vec2, vec2> firstEdge(polygon[0], (polygon[1]));
+    pair<vec2, vec2> secondEdge(polygon[0], (polygon[2]));
+
+    float firstEdgeFirstX = firstEdge.first.x;
+    float firstEdgeFirstY = firstEdge.first.y;
+    float firstEdgeSecondX = firstEdge.second.x;
+    float firstEdgeSecondY = firstEdge.second.y;
+
+    float secondEdgeFirstX = secondEdge.first.x;
+    float secondEdgeFirstY = secondEdge.first.y;
+    float secondEdgeSecondX = secondEdge.second.x;
+    float secondEdgeSecondY = secondEdge.second.y;
+
+    float dX_1 = 0, dY_1 = 0;
+    float dX_2 = 0, dY_2 = 0;
+
+    getDeltas(firstEdgeFirstX, firstEdgeFirstY, firstEdgeSecondX, firstEdgeSecondY, &dX_1, &dY_1);
+    getDeltas(secondEdgeFirstX, secondEdgeFirstY, secondEdgeSecondX, secondEdgeSecondY, &dX_2, &dY_2);
+
+    float firstEdgeGradient = (dY_1 != 0) ? dX_1 / dY_1 : 1.f;
+    float secondEdgeGradient = (dY_2 != 0) ? dX_2 / dY_2 : -1.f;
+   
+    int xEnd = static_cast<int>(secondEdgeFirstX);
+    int yEnd = static_cast<int>(firstEdgeSecondY);
+    int x = static_cast<int>(firstEdgeFirstX);
+    for (int y = static_cast<int>(firstEdgeFirstY); y <= yEnd; y++)
+    {
+        DrawLine(vec3(x, y, polygon[0].z), vec3(xEnd, yEnd, polygon[0].z), { 0, 0, 0, 1 });
+        x -= firstEdgeGradient;
+        xEnd += secondEdgeGradient;
+    }
+}
+
+void Renderer::Fill_V_Triangle(const std::vector<glm::vec3>& polygon)
+{
+    pair<vec2, vec2> firstEdge(polygon[0], (polygon[1]));
+    pair<vec2, vec2> secondEdge(polygon[0], (polygon[2]));
+
+    float firstEdgeFirstX = firstEdge.first.x;
+    float firstEdgeFirstY = firstEdge.first.y;
+    float firstEdgeSecondX = firstEdge.second.x;
+    float firstEdgeSecondY = firstEdge.second.y;
+
+    float secondEdgeFirstX = secondEdge.first.x;
+    float secondEdgeFirstY = secondEdge.first.y;
+    float secondEdgeSecondX = secondEdge.second.x;
+    float secondEdgeSecondY = secondEdge.second.y;
+
+    float dX_1 = 0, dY_1 = 0;
+    float dX_2 = 0, dY_2 = 0;
+
+    getDeltas(firstEdgeFirstX, firstEdgeFirstY, firstEdgeSecondX, firstEdgeSecondY, &dX_1, &dY_1);
+    getDeltas(secondEdgeFirstX, secondEdgeFirstY, secondEdgeSecondX, secondEdgeSecondY, &dX_2, &dY_2);
+
+    float firstEdgeGradient = (dY_1 != 0) ? dX_1 / dY_1 : -1.f;
+    float secondEdgeGradient = (dY_2 != 0) ? dX_2 / dY_2 : 1.f;
+
+    float xEnd =                  secondEdgeFirstX;
+    int   yEnd = static_cast<int>(round(firstEdgeSecondY));
+    float x    =                  firstEdgeFirstX;
+    for (int y = static_cast<int>(firstEdgeFirstY); y <= yEnd; y++)
+    {
+        DrawLine(vec3(x, y, polygon[0].z), vec3(xEnd, y, polygon[0].z), { 0, 0, 0, 1 });
+        x += firstEdgeGradient;
+        xEnd -= secondEdgeGradient;
     }
 }
 
@@ -788,7 +908,7 @@ void Renderer::ClearDepthBuffer()
     {
         for (int j = 0; j < m_height; j++)
         {
-            putZ(i, j, numeric_limits<float>::lowest());
+            zBuffer[Z_BUF_INDEX(m_width, i, j)] = std::numeric_limits<float>::lowest();
         }
     }
 }

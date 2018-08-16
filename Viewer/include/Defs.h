@@ -2,8 +2,14 @@
 
 #include <string>
 #include <stdlib.h>
-#include <tuple>
+#include <vector>
+#include <glm/glm.hpp>
+#include <iostream>
+#include <fstream>
+#include <sstream>
 
+
+#define VIEW_SCALING                     300.f
 
 #define DEFAULT_HEIGHT                   720
 #define DEFAULT_WIDTH                    1280
