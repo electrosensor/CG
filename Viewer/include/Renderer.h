@@ -42,11 +42,18 @@ private:
     glm::mat4x4 m_objectTransform;
     glm::mat4x4 m_normalTransform;
 
+    PROJ_PARAMS m_projParams;
+
     glm::vec4 m_bgColor;
     glm::vec4 m_polygonColor;
 
+    glm::vec3 m_minCoords;
+    glm::vec3 m_maxCoords;
+
     glm::vec3 toViewPlane(const glm::vec4& point);
 
+    glm::vec3 Barycentric(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c);
+    BOOL isBarycentric(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c);
     void getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, IN float d1, IN float d2, OUT float* pDx, OUT float* pDy, OUT float* pDd);
     void getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, OUT float* pDx, OUT float* pDy);
     void yStepErrorUpdate(float dx, float dy, float& error, int& y, const int& ystep);
@@ -97,6 +104,10 @@ public:
     glm::vec4 GetPolygonColor();
 
     void SetPolygonColor(glm::vec4 newMeshColor);
+
+    void setProjectionParams(PROJ_PARAMS projParams);
+
+    PROJ_PARAMS getProjectionParams();
 
     // Clears the z buffer to zero.
     void ClearDepthBuffer();

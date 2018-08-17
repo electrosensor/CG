@@ -236,17 +236,17 @@ void MeshModel::LoadFile(const string& fileName)
         m_vertexNormals[i] = normals[i];
     }
     
-    m_modelCentroid.x = NORMALIZE_COORDS(modelCentroid.x, totalMin, totalMax);
-    m_modelCentroid.y = NORMALIZE_COORDS(modelCentroid.y, totalMin, totalMax);
-    m_modelCentroid.z = NORMALIZE_COORDS(modelCentroid.z, totalMin, totalMax);
+    m_modelCentroid.x = NORMALIZE_COORDS(modelCentroid.x , totalMin, totalMax);
+    m_modelCentroid.y = NORMALIZE_COORDS(modelCentroid.y , totalMin, totalMax);
+    m_modelCentroid.z = NORMALIZE_COORDS(modelCentroid.z , totalMin, totalMax);
 
-    m_minCoords.x = NORMALIZE_COORDS(minCoords.x, totalMin, totalMax);
-    m_minCoords.y = NORMALIZE_COORDS(minCoords.y, totalMin, totalMax);
-    m_minCoords.z = NORMALIZE_COORDS(minCoords.z, totalMin, totalMax);
+    m_minCoords.x     = NORMALIZE_COORDS(minCoords.x     , totalMin, totalMax);
+    m_minCoords.y     = NORMALIZE_COORDS(minCoords.y     , totalMin, totalMax);
+    m_minCoords.z     = NORMALIZE_COORDS(minCoords.z     , totalMin, totalMax);
 
-    m_maxCoords.x = NORMALIZE_COORDS(maxCoords.x, totalMin, totalMax);
-    m_maxCoords.y = NORMALIZE_COORDS(maxCoords.y, totalMin, totalMax);
-    m_maxCoords.z = NORMALIZE_COORDS(maxCoords.z, totalMin, totalMax);
+    m_maxCoords.x     = NORMALIZE_COORDS(maxCoords.x     , totalMin, totalMax);
+    m_maxCoords.y     = NORMALIZE_COORDS(maxCoords.y     , totalMin, totalMax);
+    m_maxCoords.z     = NORMALIZE_COORDS(maxCoords.z     , totalMin, totalMax);
 
 
 }

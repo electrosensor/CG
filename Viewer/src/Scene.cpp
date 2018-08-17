@@ -41,10 +41,12 @@ void Scene::Draw()
     renderer->SetCameraTransform(activeCamera->GetTransformation());
     renderer->SetProjection(activeCamera->GetProjection());
 
+    renderer->setProjectionParams(activeCamera->getProjectionParams());
+
     renderer->SetBgColor(m_bgColor);
     renderer->SetPolygonColor(m_polygonColor);
 
-    renderer->drawAxis();
+    //renderer->drawAxis();
 
     for each (Model* model in m_models)
     {

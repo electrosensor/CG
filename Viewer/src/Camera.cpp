@@ -9,6 +9,13 @@ Camera::Camera(const vec4& eye, const vec4& at, const vec4& up) : m_cameraTransf
 {
     m_cameraModel = (PModel) new CamMeshModel(eye);
     LookAt(eye, at, up);
+    try 
+    {
+        Ortho({ -1,1,-1,1,-1,-0.1f });
+    }
+    catch (...) {}
+
+    
 }
 
 Camera::Camera() : Camera(DEFAULT_CAMERA_POSITION) {}
@@ -79,6 +86,8 @@ void Camera::Ortho(const PROJ_PARAMS projParams)
         { -(right + left) / (right - left) , -(bottom + top) / (top - bottom) , -(zFar + zNear) / (zFar - zNear)    ,              1              }
 
     });
+
+    Frustum(projParams);
 }
 
 void Camera::Frustum(const PROJ_PARAMS projParams)
@@ -95,7 +104,7 @@ void Camera::Frustum(const PROJ_PARAMS projParams)
         {                0                 ,              0                   , -2.0f*zFar*zNear / (zFar - zNear)   ,              0              }
     });
 
-    m_frustumParams = projParams;
+    m_projParams = projParams;
 
     throw false;
 }

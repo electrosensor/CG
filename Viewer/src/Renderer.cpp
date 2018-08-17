@@ -30,19 +30,26 @@ Renderer::~Renderer()
 
 vec4 Renderer::processPipeline(const vec4& point, PIPE_TYPE pipeType /*= FULL*/)
 {
+    glm::vec4 piped;
+
     switch (pipeType)
     {
     case FULL:
-        return m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * point;
+        piped =  m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * point;
+        break;
     case AXIS:
-        return m_cameraProjection * m_cameraTransform * point;
+        piped =  m_cameraProjection * m_cameraTransform * point;
+        break;
     case MODEL:
-        return m_cameraProjection * m_cameraTransform * m_objectTransform * point;
+        piped =  m_cameraProjection * m_cameraTransform * m_objectTransform * point;
+        break;
     default:
-        return HOMOGENEOUS_VECTOR4;
+        piped =  HOMOGENEOUS_VECTOR4;
+        break;
     }
 
-    
+    return piped;
+
 }
 
 void Renderer::Init()
@@ -88,11 +95,48 @@ void Renderer::DrawTriangles(const vector<vec4>& vertices, bool bDrawFaceNormals
 //         printf("View2: x = %f, y = %f, z = %f\n", viewP2.x, viewP2.y, viewP3.z);
 //         printf("View3: x = %f, y = %f, z = %f\n", viewP3.x, viewP3.y, viewP3.z);
 
-        if (/*m_bSolidModel*/1)
+        if (/*m_bSolidModel*/true)
         {
-            vector<vec3> polygonProjection({ viewP1, viewP2, viewP3 });
-            ProjectPolygon(polygonProjection);
-            PolygonScanConversion(polygonProjection);
+            ivec2 upperRight, lowerLeft;
+            upperRight = { MAX3(viewP1.x, viewP2.x, viewP3.x),MAX3(viewP1.y, viewP2.y, viewP3.y) };
+            lowerLeft  = { MIN3(viewP1.x, viewP2.x, viewP3.x),MIN3(viewP1.y, viewP2.y, viewP3.y) };
+            float maxZ = MAX3(viewP1.z, viewP2.z, viewP3.z);
+
+            int countin = 0;
+            int countout = 0;
+            
+            
+            ivec3 polyCenter = glm::ivec3(viewP1 + viewP2 + viewP3);
+            polyCenter /= 3;
+            polyCenter.z = 0;
+
+            for (int x = lowerLeft.x ; x < upperRight.x ; x++ )
+            {
+                for(int y = lowerLeft.y  ; y < upperRight.y; y++)
+
+                    if (isBarycentric({ x,y }, { viewP1.x,viewP1.y }, { viewP2.x,viewP2.y }, { viewP3.x,viewP3.y }))
+                    {
+                        countin++;
+                        putPixel(x, y, maxZ, COLOR(GREEN));
+                    }
+                    else
+                    {
+                        countout++;
+                    }
+            }
+
+            if (countout != 0)
+            {
+                countout = 0;
+            }
+// 
+//             DrawLine(viewP1, viewP2, m_polygonColor);
+//             DrawLine(viewP2, viewP3, m_polygonColor);
+//             DrawLine(viewP3, viewP1, m_polygonColor);
+
+//             vector<vec3> polygonProjection({ viewP1, viewP2, viewP3 });
+//             ProjectPolygon(polygonProjection);
+//             PolygonScanConversion(polygonProjection);
         }
         else
         {
@@ -197,17 +241,56 @@ glm::vec3 Renderer::toViewPlane(const glm::vec4& point)
     // convert to raster space 
     vec3 screenPoint;
 
-    screenPoint.x = ((point.x + 1) * m_width  / 2.0f);
-    screenPoint.y = ((point.y + 1) * m_height / 2.0f);
-    screenPoint.z =   point.z + 1.f;
+    vec3 cartPoint = Util::toCartesianForm(point);
 
-    screenPoint.x = round((screenPoint.x - (m_width  / 2.0f)) * (VIEW_SCALING / m_width ) + (m_width  / 2.0f));
-    screenPoint.y = round((screenPoint.y - (m_height / 2.0f)) * (VIEW_SCALING / m_height) + (m_height / 2.0f));
-//     screenPoint.z = screenPoint.z / 2.0f;
+    screenPoint.x = cartPoint.x;
+    screenPoint.y = cartPoint.y;
+    screenPoint.z = cartPoint.z;
+
+//     printf("x = %f, y = %f, z = %f\n", cartPoint.x, cartPoint.y, cartPoint.z);
+
+    //     screenPoint.x = round((screenPoint.x - (m_width  / 2.0f)) * (VIEW_SCALING * m_width ) + (m_width  / 2.0f));
+    //     screenPoint.y = round((screenPoint.y - (m_height / 2.0f)) * (VIEW_SCALING * m_height) + (m_height / 2.0f));
+
+    screenPoint.x = ((m_width  / 2 ) * screenPoint.x +   ( m_width  / 2));
+    screenPoint.y = ((m_height / 2)  * screenPoint.y +    (m_height / 2));
+    screenPoint.z = ((screenPoint.z * ((m_projParams.zFar - m_projParams.zNear) / 2) + ((m_projParams.zFar + m_projParams.zNear) / 2)));
 
     return vec3(screenPoint.x, screenPoint.y, screenPoint.z);
 }
 
+glm::vec3 Renderer::Barycentric(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c)
+{
+    glm::vec2 v0 = b - a, v1 = c - a, v2 = p - a;
+    float d00 = glm::dot(v0, v0);
+    float d01 = glm::dot(v0, v1);
+    float d11 = glm::dot(v1, v1);
+    float d20 = glm::dot(v2, v0);
+    float d21 = glm::dot(v2, v1);
+    float denom = d00 * d11 - d01 * d01;
+    float v = (d11 * d20 - d01 * d21) / denom;
+    float w = (d00 * d21 - d01 * d20) / denom;
+    float u = 1.0f - v - w;
+    
+    return { u ,v ,w };
+}
+
+
+BOOL Renderer::isBarycentric(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c)
+{
+    vec3 barycentricCoord = Barycentric(p, a, b, c);
+    return barycentricCoord.x <= 1 && barycentricCoord.y <= 1 && barycentricCoord.z <= 1 && barycentricCoord.x >= 0 && barycentricCoord.y >= 0 && barycentricCoord.z >= 0 ;
+}
+
+void Renderer::setProjectionParams(PROJ_PARAMS projParams)
+{
+    m_projParams = projParams;
+}
+
+PROJ_PARAMS Renderer::getProjectionParams()
+{
+    return m_projParams; 
+}
 
 void Renderer::SetCameraTransform(const mat4x4 & cTransform)
 {
@@ -224,6 +307,7 @@ void Renderer::SetObjectMatrices(const mat4x4 & oTransform, const mat4x4 & nTran
     m_objectTransform = oTransform;
     m_normalTransform = nTransform;
 }
+
 
 void Renderer::putPixel(int i, int j, float d, const vec4& color)
 {
@@ -264,295 +348,23 @@ void Renderer::DrawLine(const glm::vec3& p1, const glm::vec3& p2, const glm::vec
     int x1 = static_cast<int>(round(p2.x));
     int y1 = static_cast<int>(round(p2.y));
 
-    float zDepth = p1.z;
 
     int resSize = 1;
     int dx = abs(x1 - x0);
     int sx = x0 < x1 ? resSize : -resSize;
     int dy = abs(y1 - y0);
     int sy = y0 < y1 ? resSize : -resSize;
-//     int dz = abs(z1 - z0);
-//     int sz = z0 < z1 ? resSize : -resSize;
     int dm = MAX(dx, /*MAX(*/dy/*, dz)*/), i = dm;
-    x1 = y1 /*= z1*/ = dm / 2;
+    x1 = y1 = dm / 2;
 
     for (; ; )
     {
-        putPixel(x0, y0, zDepth, color); //Printing points here
+        putPixel(x0, y0, MAX(p1.z,p2.z), color); //Printing points here
         if (i <= 0) break;
         x1 -= dx; if (x1 < 0) { x1 += dm; x0 += sx; }
         y1 -= dy; if (y1 < 0) { y1 += dm; y0 += sy; }
-/*        z1 -= dz; if (z1 < 0) { z1 += dm; z0 += sz; }*/
         i -= resSize;
     }
-
-//     float dd, dy, dx;
-// 
-//           float x1 = p1.x;
-//           float x2 = p2.x;
-//           
-//           float y1 = p1.y;
-//           float y2 = p2.y;
-//       
-//           float d1 = p1.z;
-//           float d2 = p2.z;
-//        
-//           const bool bSteep = isSlopeBiggerThanOne(x1, x2, y1, y2);
-//           
-//           orderPoints(x1, x2, y1, y2, d1, d2);
-//       
-//           getDeltas(x1, x2, y1, y2, d1, d2, &dx, &dy, &dd);
-//           
-//           float errorX = dx / 2.0f;
-//           float errorY = dy / 2.0f;
-//           float errorD = dd / 2.0f;
-// 
-//           const int xstep = (x1 < x2) ? 1 : -1;
-//           const int ystep = (y1 < y2) ? 1 : -1;
-//           const int dstep = (d1 < d2) ? 1 : -1;
-// 
-//           auto y = (int)y1;
-//           auto d = (int)d1;
-//           auto x = (int)x1;
-//       
-//           const auto maxX = MAX(x2,MAX( y2, d2));
-//       
-//           for (auto x = (int)x1; x < maxX; x++)
-//           {
-//               putPixel(x, y, d, bSteep, color);
-//       
-//               yStepErrorUpdate(dx, dy, errorX, y, ystep);
-//           }
-//     int x1 = p1.x;
-//     int x2 = p2.x;
-//     int y1 = p1.y;
-//     int y2 = p2.y;
-//     float d1 = p1.z;
-//     float d2 = p2.z;
-// 
-//     int dx = abs(x2 - x1);
-//     int dy = abs(y2 - y1);
-//     int dz = abs(d2 - d1);
-// 
-// 
-//     int stepX = x1 < x2 ? 1 : -1;
-//     int stepY = y1 < y2 ? 1 : -1;
-//     int stepZ = d1 < d2 ? 1 : -1;
-// 
-//     int dMax = MAX(dx, MAX(dy, dz));
-// 
-// 
-//     x1 = y1 = d1 = dMax / 2;
-// 
-//            for (int i = dMax;;) {  /* loop */
-//                putPixel(x1, y1, d1, color);
-//                if (i-- == 0) break;
-//                if (x1 < 0) { x2 += dMax; x1 += stepX; }
-//                if (y1 < 0) { y2 += dMax; y1 += stepY; }
-//                if (d1 < 0) { d2 += dMax; d1 += stepZ; }
-//            }
-
-//     for (int i = 0; i < dMax; i++)
-//     {
-//         putPixel(x1, y1, d1, color);
-//         if (x1 < 0) { x2 += dMax; x1 += stepX; }
-//         if (y1 < 0) { y2 += dMax; y1 += stepY; }
-//         if (d1 < 0) { d2 += dMax; d1 += stepZ; }
-//     }
-// //     }
-// 
-//     
-//    
-//     void plotLine3d(int x0, int y0, int z0, int x1, int y1, int z1)
-//     {
-//         int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-//         int dy = abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-//         int dz = abs(z1 - z0), sz = z0 < z1 ? 1 : -1;
-//         int dm = max(dx, dy, dz), i = dm; /* maximum difference */
-//         x1 = y1 = z1 = dm / 2; /* error offset */
-// 
-//         for (;;) {  /* loop */
-//             setPixel(x0, y0, z0);
-//             if (i-- == 0) break;
-//              if (x1 < 0) { x1 += dm; x0 += sx; }
-//              if (y1 < 0) { y1 += dm; y0 += sy; }
-//              if (z1 < 0) { z1 += dm; z0 += sz; }
-//         }
-//     }
-
-
-    /*
-    
-
-   if ~exist('precision','var') | isempty(precision) | round(precision) == 0
-      precision = 0;
-      P1 = round(P1);
-      P2 = round(P2);
-   else
-      precision = round(precision);
-      P1 = round(P1*(10^precision));
-      P2 = round(P2*(10^precision));
-   end
-
-   d = max(abs(P2-P1)+1);
-   X = zeros(1, d);
-   Y = zeros(1, d);
-   Z = zeros(1, d);
-
-   x1 = P1(1);
-   y1 = P1(2);
-   z1 = P1(3);
-
-   x2 = P2(1);
-   y2 = P2(2);
-   z2 = P2(3);
-
-   dx = x2 - x1;
-   dy = y2 - y1;
-   dz = z2 - z1;
-
-   ax = abs(dx)*2;
-   ay = abs(dy)*2;
-   az = abs(dz)*2;
-
-   sx = sign(dx);
-   sy = sign(dy);
-   sz = sign(dz);
-
-   x = x1;
-   y = y1;
-   z = z1;
-   idx = 1;
-
-   if(ax>=max(ay,az))			% x dominant
-      yd = ay - ax/2;
-      zd = az - ax/2;
-
-      while(1)
-         X(idx) = x;
-         Y(idx) = y;
-         Z(idx) = z;
-         idx = idx + 1;
-
-         if(x == x2)		% end
-            break;
-         end
-
-         if(yd >= 0)		% move along y
-            y = y + sy;
-            yd = yd - ax;
-         end
-
-         if(zd >= 0)		% move along z
-            z = z + sz;
-            zd = zd - ax;
-         end
-
-         x  = x  + sx;		% move along x
-         yd = yd + ay;
-         zd = zd + az;
-      end
-   elseif(ay>=max(ax,az))		% y dominant
-      xd = ax - ay/2;
-      zd = az - ay/2;
-
-      while(1)
-         X(idx) = x;
-         Y(idx) = y;
-         Z(idx) = z;
-         idx = idx + 1;
-
-         if(y == y2)		% end
-            break;
-         end
-
-         if(xd >= 0)		% move along x
-            x = x + sx;
-            xd = xd - ay;
-         end
-
-         if(zd >= 0)		% move along z
-            z = z + sz;
-            zd = zd - ay;
-         end
-
-         y  = y  + sy;		% move along y
-         xd = xd + ax;
-         zd = zd + az;
-      end
-   elseif(az>=max(ax,ay))		% z dominant
-      xd = ax - az/2;
-      yd = ay - az/2;
-
-      while(1)
-         X(idx) = x;
-         Y(idx) = y;
-         Z(idx) = z;
-         idx = idx + 1;
-
-         if(z == z2)		% end
-            break;
-         end
-
-         if(xd >= 0)		% move along x
-            x = x + sx;
-            xd = xd - az;
-         end
-
-         if(yd >= 0)		% move along y
-            y = y + sy;
-            yd = yd - az;
-         end
-
-         z  = z  + sz;		% move along z
-         xd = xd + ax;
-         yd = yd + ay;
-      end
-   end
-
-   if precision ~= 0
-      X = X/(10^precision);
-      Y = Y/(10^precision);
-      Z = Z/(10^precision);
-   end
-
-   return;
-    
-    
-    */
-//     float dx, dy, dd;
-// 
-//     float x1 = p1.x;
-//     float x2 = p2.x;
-//     
-//     float y1 = p1.y;
-//     float y2 = p2.y;
-// 
-//     float d1 = p1.z;
-//     float d2 = p2.z;
-//  
-//     const bool bSteep = isSlopeBiggerThanOne(x1, x2, y1, y2);
-//     
-//     orderPoints(x1, x2, y1, y2);
-// 
-//     getDeltas(x1, x2, y1, y2, d1, d2, &dx, &dy, &dd);
-//     
-//     float errorX = dx / 2.0f;
-//     float errorD = dd / 2.0f;
-//     const int ystep = (y1 < y2) ? 1 : -1;
-//     const int dstep = (d1 < d2) ? 1 : -1;
-//     auto y = (int)y1;
-//     auto d = (int)d1;
-// 
-//     const auto maxX = (int)x2;
-// 
-//     for (auto x = (int)x1; x < maxX; x++)
-//     {
-//         putPixel(x, y, d, bSteep, color);
-// 
-//         yStepErrorUpdate(dx, dy, errorX, y, ystep);
-//         yStepErrorUpdate(dx, dd, errorD, d, dstep);
-//     }
 }
 
 void Renderer::putPixel(int x, int y, bool steep, float d, const vec4& color)
@@ -579,7 +391,7 @@ void Renderer::createBuffers(int w, int h)
             colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 0)] = 0.f;
             colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 1)] = 0.f;
             colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 2)] = 0.f;
-            zBuffer[ (m_width, i, j)] = std::numeric_limits<float>::lowest();
+            zBuffer    [Z_BUF_INDEX    (m_width, i, j)   ] = std::numeric_limits<float>::lowest();
         }
     }
 }
@@ -751,7 +563,11 @@ void Renderer::yStepErrorUpdate(float dx, float dy, float& error, int& y, const 
 
 void Renderer::ProjectPolygon(std::vector<glm::vec3>& polygon)
 {
-    
+    float zMax = MAX3(polygon[0].z, polygon[1].z, polygon[2].z);
+    for (auto poly : polygon)
+    {
+        poly.z = zMax;
+    }
 }
 
 void Renderer::Fill_A_Triangle(const std::vector<glm::vec3>& polygon)

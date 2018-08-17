@@ -37,7 +37,9 @@
 #define DEFAULT_CAMERA_POSITION          { { 2.f, 2.f, 2.f, 1.0f }, { 0, 0, 0, 1.0f }, { 0, 1, 0, 1.0f } }
 
 #define MAX(a,b)                         (((a) > (b)) ? (a) : (b))
+#define MAX3(a,b,c)                      (MAX(a,MAX(b,c)))
 #define MIN(a,b)                         (((a) < (b)) ? (a) : (b))
+#define MIN3(a,b,c)                      (MIN(a,MIN(b,c)))
 #define NORM_ZERO_TO_ONE(value,min,max)  ((value) - (min)) / ((max) - (min))
 #define NORMALIZE_COORDS(value,min,max)  (((NORM_ZERO_TO_ONE(value,min,max)*2) - 1))
 

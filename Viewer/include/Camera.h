@@ -13,7 +13,7 @@ class Camera
 private:
     glm::mat4x4 m_cameraTransform;
     glm::mat4x4 m_cameraProjection;
-    PROJ_PARAMS m_frustumParams;
+    PROJ_PARAMS m_projParams;
     int m_cameraIdx;
     PModel m_cameraModel;
     
@@ -47,6 +47,11 @@ public:
     void setCameraModel(Model* camModel) { m_cameraModel = camModel; }
     
     PModel getCameraModel() { return m_cameraModel; }
+
+    PROJ_PARAMS getProjectionParams()
+    {
+        return m_projParams;
+    }
 
 private:
     void validateProjParams(PROJ_PARAMS projParams);
