@@ -46,6 +46,7 @@ private:
 
     glm::vec4 m_bgColor;
     glm::vec4 m_polygonColor;
+    glm::vec4 m_wireframeColor;
 
     glm::vec3 m_minCoords;
     glm::vec3 m_maxCoords;
@@ -71,10 +72,11 @@ public:
 
     // Draws a line by Bresenham algorithm: 
     void DrawLine(const glm::vec3& p1, const glm::vec3& p2, const glm::vec4& color);
-    void PolygonScanConversion(const std::vector<glm::vec3>& polygon, const glm::vec4& polygonColor = glm::vec4(1, 1, 1, 1));
+    void PolygonScanConversion(const glm::vec3& viewP1, const glm::vec3& viewP2, const glm::vec3& viewP3);
     void drawVerticesNormals(const std::vector<glm::vec4>& vertices, const std::vector<glm::vec4>& normals, float normScaleRate);
     // Draws wireframe triangles to the color buffer
     void DrawTriangles(const std::vector<glm::vec4>& vertices, bool bDrawFaceNormals = false, const glm::vec4* modelCentroid = nullptr, float normScaleRate = 1, bool bIsCamera = false);
+    void drawFaceNormal(const glm::vec4& nrm1, const glm::vec4& nrm2, const glm::vec4& nrm3, float normScaleRate);
     // Draws surrounding border cube;
     void drawBordersCube(CUBE borderCube);
     // Sets the camera transformations with relation to world coordinates
@@ -98,12 +100,13 @@ public:
     void Viewport(int w, int h);
 
     glm::vec4 GetBgColor();
-
-    void SetBgColor(glm::vec4 newBgColor);
+    void SetBgColor(const glm::vec4& newBgColor);
 
     glm::vec4 GetPolygonColor();
+    void SetPolygonColor(const glm::vec4& newMeshColor);
 
-    void SetPolygonColor(glm::vec4 newMeshColor);
+    glm::vec4 GetWireframeColor();
+    void SetWireframeColor(const glm::vec4& newMeshColor);
 
     void setProjectionParams(PROJ_PARAMS projParams);
 
@@ -113,6 +116,7 @@ public:
     void ClearDepthBuffer();
 
     void setWorldTransformation(glm::mat4x4 m_worldTransformation);
+    void setSolidColor(bool m_bShowSolidColor);
 private:
     void orderPoints(float& x1, float& x2, float& y1, float& y2, float& d1, float& d2);
     bool isSlopeBiggerThanOne(float x1, float x2, float y1, float y2) { return (std::fabs(y2 - y1) > std::fabs(x2 - x1)); }

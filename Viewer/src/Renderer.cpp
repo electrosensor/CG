@@ -15,7 +15,7 @@ Renderer::Renderer() : m_width(DEFAULT_WIDTH), m_height(DEFAULT_HEIGHT)
     createBuffers(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 }
 
-Renderer::Renderer(int w, int h) : m_width(w), m_height(h), m_normalTransform(I_MATRIX), m_cameraTransform(I_MATRIX), m_objectTransform(I_MATRIX), m_cameraProjection(I_MATRIX), m_worldTransformation(I_MATRIX), m_bgColor(Util::getColor(CLEAR)), m_polygonColor(Util::getColor(WHITE))
+Renderer::Renderer(int w, int h) : m_width(w), m_height(h), m_normalTransform(I_MATRIX), m_cameraTransform(I_MATRIX), m_objectTransform(I_MATRIX), m_cameraProjection(I_MATRIX), m_worldTransformation(I_MATRIX), m_bgColor(Util::getColor(CLEAR)), m_polygonColor(Util::getColor(BLACK)), m_wireframeColor(Util::getColor(WHITE))
 {
     initOpenGLRendering();
     createBuffers(w, h);
@@ -76,134 +76,99 @@ void Renderer::DrawTriangles(const vector<vec4>& vertices, bool bDrawFaceNormals
         auto nrm1 = p1;
         auto nrm2 = p2;
         auto nrm3 = p3;
-//         printf("In1: x = %f, y = %f, z = %f\n", p1.x, p1.y, p3.z);
-//         printf("In2: x = %f, y = %f, z = %f\n", p2.x, p2.y, p3.z);
-//         printf("In3: x = %f, y = %f, z = %f\n", p3.x, p3.y, p3.z);
 
         p1 = processPipeline(p1);
         p2 = processPipeline(p2);
         p3 = processPipeline(p3);
-//         printf("Pipe1: x = %f, y = %f, z = %f\n", p1.x, p1.y, p3.z);
-//         printf("Pipe2: x = %f, y = %f, z = %f\n", p2.x, p2.y, p3.z);
-//         printf("Pipe3: x = %f, y = %f, z = %f\n", p3.x, p3.y, p3.z);
-
 
         auto viewP1 = toViewPlane(p1);
         auto viewP2 = toViewPlane(p2);
         auto viewP3 = toViewPlane(p3);
-//         printf("View1: x = %f, y = %f, z = %f\n", viewP1.x, viewP1.y, viewP3.z);
-//         printf("View2: x = %f, y = %f, z = %f\n", viewP2.x, viewP2.y, viewP3.z);
-//         printf("View3: x = %f, y = %f, z = %f\n", viewP3.x, viewP3.y, viewP3.z);
 
-        if (/*m_bSolidModel*/true)
+        if (m_bSolidModel)
         {
-            ivec2 upperRight, lowerLeft;
-            upperRight = { MAX3(viewP1.x, viewP2.x, viewP3.x),MAX3(viewP1.y, viewP2.y, viewP3.y) };
-            lowerLeft  = { MIN3(viewP1.x, viewP2.x, viewP3.x),MIN3(viewP1.y, viewP2.y, viewP3.y) };
-            float maxZ = MAX3(viewP1.z, viewP2.z, viewP3.z);
-
-            int countin = 0;
-            int countout = 0;
-            
-            
-            ivec3 polyCenter = glm::ivec3(viewP1 + viewP2 + viewP3);
-            polyCenter /= 3;
-            polyCenter.z = 0;
-
-            for (int x = lowerLeft.x ; x < upperRight.x ; x++ )
-            {
-                for(int y = lowerLeft.y  ; y < upperRight.y; y++)
-
-                    if (isBarycentric({ x,y }, { viewP1.x,viewP1.y }, { viewP2.x,viewP2.y }, { viewP3.x,viewP3.y }))
-                    {
-                        countin++;
-                        putPixel(x, y, maxZ, COLOR(GREEN));
-                    }
-                    else
-                    {
-                        countout++;
-                    }
-            }
-
-            if (countout != 0)
-            {
-                countout = 0;
-            }
-// 
-//             DrawLine(viewP1, viewP2, m_polygonColor);
-//             DrawLine(viewP2, viewP3, m_polygonColor);
-//             DrawLine(viewP3, viewP1, m_polygonColor);
-
-//             vector<vec3> polygonProjection({ viewP1, viewP2, viewP3 });
-//             ProjectPolygon(polygonProjection);
-//             PolygonScanConversion(polygonProjection);
+            PolygonScanConversion(viewP1, viewP2, viewP3);
         }
         else
         {
-            DrawLine(viewP1, viewP2, m_polygonColor);
-            DrawLine(viewP2, viewP3, m_polygonColor);
-            DrawLine(viewP3, viewP1, m_polygonColor);
+            DrawLine(viewP1, viewP2, m_wireframeColor);
+            DrawLine(viewP2, viewP3, m_wireframeColor);
+            DrawLine(viewP3, viewP1, m_wireframeColor);
         }
-//         maxX = MAX(maxX, (MAX(p1.x, p2.x)));
-//         maxY = MAX(maxY, (MAX(p1.y, p2.y)));
-//         maxZ = MAX(maxZ, (MAX(p1.z, p2.z)));
-
-
+       
         if (bDrawFaceNormals)
         {
-
-            auto nrm1_3 = Util::toCartesianForm(nrm1);
-            auto nrm2_3 = Util::toCartesianForm(nrm2);
-            auto nrm3_3 = Util::toCartesianForm(nrm3);
-
-            auto subs1 = nrm3_3 - nrm1_3;
-            auto subs2 = nrm2_3 - nrm1_3;
-
-            auto faceNormal = cross(subs1, subs2);
-
-            auto faceCenter   = (nrm1_3 + nrm2_3 + nrm3_3) / 3.0f;
-
-            auto normalizedFaceNormal = Util::isVecEqual(faceNormal, vec3(0)) ? faceNormal : normalize(faceNormal);
-
-            normalizedFaceNormal.x *= normScaleRate;
-            normalizedFaceNormal.y *= normScaleRate;
-            normalizedFaceNormal.z *= normScaleRate;
-
-            auto nP1 = processPipeline(Util::toHomogeneousForm(faceCenter));
-            auto nP2 = processPipeline(Util::toHomogeneousForm(faceCenter + normalizedFaceNormal));
-
-            DrawLine(toViewPlane(nP1), toViewPlane(nP2), COLOR(LIME));
+            drawFaceNormal(nrm1, nrm2, nrm3, normScaleRate);
         }
 
         //printf("max: %f\n%f\n%f\n%f\n%f\n%f\n", p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
     }
 }
 
-
-
-void Renderer::PolygonScanConversion(const std::vector<glm::vec3>& polygon, const glm::vec4& polygonColor /*= glm::vec4(1, 1, 1, 1)*/)
+void Renderer::drawFaceNormal(const vec4& nrm1, const vec4& nrm2, const vec4& nrm3, float normScaleRate)
 {
-    vector<vec3> polygonVertex = polygon;
-    std::sort(polygonVertex.begin(), polygonVertex.end(), [](const vec3& p1, const vec3& p2)->bool { return (p1.y > p2.y); });
+    auto nrm1_3 = Util::toCartesianForm(nrm1);
+    auto nrm2_3 = Util::toCartesianForm(nrm2);
+    auto nrm3_3 = Util::toCartesianForm(nrm3);
 
-    if (polygonVertex[1] == polygonVertex[2])
+    auto subs1 = nrm3_3 - nrm1_3;
+    auto subs2 = nrm2_3 - nrm1_3;
+
+    auto faceNormal = cross(subs1, subs2);
+
+    auto faceCenter = (nrm1_3 + nrm2_3 + nrm3_3) / 3.0f;
+
+    auto normalizedFaceNormal = Util::isVecEqual(faceNormal, vec3(0)) ? faceNormal : normalize(faceNormal);
+
+    normalizedFaceNormal.x *= normScaleRate;
+    normalizedFaceNormal.y *= normScaleRate;
+    normalizedFaceNormal.z *= normScaleRate;
+
+    auto nP1 = processPipeline(Util::toHomogeneousForm(faceCenter));
+    auto nP2 = processPipeline(Util::toHomogeneousForm(faceCenter + normalizedFaceNormal));
+
+    DrawLine(toViewPlane(nP1), toViewPlane(nP2), COLOR(LIME));
+}
+
+
+void Renderer::PolygonScanConversion(const vec3& viewP1, const vec3& viewP2, const vec3& viewP3)
+{
+    ivec2 upperRight, lowerLeft;
+    upperRight = { MAX3(viewP1.x, viewP2.x, viewP3.x),MAX3(viewP1.y, viewP2.y, viewP3.y) };
+    lowerLeft = { MIN3(viewP1.x, viewP2.x, viewP3.x),MIN3(viewP1.y, viewP2.y, viewP3.y) };
+    float maxZ = MAX3(viewP1.z, viewP2.z, viewP3.z);
+
+    int countin = 0;
+    int countout = 0;
+
+
+    ivec3 polyCenter = glm::ivec3(viewP1 + viewP2 + viewP3);
+    polyCenter /= 3;
+    polyCenter.z = 0;
+
+    for (int x = lowerLeft.x; x < upperRight.x; x++)
     {
-        Fill_A_Triangle(polygonVertex);
+        for (int y = lowerLeft.y; y < upperRight.y; y++)
+
+            if (isBarycentric({ x,y }, { viewP1.x,viewP1.y }, { viewP2.x,viewP2.y }, { viewP3.x,viewP3.y }))
+            {
+                countin++;
+                putPixel(x, y, maxZ, m_polygonColor);
+            }
+            else
+            {
+                countout++;
+            }
     }
-    else if (polygonVertex[0] == polygonVertex[1])
+
+    if (countout != 0)
     {
-        Fill_V_Triangle(polygonVertex);
+        countout = 0;
     }
-    else
-    {
-        vec3 splitPoint(
-            (int)(polygonVertex[0].x + ((float)(polygonVertex[1].y - polygonVertex[0].y) / (float)(polygonVertex[2].y - polygonVertex[0].y)) * (polygonVertex[2].x - polygonVertex[0].x)),
-                  polygonVertex[1].y,
-                  polygonVertex[0].z
-        );
-        Fill_A_Triangle({ polygonVertex[0], polygonVertex[1], splitPoint });
-        Fill_V_Triangle({ polygonVertex[1], splitPoint, polygonVertex[2] });
-    }
+    // 
+    //             DrawLine(viewP1, viewP2, m_polygonColor);
+    //             DrawLine(viewP2, viewP3, m_polygonColor);
+    //             DrawLine(viewP3, viewP1, m_polygonColor);
 }
 
 void Renderer::drawVerticesNormals(const vector<vec4>& vertices, const vector<vec4>& normals, float normScaleRate)
@@ -399,6 +364,11 @@ void Renderer::createBuffers(int w, int h)
 void Renderer::setWorldTransformation(mat4x4 worldTransformation)
 {
     m_worldTransformation = worldTransformation;
+}
+
+void Renderer::setSolidColor(bool bShowSolidColor)
+{
+    m_bSolidModel = bShowSolidColor;
 }
 
 void Renderer::orderPoints(float& x1, float& x2, float& y1, float& y2, float& d1, float& d2)
@@ -703,7 +673,7 @@ vec4 Renderer::GetBgColor()
     return m_bgColor;
 }
 
-void Renderer::SetBgColor(vec4 newBgColor)
+void Renderer::SetBgColor(const glm::vec4& newBgColor)
 {
     m_bgColor = newBgColor;
 }
@@ -713,9 +683,19 @@ vec4 Renderer::GetPolygonColor()
     return m_polygonColor;
 }
 
-void Renderer::SetPolygonColor(vec4 newMeshColor)
+void Renderer::SetPolygonColor(const glm::vec4& newMeshColor)
 {
     m_polygonColor = newMeshColor;
+}
+
+vec4 Renderer::GetWireframeColor()
+{
+    return m_wireframeColor;
+}
+
+void Renderer::SetWireframeColor(const glm::vec4& newWireframeColor)
+{
+    m_wireframeColor = newWireframeColor;
 }
 
 void Renderer::ClearDepthBuffer()

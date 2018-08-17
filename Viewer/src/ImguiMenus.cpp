@@ -466,15 +466,17 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         bool        bShowVertNorms  = normals[0] > 0.1f ? true : false;
         bool        bShowFaceNorms  = normals[1] > 0.1f ? true : false;
         static bool bShowBorderCube = false;
+        static bool bShowSolidColor = true;
         
         scene->showVerticesNormals(bShowVertNorms);
         scene->showFacesNormals(bShowFaceNorms);
         scene->showBorderCube(bShowBorderCube);
+        scene->showSolidColor(bShowSolidColor);
 
         ImGui::Checkbox("Show vertices normals", &bShowVertNorms);
         ImGui::Checkbox("Show face normals", &bShowFaceNorms);
         ImGui::Checkbox("Show Border Cube", &bShowBorderCube);
-       
+        ImGui::Checkbox("Show Solid Color", &bShowSolidColor);
 
 
         //int val[2]; val[0] = io.MousePos.x; val[1] = io.MousePos.y;
@@ -508,8 +510,14 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         static float polygon[3] = { currentPolygonCol.x ,currentPolygonCol.y ,currentPolygonCol.z };
         ImGui::ColorEdit3("Polygon", polygon);
         scene->SetPolygonColor({ polygon[0], polygon[1], polygon[2], 1 });
-        ImGui::End();
 
+        ImGui::Text("-------------- Wireframe: --------------");
+        vec4 currentWireframeCol = scene->GetWireframeColor();
+        static float wireframe[3] = { currentWireframeCol.x ,currentWireframeCol.y ,currentWireframeCol.z };
+        ImGui::ColorEdit3("Wireframe", wireframe);
+        scene->SetWireframeColor({ wireframe[0], wireframe[1], wireframe[2], 1 });
+     
+        ImGui::End();
     }
 
     // Demonstrate creating a fullscreen menu bar and populating it.

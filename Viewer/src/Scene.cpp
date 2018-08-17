@@ -45,7 +45,8 @@ void Scene::Draw()
 
     renderer->SetBgColor(m_bgColor);
     renderer->SetPolygonColor(m_polygonColor);
-
+    renderer->SetWireframeColor(m_wireframeColor);
+    renderer->setSolidColor(m_bShowSolidColor);
     //renderer->drawAxis();
 
     for each (Model* model in m_models)
@@ -55,8 +56,7 @@ void Scene::Draw()
         tie(vPositions, vVertices, vVerticesNormals) = modelData;
 
         renderer->SetObjectMatrices(model->GetModelTransformation(), model->GetNormalTransformation());
-        renderer->setWorldTransformation(m_worldTransformation);
-        
+        renderer->setWorldTransformation(m_worldTransformation); 
         renderer->DrawTriangles(vPositions, m_bDrawFaceNormal, &model->getCentroid(), m_fnScaleFactor);
 
         if (m_bDrawVecNormal && !vVerticesNormals.empty())
@@ -343,7 +343,7 @@ vec4 Scene::GetBgColor()
     return m_bgColor;
 }
 
-void Scene::SetBgColor(vec4 newBgColor)
+void Scene::SetBgColor(const glm::vec4& newBgColor)
 {
     m_bgColor = newBgColor;
 }
@@ -353,11 +353,20 @@ vec4 Scene::GetPolygonColor()
     return m_polygonColor;
 }
 
-void Scene::SetPolygonColor(vec4 newMeshColor)
+void Scene::SetPolygonColor(const vec4& newMeshColor)
 {
     m_polygonColor = newMeshColor;
 }
 
+vec4 Scene::GetWireframeColor()
+{
+    return m_wireframeColor;
+}
+
+void Scene::SetWireframeColor(const vec4& newWireframeColor)
+{
+    m_wireframeColor = newWireframeColor;
+}
 
 float Scene::GetvnScale()
 {
