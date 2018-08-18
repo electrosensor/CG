@@ -54,7 +54,8 @@ private:
     glm::vec3 toViewPlane(const glm::vec4& point);
 
     glm::vec3 Barycentric(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c);
-    BOOL isBarycentric(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c);
+//     BOOL is_point_in_triangle(const glm::vec3& p, const glm::vec3& a, const glm::vec3& b, const glm::vec3& c);
+    BOOL isPointInTriangle(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c);
     void getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, IN float d1, IN float d2, OUT float* pDx, OUT float* pDy, OUT float* pDd);
     void getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, OUT float* pDx, OUT float* pDy);
     void yStepErrorUpdate(float dx, float dy, float& error, int& y, const int& ystep);

@@ -33,28 +33,28 @@ protected:
     {
         INIT_CUBE_COORDS(m_maxCoords, m_minCoords);
                                                                 
-        glm::vec4 RNB       = { cRight , cBottom , cNear ,  1 };  //            _________________________RFT=m_maxCoords(x,y,z)
-        glm::vec4 RFB       = { cRight , cBottom , cFar  ,  1 };  //           /LFT___________________  /|
-        glm::vec4 LFB       = { cLeft  , cBottom , cFar  ,  1 };  //          / / ___________________/ / |
-        glm::vec4 LNB       = { cLeft  , cBottom , cNear ,  1 };  //         / / /| |               / /  |
-        glm::vec4 RNT       = { cRight , cTop    , cNear ,  1 };  //        / / / | |              / / . |
-        glm::vec4 RFT       = { cRight , cTop    , cFar  ,  1 };  //       / / /| | |             / / /| |
-        glm::vec4 LFT       = { cLeft  , cTop    , cFar  ,  1 };  //      / / / | | |            / / / | |
-        glm::vec4 LNT       = { cLeft  , cTop    , cNear ,  1 };  //     / / /  | | |           / / /| | |
+        glm::vec4 RBN       = { cRight , cBottom , cNear ,  1 };  //            _________________________RTF=m_maxCoords(x,y,z)
+        glm::vec4 RBF       = { cRight , cBottom , cFar  ,  1 };  //           /LTF___________________  /|
+        glm::vec4 LBF       = { cLeft  , cBottom , cFar  ,  1 };  //          / / ___________________/ / |
+        glm::vec4 LBN       = { cLeft  , cBottom , cNear ,  1 };  //         / / /| |               / /  |
+        glm::vec4 RTN       = { cRight , cTop    , cNear ,  1 };  //        / / / | |              / / . |
+        glm::vec4 RTF       = { cRight , cTop    , cFar  ,  1 };  //       / / /| | |             / / /| |
+        glm::vec4 LTF       = { cLeft  , cTop    , cFar  ,  1 };  //      / / / | | |            / / / | |
+        glm::vec4 LTN       = { cLeft  , cTop    , cNear ,  1 };  //     / / /  | | |           / / /| | |
                                                                   //    / /_/__________________/ / / | | |
-        cubeLines.lines[0 ] =            { RNB, RFB };            //   /LNT___________________ _/ /  | | |
-        cubeLines.lines[1 ] =            { RNB, LNB };            //   | ____________________RNT| |  | | |
-        cubeLines.lines[2 ] =            { RNB, RNT };            //   | | |    | | |_________| | |__| | |
-        cubeLines.lines[3 ] =            { RFB, LFB };            //   | | |    | |___________| | |____| |
-        cubeLines.lines[4 ] =            { RFB, RFT };            //   | | |   / /LFB_________| | |_  / /RFB
-        cubeLines.lines[5 ] =            { LFB, LNB };            //   | | |  / / /           | | |/ / /
-        cubeLines.lines[6 ] =            { LFB, LFT };            //   | | | / / /            | | | / /
-        cubeLines.lines[7 ] =            { LNB, LNT };            //   | | |/ / /             | | |/ /
-        cubeLines.lines[8 ] =            { RNT, LNT };            //   | | | / /              | | ' /
-        cubeLines.lines[9 ] =            { RNT, RFT };            //   | | |/_/_______________| |  /
-        cubeLines.lines[10] =            { RFT, LFT };            //   | |____________________| | /
-        cubeLines.lines[11] =            { LFT, LNT };            //   |________________________|/
-                                                                  //   LNB=m_minCoords(u,v,w)   RNB   
+        cubeLines.lines[0 ] = {       RBN     ,      RBF      };  //   /LTN___________________ _/ /  | | |
+        cubeLines.lines[1 ] = {       RBN     ,      LBN      };  //   | ____________________RTN| |  | | |
+        cubeLines.lines[2 ] = {       RBN     ,      RTN      };  //   | | |    | | |_________| | |__| | |
+        cubeLines.lines[3 ] = {       RBF     ,      LBF      };  //   | | |    | |___________| | |____| |
+        cubeLines.lines[4 ] = {       RBF     ,      RTF      };  //   | | |   / /LBF_________| | |_  / /RBF
+        cubeLines.lines[5 ] = {       LBF     ,      LBN      };  //   | | |  / / /           | | |/ / /
+        cubeLines.lines[6 ] = {       LBF     ,      LTF      };  //   | | | / / /            | | | / /
+        cubeLines.lines[7 ] = {       LBN     ,      LTN      };  //   | | |/ / /             | | |/ /
+        cubeLines.lines[8 ] = {       RTN     ,      LTN      };  //   | | | / /              | | ' /
+        cubeLines.lines[9 ] = {       RTN     ,      RTF      };  //   | | |/_/_______________| |  /
+        cubeLines.lines[10] = {       RTF     ,      LTF      };  //   | |____________________| | /
+        cubeLines.lines[11] = {       LTF     ,      LTN      };  //   |________________________|/
+                                                                  //   LBN=m_minCoords(u,v,w)   RBN   
     }
 
 

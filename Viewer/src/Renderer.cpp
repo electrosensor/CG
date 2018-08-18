@@ -141,34 +141,22 @@ void Renderer::PolygonScanConversion(const vec3& viewP1, const vec3& viewP2, con
     int countin = 0;
     int countout = 0;
 
+    upperRight.x = upperRight.x > m_width  ? m_width  : upperRight.x;
+    upperRight.y = upperRight.y > m_height ? m_height : upperRight.y;
 
-    ivec3 polyCenter = glm::ivec3(viewP1 + viewP2 + viewP3);
-    polyCenter /= 3;
-    polyCenter.z = 0;
+    lowerLeft.x  = lowerLeft .x > m_width  ? m_width  : lowerLeft.x;
+    lowerLeft.y  = lowerLeft .y > m_height ? m_height : lowerLeft.y;
+
 
     for (int x = lowerLeft.x; x < upperRight.x; x++)
     {
         for (int y = lowerLeft.y; y < upperRight.y; y++)
 
-            if (isBarycentric({ x,y }, { viewP1.x,viewP1.y }, { viewP2.x,viewP2.y }, { viewP3.x,viewP3.y }))
+            if (isPointInTriangle({ x,y }, { viewP1.x,viewP1.y }, { viewP2.x,viewP2.y }, { viewP3.x,viewP3.y }))
             {
-                countin++;
                 putPixel(x, y, maxZ, m_polygonColor);
             }
-            else
-            {
-                countout++;
-            }
     }
-
-    if (countout != 0)
-    {
-        countout = 0;
-    }
-    // 
-    //             DrawLine(viewP1, viewP2, m_polygonColor);
-    //             DrawLine(viewP2, viewP3, m_polygonColor);
-    //             DrawLine(viewP3, viewP1, m_polygonColor);
 }
 
 void Renderer::drawVerticesNormals(const vector<vec4>& vertices, const vector<vec4>& normals, float normScaleRate)
@@ -201,27 +189,54 @@ void Renderer::drawBordersCube(CUBE borderCube)
 }
 
 
+// glm::vec3 Renderer::toViewPlane(const glm::vec4& point)
+// {
+//     // convert to raster space 
+//     vec3 screenPoint;
+// 
+//     vec3 cartPoint = Util::toCartesianForm(point);
+// 
+//     screenPoint.x = cartPoint.x;
+//     screenPoint.y = cartPoint.y;
+//     screenPoint.z = cartPoint.z;
+// 
+// //     printf("x = %f, y = %f, z = %f\n", cartPoint.x, cartPoint.y, cartPoint.z);
+// 
+//     screenPoint.x = round((screenPoint.x - (m_width / 2.0f)) * (VIEW_SCALING * m_width) + (m_width / 2.0f));
+//     screenPoint.y = round((screenPoint.y - (m_height / 2.0f)) * (VIEW_SCALING * m_height) + (m_height / 2.0f));
+// 
+// //     screenPoint.x = ((m_width  / 2 ) * screenPoint.x +   ( m_width  / 2));
+// //     screenPoint.y = ((m_height / 2)  * screenPoint.y +    (m_height / 2));
+//     screenPoint.z = ((screenPoint.z * ((m_projParams.zFar - m_projParams.zNear) / 2) + ((m_projParams.zFar + m_projParams.zNear) / 2)));
+// 
+//     return vec3(screenPoint.x, screenPoint.y, screenPoint.z);
+// }
+
+
 glm::vec3 Renderer::toViewPlane(const glm::vec4& point)
 {
     // convert to raster space 
     vec3 screenPoint;
 
-    vec3 cartPoint = Util::toCartesianForm(point);
+    screenPoint.x = ((point.x + 1) * m_width / 2.0f);
+    screenPoint.y = ((point.y + 1) * m_height / 2.0f);
+    //   screenPoint.z = ((point.z + 1) * (m_height + m_width) / 2.0f);
 
-    screenPoint.x = cartPoint.x;
-    screenPoint.y = cartPoint.y;
-    screenPoint.z = cartPoint.z;
+    screenPoint.x = round((screenPoint.x - (m_width / 2.0f)) * (250.0f / m_width) + (m_width / 2.0f));
+    screenPoint.y = round((screenPoint.y - (m_height / 2.0f)) * (250.0f / m_height) + (m_height / 2.0f));
+    screenPoint.z = ((point.z * ((m_projParams.zFar - m_projParams.zNear) / 2) + ((m_projParams.zFar + m_projParams.zNear) / 2)));
 
-//     printf("x = %f, y = %f, z = %f\n", cartPoint.x, cartPoint.y, cartPoint.z);
 
-    //     screenPoint.x = round((screenPoint.x - (m_width  / 2.0f)) * (VIEW_SCALING * m_width ) + (m_width  / 2.0f));
-    //     screenPoint.y = round((screenPoint.y - (m_height / 2.0f)) * (VIEW_SCALING * m_height) + (m_height / 2.0f));
+    if (screenPoint.x <0 || screenPoint.x >m_width || screenPoint.y < 0 || screenPoint.y > m_height)
+    {
+        screenPoint.z = numeric_limits<float>::min();
+    }
+    else
+    {
+        screenPoint.z = ((point.z * ((m_projParams.zFar - m_projParams.zNear) / 2) + ((m_projParams.zFar + m_projParams.zNear) / 2)));
+    }
 
-    screenPoint.x = ((m_width  / 2 ) * screenPoint.x +   ( m_width  / 2));
-    screenPoint.y = ((m_height / 2)  * screenPoint.y +    (m_height / 2));
-    screenPoint.z = ((screenPoint.z * ((m_projParams.zFar - m_projParams.zNear) / 2) + ((m_projParams.zFar + m_projParams.zNear) / 2)));
-
-    return vec3(screenPoint.x, screenPoint.y, screenPoint.z);
+    return vec3((int)screenPoint.x, (int)screenPoint.y, screenPoint.z);
 }
 
 glm::vec3 Renderer::Barycentric(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c)
@@ -241,10 +256,32 @@ glm::vec3 Renderer::Barycentric(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2
 }
 
 
-BOOL Renderer::isBarycentric(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c)
+// bool Renderer::is_point_in_triangle(const glm::vec2& p, const glm::vec2& a, const glm::vec2& b, const glm::vec2& c)
+// {
+// 
+//     
+// 
+//     vec2 v0 = b - a, v1 = c - a, v2 = p - a;
+// 
+//     vec2 d00 = v0 * v0;
+//     vec2 d01 = v0 * v1;
+//     vec2 d11 = v1 * v1;
+//     vec2 d20 = v2 * v0;
+//     vec2 d21 = v2 * v1;
+//     vec2 denom = d00 * d11 - d01 * d01;
+// 
+//     // compute parametric coordinates
+//     float v = (d11 * d20 - d01 * d21) / denom;
+//     float w = (d00 * d21 - d01 * d20) / denom;
+//     return v >= 0. && w >= 0. && v + w <= 1.;
+// }
+
+
+BOOL Renderer::isPointInTriangle(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c)
 {
-    vec3 barycentricCoord = Barycentric(p, a, b, c);
-    return barycentricCoord.x <= 1 && barycentricCoord.y <= 1 && barycentricCoord.z <= 1 && barycentricCoord.x >= 0 && barycentricCoord.y >= 0 && barycentricCoord.z >= 0 ;
+    vec3 bc = Barycentric(p, a, b, c);
+    return p == a || p == b || p == c || (0 <= bc.x && bc.x <= 1 && 0 <= bc.y && bc.y <= 1 && 0 <= bc.z && bc.z <= 1);
+//     return barycentricCoord.u <= 1 && barycentricCoord.y <= 1 && barycentricCoord.z <= 1 && barycentricCoord.x >= 0 && barycentricCoord.y >= 0 && barycentricCoord.z >= 0 ;
 }
 
 void Renderer::setProjectionParams(PROJ_PARAMS projParams)
@@ -283,6 +320,10 @@ void Renderer::putPixel(int i, int j, float d, const vec4& color)
         colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 0)] = color.x;
         colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 1)] = color.y;
         colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 2)] = color.z;
+    }
+    else if(color.x == 0 && color.y == 0 && color.z ==0 && zBuffer[Z_BUF_INDEX(m_width, i, j)] == numeric_limits<float>::lowest())
+    {
+        printf("i = %d, j = %d, d = %f\n");
     }
 
 }
@@ -328,7 +369,7 @@ void Renderer::DrawLine(const glm::vec3& p1, const glm::vec3& p2, const glm::vec
         if (i <= 0) break;
         x1 -= dx; if (x1 < 0) { x1 += dm; x0 += sx; }
         y1 -= dy; if (y1 < 0) { y1 += dm; y0 += sy; }
-        i -= resSize;
+        i  -= resSize;
     }
 }
 
@@ -545,13 +586,13 @@ void Renderer::Fill_A_Triangle(const std::vector<glm::vec3>& polygon)
     pair<vec2, vec2> firstEdge(polygon[0], (polygon[1]));
     pair<vec2, vec2> secondEdge(polygon[0], (polygon[2]));
 
-    float firstEdgeFirstX = firstEdge.first.x;
-    float firstEdgeFirstY = firstEdge.first.y;
-    float firstEdgeSecondX = firstEdge.second.x;
-    float firstEdgeSecondY = firstEdge.second.y;
+    float firstEdgeFirstX   = firstEdge.first .x;
+    float firstEdgeFirstY   = firstEdge.first .y;
+    float firstEdgeSecondX  = firstEdge.second.x;
+    float firstEdgeSecondY  = firstEdge.second.y;
 
-    float secondEdgeFirstX = secondEdge.first.x;
-    float secondEdgeFirstY = secondEdge.first.y;
+    float secondEdgeFirstX  = secondEdge.first .x;
+    float secondEdgeFirstY  = secondEdge.first .y;
     float secondEdgeSecondX = secondEdge.second.x;
     float secondEdgeSecondY = secondEdge.second.y;
 
