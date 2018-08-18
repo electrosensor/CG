@@ -95,7 +95,12 @@ vec4 Util::getColor(R_COLOR color)
         return { 153.f / 255.f,204.f / 255.f,0.f, 1 };
     case Z_COL:
         return {11.f / 255.f, 62.f / 255, 215.f / 255, 1 };
-
+    case YURI_BG:
+        return { 7.f / 255.f, 11.f / 255.f, 34.f / 255.f, 1.f };
+    case YURI_POLYGON:
+        return { 5.f / 255.f , 37.f / 255.f , 114.f / 255.f , 1.f };
+    case YURI_WIRE:
+        return { 255.f / 255.f , 172.f / 255.f , 0.f / 255.f , 1.f };
         
     default:
         return { 0.f, 0.f, 0.f, 1 };

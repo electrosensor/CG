@@ -36,7 +36,7 @@ private:
 
 public:
     Scene() = delete;
-    Scene(Renderer *renderer) : renderer(renderer), m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamera(DISABLED), m_bDrawVecNormal(false), m_vnScaleFactor(2.f), m_fnScaleFactor(2.f), m_bgColor(Util::getColor(CLEAR)), m_polygonColor(Util::getColor(BLACK)), m_wireframeColor(Util::getColor(WHITE))
+    Scene(Renderer *renderer) : renderer(renderer), m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamera(DISABLED), m_bDrawVecNormal(false), m_vnScaleFactor(2.f), m_fnScaleFactor(2.f), m_bgColor(Util::getColor(YURI_BG)), m_polygonColor(Util::getColor(YURI_POLYGON)), m_wireframeColor(Util::getColor(YURI_WIRE))
     {
         m_worldTransformation = I_MATRIX ;
         m_worldTransformation[3].w = 1;

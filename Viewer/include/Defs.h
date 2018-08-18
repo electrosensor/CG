@@ -59,7 +59,10 @@
     YELLOW,
     X_COL,
     Y_COL,
-    Z_COL
+    Z_COL,
+    YURI_BG,
+    YURI_POLYGON,
+    YURI_WIRE
 };
 
 

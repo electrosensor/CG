@@ -90,6 +90,14 @@ public:
 
     void Draw(std::tuple<std::vector<glm::vec4>, std::vector<glm::vec4>, std::vector<glm::vec4> >& modelData) override;
 
-
+    ~CamMeshModel() = default;
 };
 
+class LightMeshModel : public MeshModel
+{
+public:
+
+    LightMeshModel() : MeshModel(CAMERA_OBJ_FILE) {} // change to light
+   ~LightMeshModel() = default;
+   
+};

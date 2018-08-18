@@ -51,15 +51,15 @@ private:
     glm::vec3 m_minCoords;
     glm::vec3 m_maxCoords;
 
-    glm::vec3 toViewPlane(const glm::vec4& point);
+    bool m_bSolidModel;
 
+    glm::vec3 toViewPlane(const glm::vec4& point);
     glm::vec3 Barycentric(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c);
 //     BOOL is_point_in_triangle(const glm::vec3& p, const glm::vec3& a, const glm::vec3& b, const glm::vec3& c);
     BOOL isPointInTriangle(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c);
     void getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, IN float d1, IN float d2, OUT float* pDx, OUT float* pDy, OUT float* pDd);
     void getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, OUT float* pDx, OUT float* pDy);
     void yStepErrorUpdate(float dx, float dy, float& error, int& y, const int& ystep);
-    bool m_bSolidModel;
     void ProjectPolygon(std::vector<glm::vec3>& polygon);
     void Fill_A_Triangle(const std::vector<glm::vec3>& polygon);
     void Fill_V_Triangle(const std::vector<glm::vec3>& polygon);

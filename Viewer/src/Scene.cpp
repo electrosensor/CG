@@ -49,6 +49,8 @@ void Scene::Draw()
     renderer->setSolidColor(m_bShowSolidColor);
     renderer->drawAxis();
 
+    renderer->setWorldTransformation(m_worldTransformation);
+
     for each (Model* model in m_models)
     {
         tuple modelData(vPositions, vVertices, vVerticesNormals);
@@ -56,7 +58,6 @@ void Scene::Draw()
         tie(vPositions, vVertices, vVerticesNormals) = modelData;
 
         renderer->SetObjectMatrices(model->GetModelTransformation(), model->GetNormalTransformation());
-        renderer->setWorldTransformation(m_worldTransformation); 
         renderer->DrawTriangles(vPositions, m_bDrawFaceNormal, &model->getCentroid(), m_fnScaleFactor);
 
         if (m_bDrawVecNormal && !vVerticesNormals.empty())
@@ -78,8 +79,6 @@ void Scene::Draw()
             vVerticesNormals.reserve(0);
             tuple camModelData(vPositions, vVertices, vVerticesNormals);
 
-            renderer->setWorldTransformation(m_worldTransformation);
-
             mat4x4 cameraModelTransformation = camModel->GetModelTransformation();
 
             renderer->SetObjectMatrices(cameraModelTransformation, mat4x4(I_MATRIX));
@@ -87,6 +86,24 @@ void Scene::Draw()
             camModel->Draw(camModelData);
 
             renderer->DrawTriangles(get<TUPLE_POSITIONS>(camModelData), FALSE, NULL, 1, IS_CAMERA);
+        }
+    }
+
+    for each(Light* light in m_lights)
+    {
+        auto lightModel = (LightMeshModel*)light->GetLightModel();
+        if (lightModel->isModelRenderingActive() && light != m_lights[m_activeLight])
+        {
+
+            tuple lightModelData(vPositions, vVertices, vVerticesNormals);
+
+            mat4x4 cameraModelTransformation = lightModel->GetModelTransformation();
+
+            renderer->SetObjectMatrices(cameraModelTransformation, mat4x4(I_MATRIX));
+
+            lightModel->Draw(lightModelData);
+
+            renderer->DrawTriangles(get<TUPLE_POSITIONS>(lightModelData));
         }
     }
     
