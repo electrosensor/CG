@@ -30,6 +30,17 @@ vec3 Util::findCentralVec(vec3 p1, vec3 p2, vec3 p3)
     return 0.5f*(p2 + p3) - p1;  
 }
 
+bool Util::isVecEqual(vec2 v1, vec2 v2)
+{
+    bool bEquals = true;
+
+    bEquals &= fabs(v1.x - v2.x) < std::numeric_limits<float>::epsilon();
+    bEquals &= fabs(v1.y - v2.y) < std::numeric_limits<float>::epsilon();
+
+    return bEquals;
+}
+
+
 bool Util::isVecEqual(vec3 v1, vec3 v2)
 {
     bool bEquals = true;
@@ -39,8 +50,6 @@ bool Util::isVecEqual(vec3 v1, vec3 v2)
     bEquals &= fabs(v1.z - v2.z) < std::numeric_limits<float>::epsilon();
 
     return bEquals;
-    
-
 }
 
 bool Util::isVecEqual(vec4 v1, vec4 v2)

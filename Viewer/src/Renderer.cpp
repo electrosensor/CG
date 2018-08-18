@@ -157,6 +157,10 @@ void Renderer::PolygonScanConversion(const vec3& viewP1, const vec3& viewP2, con
                 putPixel(x, y, maxZ, m_polygonColor);
             }
     }
+
+    DrawLine(viewP1, viewP2, m_polygonColor);
+    DrawLine(viewP2, viewP3, m_polygonColor);
+    DrawLine(viewP3, viewP1, m_polygonColor);
 }
 
 void Renderer::drawVerticesNormals(const vector<vec4>& vertices, const vector<vec4>& normals, float normScaleRate)
@@ -229,7 +233,7 @@ glm::vec3 Renderer::toViewPlane(const glm::vec4& point)
 
     if (screenPoint.x <0 || screenPoint.x >m_width || screenPoint.y < 0 || screenPoint.y > m_height)
     {
-        screenPoint.z = numeric_limits<float>::min();
+        screenPoint.z = numeric_limits<float>::lowest();
     }
     else
     {
