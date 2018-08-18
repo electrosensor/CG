@@ -11,7 +11,7 @@ Camera::Camera(const vec4& eye, const vec4& at, const vec4& up) : m_cameraTransf
     LookAt(eye, at, up);
     try 
     {
-        Ortho({ -1,1,-1,1,-1,-0.1f });
+        Ortho({ -1,1,-1,1,0.1f,1.0f });
     }
     catch (...) {}
 
