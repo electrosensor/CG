@@ -449,9 +449,9 @@ void Renderer::drawAxis()
     axisZ     = processPipeline(axisZ,     AXIS);
     zeroPoint = processPipeline(zeroPoint, AXIS);
 // 
-    axisX = mat4x4(SCALING_MATRIX4(60))*axisX;
-    axisY = mat4x4(SCALING_MATRIX4(60))*axisY;
-    axisZ = mat4x4(SCALING_MATRIX4(60))*axisZ;
+    axisX = mat4x4(SCALING_MATRIX4(6))*axisX;
+    axisY = mat4x4(SCALING_MATRIX4(6))*axisY;
+    axisZ = mat4x4(SCALING_MATRIX4(6))*axisZ;
 
     auto viewAxisX     = toViewPlane(axisX);
     auto viewAxisY     = toViewPlane(axisY);
