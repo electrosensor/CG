@@ -64,6 +64,11 @@ bool Util::isVecEqual(vec4 v1, vec4 v2)
     return bEquals;
 }
 
+bool Util::isInRange(float x, float min, float max)
+{
+    return min <= x && x <= max;
+}
+
 vec4 Util::getColor(R_COLOR color)
 {
     switch (color)

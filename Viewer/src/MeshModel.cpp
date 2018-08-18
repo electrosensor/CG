@@ -5,6 +5,7 @@
 using namespace std;
 using namespace glm;
 
+
 // A struct for processing a single line in a wafefront obj file:
 // https://en.wikipedia.org/wiki/Wavefront_.obj_file
 struct FaceIdx
@@ -181,7 +182,7 @@ void MeshModel::LoadFile(const string& fileName)
 		}
 		else
 		{
-			cout << "Found unknown line Type \"" << lineType << "\"";
+			cout << "Found unknown line Type \"" << lineType << "\"\n";
 		}
 	}
 

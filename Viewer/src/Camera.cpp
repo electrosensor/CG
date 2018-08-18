@@ -15,7 +15,6 @@ Camera::Camera(const vec4& eye, const vec4& at, const vec4& up) : m_cameraTransf
     }
     catch (...) {}
 
-    
 }
 
 Camera::Camera() : Camera(DEFAULT_CAMERA_POSITION) {}

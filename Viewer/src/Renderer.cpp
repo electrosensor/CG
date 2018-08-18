@@ -158,9 +158,9 @@ void Renderer::PolygonScanConversion(const vec3& viewP1, const vec3& viewP2, con
             }
     }
 
-    DrawLine(viewP1, viewP2, m_polygonColor);
-    DrawLine(viewP2, viewP3, m_polygonColor);
-    DrawLine(viewP3, viewP1, m_polygonColor);
+    DrawLine(viewP1, viewP2, COLOR(LIME));
+    DrawLine(viewP2, viewP3, COLOR(LIME));
+    DrawLine(viewP3, viewP1, COLOR(LIME));
 }
 
 void Renderer::drawVerticesNormals(const vector<vec4>& vertices, const vector<vec4>& normals, float normScaleRate)
@@ -239,7 +239,7 @@ glm::vec3 Renderer::toViewPlane(const glm::vec4& point)
     {
         screenPoint.z = ((point.z * ((m_projParams.zFar - m_projParams.zNear) / 2) + ((m_projParams.zFar + m_projParams.zNear) / 2)));
     }
-
+    
     return vec3((int)screenPoint.x, (int)screenPoint.y, screenPoint.z);
 }
 
@@ -284,7 +284,7 @@ glm::vec3 Renderer::Barycentric(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2
 BOOL Renderer::isPointInTriangle(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c)
 {
     vec3 bc = Barycentric(p, a, b, c);
-    return p == a || p == b || p == c || (0 <= bc.x && bc.x <= 1 && 0 <= bc.y && bc.y <= 1 && 0 <= bc.z && bc.z <= 1);
+    return p == a || p == b || p == c || (Util::isInRange(bc.x ,0,1) && Util::isInRange(bc.y, 0, 1) && Util::isInRange(bc.z, 0, 1));
 //     return barycentricCoord.u <= 1 && barycentricCoord.y <= 1 && barycentricCoord.z <= 1 && barycentricCoord.x >= 0 && barycentricCoord.y >= 0 && barycentricCoord.z >= 0 ;
 }
 
@@ -449,14 +449,16 @@ void Renderer::drawAxis()
     axisZ     = processPipeline(axisZ,     AXIS);
     zeroPoint = processPipeline(zeroPoint, AXIS);
 // 
-//     axisX = mat4x4(SCALING_MATRIX4(5))*axisX;
-//     axisY = mat4x4(SCALING_MATRIX4(5))*axisY;
-//     axisZ = mat4x4(SCALING_MATRIX4(5))*axisZ;
+    axisX = mat4x4(SCALING_MATRIX4(60))*axisX;
+    axisY = mat4x4(SCALING_MATRIX4(60))*axisY;
+    axisZ = mat4x4(SCALING_MATRIX4(60))*axisZ;
 
     auto viewAxisX     = toViewPlane(axisX);
     auto viewAxisY     = toViewPlane(axisY);
     auto viewAxisZ     = toViewPlane(axisZ);
     auto viewZeroPoint = toViewPlane(zeroPoint);
+
+    viewZeroPoint.z = viewAxisX.z = viewAxisY.z = viewAxisZ.z = numeric_limits<float>::lowest() + numeric_limits<float>::epsilon();
 
 
     DrawLine(viewZeroPoint, viewAxisX, COLOR(X_COL));

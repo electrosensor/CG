@@ -47,7 +47,7 @@ void Scene::Draw()
     renderer->SetPolygonColor(m_polygonColor);
     renderer->SetWireframeColor(m_wireframeColor);
     renderer->setSolidColor(m_bShowSolidColor);
-    //renderer->drawAxis();
+    renderer->drawAxis();
 
     for each (Model* model in m_models)
     {

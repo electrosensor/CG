@@ -21,6 +21,7 @@ public:
     static bool isVecEqual(glm::vec3 v1, glm::vec3 v2);
     static bool isVecEqual(glm::vec4 v1, glm::vec4 v2);
     static bool isVecEqual(glm::vec2 v1, glm::vec2 v2);
+    static bool isInRange(float x, float min, float max);
     //Color handling
 
 
