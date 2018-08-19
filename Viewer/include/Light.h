@@ -14,10 +14,10 @@
 � Ambient light : Light reflected many times, comes equally from all directions
 
 
-� Specular reflection
+� Specular reflection:
 � Smooth surface
 � Reflects light at defined angle
-� Diffuse reflection
+� Diffuse reflection:
 � Rough surface
 � Reflects light in all directions
 * /
@@ -28,37 +28,52 @@ class Light
 {
 private:
     PModel m_pLightSourceModel;
-    //vec4 operator() (const vec3& point, const vec4& color, const Surface& surf) = 0;
+    virtual glm::vec4 DiffuseReflection()  = 0;
+    virtual glm::vec4 SpecularReflection() = 0;
+
+    virtual glm::vec4 GouraudShading()     = 0;
+    virtual glm::vec4 PhongShading()       = 0;
 
 public:
-    PModel GetLightModel() { return m_pLightSourceModel; }
-	Light();
-	~Light();
+	Light()          = default;
+	virtual ~Light() = default;
+  
+    PModel  GetLightModel() { return m_pLightSourceModel; }
+    virtual glm::vec4 Reflect(const glm::vec3& point, const glm::vec4& color, const std::string/*Surface*/& surf) = 0;
 };
+
+
+
 
 class PointSourceLight : public Light
 {
 private:
 
 public:
-    PointSourceLight() = default;
+     PointSourceLight() = default;
     ~PointSourceLight() = default;
 };
+
+
+
 
 class ParallelSourceLight : public Light
 {
 private:
 
 public:
-    ParallelSourceLight() = default;
+     ParallelSourceLight() = default;
     ~ParallelSourceLight() = default;
 };
+
+
+
 
 class DistributedSourceLight : public Light
 {
 private:
 
 public:
-    DistributedSourceLight() = default;
+     DistributedSourceLight() = default;
     ~DistributedSourceLight() = default;
 };
