@@ -63,6 +63,7 @@ private:
     void ProjectPolygon(std::vector<glm::vec3>& polygon);
     void Fill_A_Triangle(const std::vector<glm::vec3>& polygon);
     void Fill_V_Triangle(const std::vector<glm::vec3>& polygon);
+
 public:
     Renderer();
     Renderer(int w, int h);
@@ -99,6 +100,9 @@ public:
 
     // Resize the buffer.
     void Viewport(int w, int h);
+
+    int getHeight() { return m_height; }
+    int getWidth() { return m_width; }
 
     glm::vec4 GetBgColor();
     void SetBgColor(const glm::vec4& newBgColor);

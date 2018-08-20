@@ -68,9 +68,9 @@
 
 typedef enum _AXES
 {
-    X,
-    Y,
-    Z
+    AXIS_X,
+    AXIS_Y,
+    AXIS_Z
 }AXES;
 
 typedef enum _ROTATION_REL

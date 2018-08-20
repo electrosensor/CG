@@ -132,7 +132,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         ImGui::SliderAngle("rotation angle", &rotAngle, 1.0f, 180.0f);
 
         static int currentFrame = FRAME_TYPE::FT_CAMERA;
-        static AXES currentAxis = AXES::Y;
+        static AXES currentAxis = AXES::AXIS_Y;
         static int currentRel = ROTATION_REL::RR_WORLD;
         static const char AxisList[6] = { 'X','\0','Y','\0','Z','\0' };
         static const char Relations[11] = { 'W','o','r','l','d','\0',
@@ -231,11 +231,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             {
                 case FRAME_TYPE::FT_CAMERA:
                 {
-                    scene->TranslateActiveCameraAxis(-moveFactor, AXES::X);
+                    scene->TranslateActiveCameraAxis(-moveFactor, AXES::AXIS_X);
                 } break;
                 case FRAME_TYPE::FT_MODEL:
                 {
-                    scene->TranslateActiveModelAxis(-moveFactor, AXES::X);
+                    scene->TranslateActiveModelAxis(-moveFactor, AXES::AXIS_X);
                 } break;
                 default: break;
             }
@@ -247,11 +247,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             {
             case FRAME_TYPE::FT_CAMERA:
             {
-                scene->TranslateActiveCameraAxis(moveFactor, AXES::X);
+                scene->TranslateActiveCameraAxis(moveFactor, AXES::AXIS_X);
             } break;
             case FRAME_TYPE::FT_MODEL:
             {
-                scene->TranslateActiveModelAxis(moveFactor, AXES::X);
+                scene->TranslateActiveModelAxis(moveFactor, AXES::AXIS_X);
             } break;
             default: break;
             }
@@ -262,11 +262,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             {
             case FRAME_TYPE::FT_CAMERA:
             {
-                scene->TranslateActiveCameraAxis(moveFactor, AXES::Y);
+                scene->TranslateActiveCameraAxis(moveFactor, AXES::AXIS_Y);
             } break;
             case FRAME_TYPE::FT_MODEL:
             {
-                scene->TranslateActiveModelAxis(moveFactor, AXES::Y);
+                scene->TranslateActiveModelAxis(moveFactor, AXES::AXIS_Y);
             } break;
             default: break;
             }
@@ -278,11 +278,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             {
             case FRAME_TYPE::FT_CAMERA:
             {
-                scene->TranslateActiveCameraAxis(-moveFactor, AXES::Y);
+                scene->TranslateActiveCameraAxis(-moveFactor, AXES::AXIS_Y);
             } break;
             case FRAME_TYPE::FT_MODEL:
             {
-                scene->TranslateActiveModelAxis(-moveFactor, AXES::Y);
+                scene->TranslateActiveModelAxis(-moveFactor, AXES::AXIS_Y);
             } break;
             default: break;
             }
@@ -293,11 +293,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             {
             case FRAME_TYPE::FT_CAMERA:
             {
-                scene->TranslateActiveCameraAxis(moveFactor, AXES::Z);
+                scene->TranslateActiveCameraAxis(moveFactor, AXES::AXIS_Z);
             } break;
             case FRAME_TYPE::FT_MODEL:
             {
-                scene->TranslateActiveModelAxis(moveFactor, AXES::Z);
+                scene->TranslateActiveModelAxis(moveFactor, AXES::AXIS_Z);
             } break;
             default: break;
             }
@@ -309,11 +309,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             {
             case FRAME_TYPE::FT_CAMERA:
             {
-                scene->TranslateActiveCameraAxis(-moveFactor, AXES::Z);
+                scene->TranslateActiveCameraAxis(-moveFactor, AXES::AXIS_Z);
             } break;
             case FRAME_TYPE::FT_MODEL:
             {
-                scene->TranslateActiveModelAxis(-moveFactor, AXES::Z);
+                scene->TranslateActiveModelAxis(-moveFactor, AXES::AXIS_Z);
             } break;
             default: break;
             }

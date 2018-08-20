@@ -131,8 +131,8 @@ void MeshModel::LoadFile(const string& fileName)
 	vector<vec4> vertices;
     vector<vec4> normals;
 
-    vec4 maxCoords = { -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max() , 1 };
-    vec4 minCoords = {  std::numeric_limits<float>::max(),  std::numeric_limits<float>::max(),  std::numeric_limits<float>::max() , 1 };
+    vec4 maxCoords = { -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity() , 1 };
+    vec4 minCoords = {  std::numeric_limits<float>::infinity(),  std::numeric_limits<float>::infinity(),  std::numeric_limits<float>::infinity() , 1 };
     vec4 normalizedVec = HOMOGENEOUS_VECTOR4;
     unsigned int numVertices = 0;
     vec4 modelCentroid = HOMOGENEOUS_VECTOR4;

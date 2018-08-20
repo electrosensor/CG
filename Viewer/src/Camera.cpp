@@ -85,8 +85,9 @@ void Camera::Ortho(const PROJ_PARAMS projParams)
         { -(right + left) / (right - left) , -(bottom + top) / (top - bottom) , -(zFar + zNear) / (zFar - zNear)    ,              1              }
 
     });
-
-    Frustum(projParams);
+    m_projParams = projParams;
+    
+    //Frustum(projParams);
 }
 
 void Camera::Frustum(const PROJ_PARAMS projParams)

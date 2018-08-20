@@ -138,9 +138,6 @@ void Renderer::PolygonScanConversion(const vec3& viewP1, const vec3& viewP2, con
     lowerLeft = { MIN3(viewP1.x, viewP2.x, viewP3.x),MIN3(viewP1.y, viewP2.y, viewP3.y) };
     float maxZ = MAX3(viewP1.z, viewP2.z, viewP3.z);
 
-    int countin = 0;
-    int countout = 0;
-
     upperRight.x = upperRight.x > m_width  ? m_width  : upperRight.x;
     upperRight.y = upperRight.y > m_height ? m_height : upperRight.y;
 
@@ -148,9 +145,9 @@ void Renderer::PolygonScanConversion(const vec3& viewP1, const vec3& viewP2, con
     lowerLeft.y  = lowerLeft .y > m_height ? m_height : lowerLeft.y;
 
 
-    for (int x = lowerLeft.x; x < upperRight.x; x++)
+    for (int x = lowerLeft.x ; x <= upperRight.x; x++)
     {
-        for (int y = lowerLeft.y; y < upperRight.y; y++)
+        for (int y = lowerLeft.y ; y <= upperRight.y; y++)
 
             if (isPointInTriangle({ x,y }, { viewP1.x,viewP1.y }, { viewP2.x,viewP2.y }, { viewP3.x,viewP3.y }))
             {
@@ -168,7 +165,7 @@ void Renderer::drawVerticesNormals(const vector<vec4>& vertices, const vector<ve
     for (int i = 0; i < normals.size() && i < vertices.size(); i++)
     {
         auto vertex       = Util::toCartesianForm(vertices[i]);
-        auto vertexNormal = Util::toCartesianForm(normals[i]);
+        auto vertexNormal = Util::toCartesianForm(normals[i] );
 
         auto normalizedVertexNormal = Util::isVecEqual(vertexNormal, vec3(0)) ? vertexNormal : normalize(vertexNormal);
 
@@ -219,32 +216,53 @@ void Renderer::drawBordersCube(CUBE borderCube)
 
 glm::vec3 Renderer::toViewPlane(const glm::vec4& point)
 {
+
     // convert to raster space 
     vec3 screenPoint;
 
-    screenPoint.x = ((point.x + 1) * m_width / 2.0f);
-    screenPoint.y = ((point.y + 1) * m_height / 2.0f);
-    //   screenPoint.z = ((point.z + 1) * (m_height + m_width) / 2.0f);
+    vec3 cartPoint = Util::toCartesianForm(point);
 
-    screenPoint.x = round((screenPoint.x - (m_width / 2.0f)) * (250.0f / m_width) + (m_width / 2.0f));
-    screenPoint.y = round((screenPoint.y - (m_height / 2.0f)) * (250.0f / m_height) + (m_height / 2.0f));
-    screenPoint.z = ((point.z * ((m_projParams.zFar - m_projParams.zNear) / 2) + ((m_projParams.zFar + m_projParams.zNear) / 2)));
+    screenPoint.x = cartPoint.x;
+    screenPoint.y = cartPoint.y;
+    screenPoint.z = cartPoint.z;
 
+    //     printf("x = %f, y = %f, z = %f\n", cartPoint.x, cartPoint.y, cartPoint.z);
 
-    if (screenPoint.x <0 || screenPoint.x >m_width || screenPoint.y < 0 || screenPoint.y > m_height)
-    {
-        screenPoint.z = numeric_limits<float>::lowest();
-    }
-    else
-    {
-        screenPoint.z = ((point.z * ((m_projParams.zFar - m_projParams.zNear) / 2) + ((m_projParams.zFar + m_projParams.zNear) / 2)));
-    }
-    
-    return vec3((int)screenPoint.x, (int)screenPoint.y, screenPoint.z);
+    //     screenPoint.x = round((screenPoint.x - (m_width  / 2.0f)) * (VIEW_SCALING * m_width ) + (m_width  / 2.0f));
+    //     screenPoint.y = round((screenPoint.y - (m_height / 2.0f)) * (VIEW_SCALING * m_height) + (m_height / 2.0f));
+
+    screenPoint.x = round(((m_width / 2.f) * screenPoint.x/((float) m_width/m_height) + (m_width / 2.f)));
+    screenPoint.y = round(((m_height / 2)  * screenPoint.y + (m_height / 2)));
+//     screenPoint.z = round(((screenPoint.z * ((m_projParams.zFar - m_projParams.zNear) / 2) + ((m_projParams.zFar + m_projParams.zNear) / 2))));
+
+    return vec3(screenPoint.x, screenPoint.y, screenPoint.z);
+//     // convert to raster space 
+//     vec3 screenPoint;
+// 
+//     screenPoint.x = ((point.x + 1) * m_width / 2.0f);
+//     screenPoint.y = ((point.y + 1) * m_height / 2.0f);
+//     //   screenPoint.z = ((point.z + 1) * (m_height + m_width) / 2.0f);
+// 
+//     screenPoint.x = round((screenPoint.x - (m_width / 2.0f)) * (250.0f / m_width) + (m_width / 2.0f));
+//     screenPoint.y = round((screenPoint.y - (m_height / 2.0f)) * (250.0f / m_height) + (m_height / 2.0f));
+//     screenPoint.z = ((point.z * ((m_projParams.zFar - m_projParams.zNear) / 2) + ((m_projParams.zFar + m_projParams.zNear) / 2)));
+// 
+// 
+//     if (screenPoint.x <0 || screenPoint.x >m_width || screenPoint.y < 0 || screenPoint.y > m_height)
+//     {
+//         screenPoint.z = numeric_limits<float>::lowest();
+//     }
+//     else
+//     {
+//         screenPoint.z = ((point.z * ((m_projParams.zFar - m_projParams.zNear) / 2) + ((m_projParams.zFar + m_projParams.zNear) / 2)));
+//     }
+//     
+//     return vec3((int)screenPoint.x, (int)screenPoint.y, screenPoint.z);
 }
 
 glm::vec3 Renderer::Barycentric(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c)
 {
+ 
     glm::vec2 v0 = b - a, v1 = c - a, v2 = p - a;
     float d00 = glm::dot(v0, v0);
     float d01 = glm::dot(v0, v1);
@@ -449,9 +467,9 @@ void Renderer::drawAxis()
     axisZ     = processPipeline(axisZ,     AXIS);
     zeroPoint = processPipeline(zeroPoint, AXIS);
 // 
-    axisX = mat4x4(SCALING_MATRIX4(6))*axisX;
-    axisY = mat4x4(SCALING_MATRIX4(6))*axisY;
-    axisZ = mat4x4(SCALING_MATRIX4(6))*axisZ;
+    axisX = mat4x4(SCALING_MATRIX4(2))*axisX;
+    axisY = mat4x4(SCALING_MATRIX4(2))*axisY;
+    axisZ = mat4x4(SCALING_MATRIX4(2))*axisZ;
 
     auto viewAxisX     = toViewPlane(axisX);
     auto viewAxisY     = toViewPlane(axisY);
@@ -751,7 +769,7 @@ void Renderer::ClearDepthBuffer()
     {
         for (int j = 0; j < m_height; j++)
         {
-            zBuffer[Z_BUF_INDEX(m_width, i, j)] = std::numeric_limits<float>::lowest();
+            zBuffer[Z_BUF_INDEX(m_width, i, j)] = -std::numeric_limits<float>::infinity();
         }
     }
 }

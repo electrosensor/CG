@@ -27,6 +27,7 @@ void Scene::Draw()
     vector<vec4> vVerticesNormals;
 
 
+
     if (m_activeCamera != DISABLED)
     {
         activeCamera = m_cameras[m_activeCamera];
@@ -39,9 +40,10 @@ void Scene::Draw()
     }
 
     renderer->SetCameraTransform(activeCamera->GetTransformation());
+    renderer->setProjectionParams(activeCamera->getProjectionParams());
     renderer->SetProjection(activeCamera->GetProjection());
 
-    renderer->setProjectionParams(activeCamera->getProjectionParams());
+    
 
     renderer->SetBgColor(m_bgColor);
     renderer->SetPolygonColor(m_polygonColor);
@@ -150,6 +152,7 @@ void Scene::SetOrthoProjection(PROJ_PARAMS projParams)
     if (m_activeCamera != DISABLED)
     {
         Camera* activeCamera = m_cameras[m_activeCamera];
+/*        projParams.right *= ((float)renderer->getWidth()/(float)renderer->getHeight());*/
         activeCamera->Ortho(projParams);
     }
 }
@@ -225,7 +228,7 @@ void Scene::ScaleActiveCamera(float value)
     if (m_activeCamera != DISABLED)
     {
         Camera* p_activeCamera = m_cameras[m_activeCamera];
-        mat4x4 currTransf = p_activeCamera->GetTransformation();
+        mat4x4 currTransf      = p_activeCamera->GetTransformation();
         mat4x4 scaleTransform(SCALING_MATRIX4(value));
         p_activeCamera->SetTransformation(inverse(scaleTransform * inverse(currTransf)));
     }
@@ -241,7 +244,7 @@ void Scene::TranslateActiveCameraAxis(float value, AXES axis)
     {
         Camera* p_activeCamera = m_cameras[m_activeCamera];
         mat4x4 currTransf = p_activeCamera->GetTransformation();
-        mat4x4 translateTransform(TRANSLATION_MATRIX(axis == X ? value : 0, axis == Y ? value : 0, axis == Z ? value : 0));
+        mat4x4 translateTransform(TRANSLATION_MATRIX(axis == AXIS_X ? value : 0, axis == AXIS_Y ? value : 0, axis == AXIS_Z ? value : 0));
         p_activeCamera->SetTransformation(inverse(translateTransform * inverse(currTransf)));
 
         //model update
@@ -260,9 +263,9 @@ void Scene::RotateActiveCameraWorldAxis(float angle, AXES axis)
         mat4x4 rotateTransform;
         switch (axis)
         {
-        case X: rotateTransform = ROTATING_MATRIX_X_AXIS(angle); break;
-        case Y: rotateTransform = ROTATING_MATRIX_Y_AXIS(angle); break;
-        case Z: rotateTransform = ROTATING_MATRIX_Z_AXIS(angle); break;
+        case AXIS_X: rotateTransform = ROTATING_MATRIX_X_AXIS(angle); break;
+        case AXIS_Y: rotateTransform = ROTATING_MATRIX_Y_AXIS(angle); break;
+        case AXIS_Z: rotateTransform = ROTATING_MATRIX_Z_AXIS(angle); break;
         default:                                               ; break;
         }
 
@@ -287,9 +290,9 @@ void Scene::RotateActiveCameraAxis(float angle, AXES axis)
 
         switch (axis)
         {
-        case X: rotateTransform = ROTATING_MATRIX_X_AXIS(angle); break;
-        case Y: rotateTransform = ROTATING_MATRIX_Y_AXIS(angle); break;
-        case Z: rotateTransform = ROTATING_MATRIX_Z_AXIS(angle); break;
+        case AXIS_X: rotateTransform = ROTATING_MATRIX_X_AXIS(angle); break;
+        case AXIS_Y: rotateTransform = ROTATING_MATRIX_Y_AXIS(angle); break;
+        case AXIS_Z: rotateTransform = ROTATING_MATRIX_Z_AXIS(angle); break;
         default:                                               ; break;
         }
 
@@ -306,7 +309,7 @@ void Scene::TranslateActiveModelAxis(float value, AXES axis)
     {
         Model* activeModel = m_models[m_activeModel];
         mat4x4 currTransf = activeModel->GetModelTransformation();
-        mat4x4 translateTransform(TRANSLATION_MATRIX(axis == X ? value : 0, axis == Y ? value : 0, axis == Z ? value : 0));
+        mat4x4 translateTransform(TRANSLATION_MATRIX(axis == AXIS_X ? value : 0, axis == AXIS_Y ? value : 0, axis == AXIS_Z ? value : 0));
         activeModel->SetModelTransformation(translateTransform * currTransf);
     }
 }
@@ -335,9 +338,9 @@ void Scene::RotateActiveModelAxis(float angle, AXES axis)
 
         switch (axis)
         {
-        case X: rotateTransform = ROTATING_MATRIX_X_AXIS(angle); break;
-        case Y: rotateTransform = ROTATING_MATRIX_Y_AXIS(angle); break;
-        case Z: rotateTransform = ROTATING_MATRIX_Z_AXIS(angle); break;
+        case AXIS_X: rotateTransform = ROTATING_MATRIX_X_AXIS(angle); break;
+        case AXIS_Y: rotateTransform = ROTATING_MATRIX_Y_AXIS(angle); break;
+        case AXIS_Z: rotateTransform = ROTATING_MATRIX_Z_AXIS(angle); break;
         default:; break;
         }
 
