@@ -1,29 +1,30 @@
 #pragma once
-#include "Defs.h"
+#include "Face.h"
 
 /*
  * Model class. An abstract class for all types of geometric data.
  */
+
 class Model
 {
 public:
 	virtual ~Model() {}
-    virtual const   glm::mat4x4& GetModelTransformation()                                                                = 0;
-    virtual const   glm::mat4x4& GetWorldTransformation()                                                                = 0;
-    virtual const   glm::mat4x4& GetNormalTransformation()                                                               = 0;
-    virtual void    SetModelTransformation(glm::mat4x4& transformation)                                                  = 0;
-	virtual void    SetWorldTransformation(glm::mat4x4& transformation)                                                  = 0;
-	virtual void    SetNormalTransformation(glm::mat4x4& transformation)                                                 = 0;
-	virtual void    Draw(std::tuple<std::vector<glm::vec4>, std::vector<glm::vec4>, std::vector<glm::vec4> >& modelData) = 0;
-    virtual glm::vec4 getCentroid() = 0;
+    virtual const   glm::mat4x4& GetModelTransformation()                                                              = 0;
+    virtual const   glm::mat4x4& GetWorldTransformation()                                                              = 0;
+    virtual const   glm::mat4x4& GetNormalTransformation()                                                             = 0;
+    virtual void    SetModelTransformation(glm::mat4x4& transformation)                                                = 0;
+	virtual void    SetWorldTransformation(glm::mat4x4& transformation)                                                = 0;
+	virtual void    SetNormalTransformation(glm::mat4x4& transformation)                                               = 0;
+	virtual void    Draw(std::tuple<std::vector<Face> , std::vector<glm::vec3> , std::vector<glm::vec3> >& modelData) = 0;
+    virtual glm::vec3 getCentroid() = 0;
 
     bool isModelRenderingActive()                               { return m_bShouldRender; }
     void setModelRenderingState(bool bIsRenderingStateActive)   { m_bShouldRender = bIsRenderingStateActive; }
     CUBE& getBordersCube()                                      { return m_cubeLines; }
     
 
-    glm::vec4 m_minCoords;
-    glm::vec4 m_maxCoords;
+    glm::vec3 m_minCoords;
+    glm::vec3 m_maxCoords;
 
 
 protected:
@@ -34,14 +35,14 @@ protected:
     {
         INIT_CUBE_COORDS(m_maxCoords, m_minCoords);
                                                                 
-        glm::vec4    RBN    = { cRight , cBottom , cNear ,  1 };  //            _________________________RTF=m_maxCoords(x,y,z)
-        glm::vec4    RBF    = { cRight , cBottom , cFar  ,  1 };  //           /LTF___________________  /|
-        glm::vec4    LBF    = { cLeft  , cBottom , cFar  ,  1 };  //          / / ___________________/ / |
-        glm::vec4    LBN    = { cLeft  , cBottom , cNear ,  1 };  //         / / /| |               / /  |
-        glm::vec4    RTN    = { cRight , cTop    , cNear ,  1 };  //        / / / | |              / / . |
-        glm::vec4    RTF    = { cRight , cTop    , cFar  ,  1 };  //       / / /| | |             / / /| |
-        glm::vec4    LTF    = { cLeft  , cTop    , cFar  ,  1 };  //      / / / | | |            / / / | |
-        glm::vec4    LTN    = { cLeft  , cTop    , cNear ,  1 };  //     / / /  | | |           / / /| | |
+        glm::vec3    RBN = {   cRight  ,  cBottom  ,  cNear   };  //            _________________________RTF=m_maxCoords(x,y,z)
+        glm::vec3    RBF = {   cRight  ,  cBottom  ,  cFar    };  //           /LTF___________________  /|
+        glm::vec3    LBF = {   cLeft   ,  cBottom  ,  cFar    };  //          / / ___________________/ / |
+        glm::vec3    LBN = {   cLeft   ,  cBottom  ,  cNear   };  //         / / /| |               / /  |
+        glm::vec3    RTN = {   cRight  ,  cTop     ,  cNear   };  //        / / / | |              / / . |
+        glm::vec3    RTF = {   cRight  ,  cTop     ,  cFar    };  //       / / /| | |             / / /| |
+        glm::vec3    LTF = {   cLeft   ,  cTop     ,  cFar    };  //      / / / | | |            / / / | |
+        glm::vec3    LTN = {   cLeft   ,  cTop     ,  cNear   };  //     / / /  | | |           / / /| | |
                                                                   //    / /_/__________________/ / / | | |
                                                                   //   /LTN___________________ _/ /  | | |
         cubeLines.lines[0 ] = {      RBN      ,      RBF      };  //   | ____________________RTN| |  | | |

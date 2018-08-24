@@ -1,6 +1,6 @@
 #include "MeshModel.h"
 #include "Util.h"
-#include "Defs.h"
+#include "Face.h"
 
 using namespace std;
 using namespace glm;
@@ -70,10 +70,11 @@ vec2 vec2fFromStream(std::istream& issLine)
 	return vec2(x, y);
 }
 
-MeshModel::MeshModel(const string& fileName) : m_modelTransformation(I_MATRIX),
+MeshModel::MeshModel(const string& fileName) : m_modelTransformation(SCALING_MATRIX4(0.5f)),
 											   m_normalTransformation(I_MATRIX),
                                                m_worldTransformation(I_MATRIX),
-                                               m_modelCentroid(HOMOGENEOUS_VECTOR4)
+                                               m_modelCentroid(ZERO_VEC3),
+                                               m_surface(Surface())
 {
 	LoadFile(fileName);
     setModelRenderingState(true);
@@ -83,7 +84,7 @@ MeshModel::MeshModel(const string& fileName) : m_modelTransformation(I_MATRIX),
 MeshModel::~MeshModel()
 {
     delete[] m_vertices;
-	delete[] m_vertexPositions;
+	delete[] m_polygons;
     delete[] m_vertexNormals;
 }
 
@@ -128,14 +129,14 @@ void MeshModel::LoadFile(const string& fileName)
 	}
 
 	vector<FaceIdx> faces;
-	vector<vec4> vertices;
-    vector<vec4> normals;
+	vector<vec3> vertices;
+    vector<vec3> normals;
 
-    vec4 maxCoords = { -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity() , 1 };
-    vec4 minCoords = {  std::numeric_limits<float>::infinity(),  std::numeric_limits<float>::infinity(),  std::numeric_limits<float>::infinity() , 1 };
-    vec4 normalizedVec = HOMOGENEOUS_VECTOR4;
+    vec3 maxCoords = { -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity(), -std::numeric_limits<float>::infinity() };
+    vec3 minCoords = {  std::numeric_limits<float>::infinity(),  std::numeric_limits<float>::infinity(),  std::numeric_limits<float>::infinity() };
+    vec3 normalizedVec = ZERO_VEC3;
     unsigned int numVertices = 0;
-    vec4 modelCentroid = HOMOGENEOUS_VECTOR4;
+    vec3 modelCentroid = ZERO_VEC3;
 	// while not end of file
 	while (!ifile.eof())
 	{
@@ -152,7 +153,7 @@ void MeshModel::LoadFile(const string& fileName)
 		// based on the type parse data
 		if (lineType == "v")
         {
-            vec4 parsedVec = Util::toHomogeneousForm(vec3fFromStream(issLine));
+            vec3 parsedVec = vec3fFromStream(issLine);
             
             minCoords.x = (minCoords.x > parsedVec.x) ? parsedVec.x : minCoords.x;
             minCoords.y = (minCoords.y > parsedVec.y) ? parsedVec.y : minCoords.y;
@@ -190,49 +191,58 @@ void MeshModel::LoadFile(const string& fileName)
     minCoords -= m_modelCentroid;
     maxCoords -= m_modelCentroid;
 
-
     float totalMin = MIN(minCoords.x, MIN(minCoords.y, minCoords.z));
     float totalMax = MAX(maxCoords.x, MAX(maxCoords.y, maxCoords.z));
 
-
     m_verticesSize    = vertices.size();
-    m_vertices        = new vec4[m_verticesSize];
-	m_vertexPosSize   = faces.size()*FACE_ELEMENTS;
-	m_vertexPositions = new vec4[m_vertexPosSize];
-    m_vertexNormSize  = normals.size();
-    m_vertexNormals   = new vec4[m_vertexNormSize];
-
-
+    m_vertices        = new vec3[m_verticesSize];
+	m_polygonsSize    = faces.size();
+    m_polygons        = new Face[m_polygonsSize];
+    m_verticesNormSize  = normals.size();
+    m_vertexNormals   = new vec3[m_verticesNormSize];
 
     for (unsigned int i = 0; i < m_verticesSize; i++)
 
     {
-
         normalizedVec.x = NORMALIZE_COORDS((vertices[i].x - m_modelCentroid.x), totalMin, totalMax);
         normalizedVec.y = NORMALIZE_COORDS((vertices[i].y - m_modelCentroid.y), totalMin, totalMax);
         normalizedVec.z = NORMALIZE_COORDS((vertices[i].z - m_modelCentroid.z), totalMin, totalMax);
                                            
        // fprintf(stderr, "x = %f, y = %f, z = %f\n", normalizedVec.x, normalizedVec.y, normalizedVec.z);
-
         m_vertices[i] = normalizedVec;
-
     }
 
 	// iterate through all stored faces and create triangles
 	size_t posIdx = 0;
 	for each (FaceIdx face in faces)
 	{
+        vec3 currentFace[FACE_ELEMENTS];
 		for (int i = 0; i < FACE_ELEMENTS; i++)
 		{
 			int currentVertexIdx = face.v[i];
             float x = m_vertices[currentVertexIdx - 1].x;
             float y = m_vertices[currentVertexIdx - 1].y;
             float z = m_vertices[currentVertexIdx - 1].z;
-			m_vertexPositions[posIdx++] = vec4(x, y, z , 1);
+            currentFace[i] = vec3(x, y, z);
 		}
+        auto nrm1_3 = currentFace[0];
+        auto nrm2_3 = currentFace[1];
+        auto nrm3_3 = currentFace[2];
+
+        auto subs1 = nrm3_3 - nrm1_3;
+        auto subs2 = nrm2_3 - nrm1_3;
+
+        auto faceNormal = cross(subs1, subs2);
+
+        auto faceCenter = (nrm1_3 + nrm2_3 + nrm3_3) / 3.0f;
+
+        auto normalizedFaceNormal = Util::isVecEqual(faceNormal, vec3(0)) ? faceNormal : normalize(faceNormal);
+
+        Face currentPolygon(currentFace[0], currentFace[1], currentFace[2], normalizedFaceNormal, &m_surface);
+        m_polygons[posIdx++] = currentPolygon;
 	}
     
-    for (unsigned int i = 0; i < m_vertexNormSize; i++)
+    for (unsigned int i = 0; i < m_verticesNormSize; i++)
     {
         m_vertexNormals[i] = normals[i];
     }
@@ -249,14 +259,14 @@ void MeshModel::LoadFile(const string& fileName)
     m_maxCoords.y     = NORMALIZE_COORDS(maxCoords.y     , totalMin, totalMax);
     m_maxCoords.z     = NORMALIZE_COORDS(maxCoords.z     , totalMin, totalMax);
 
-
 }
 
-void MeshModel::Draw(tuple<vector<vec4>, vector<vec4>, vector<vec4> >& modelData)
+void MeshModel::Draw(tuple<vector<Face>, vector<vec3>, vector<vec3> >& modelData)
 {
-	for (size_t i = 0; i < m_vertexPosSize; i++)
+	for (size_t i = 0; i < m_polygonsSize; i++)
 	{
-        get<TUPLE_POSITIONS>(modelData).push_back(m_vertexPositions[i]);
+     
+        get<TUPLE_POLYGONS>(modelData).push_back(m_polygons[i]);
 	}
    
     for (size_t i = 0; i < m_verticesSize; i++)
@@ -264,7 +274,7 @@ void MeshModel::Draw(tuple<vector<vec4>, vector<vec4>, vector<vec4> >& modelData
         get<TUPLE_VERTICES>(modelData).push_back(m_vertices[i]);
     }
 
-    for (size_t i = 0; i < m_vertexNormSize; i++)
+    for (size_t i = 0; i < m_verticesNormSize; i++)
     {
         get<TUPLE_VNORMALS>(modelData).push_back(m_vertexNormals[i]);
     }
@@ -287,15 +297,14 @@ string* PrimMeshModel::setPrimModelFilePath(PRIM_MODEL primModel)
 	return m_pPrimModelString;
 }
 
-void CamMeshModel::Draw(tuple<vector<vec4>, vector<vec4>, vector<vec4> >& modelData)
+void CamMeshModel::Draw(tuple<vector<Face>, vector<vec3>, vector<vec3> >& modelData)
 {
-    vector<vec4> camModelVertices;
+    vector<Face> camModelPolygons;
 
-    for (size_t i = 0; i < m_vertexPosSize; i++)
+    for (size_t i = 0; i < m_polygonsSize; i++)
     {
-        vec4 vertex = mat4x4(SCALING_MATRIX4(0.3f))*m_vertexPositions[i];
-        camModelVertices.push_back(vertex);
+        camModelPolygons.push_back(m_polygons[i]);
     }
 
-    get<TUPLE_POSITIONS>(modelData) = camModelVertices;
+    get<TUPLE_POLYGONS>(modelData) = camModelPolygons;
 }

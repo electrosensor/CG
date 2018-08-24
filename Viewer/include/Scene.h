@@ -68,7 +68,7 @@ public:
     }
     void SetActiveCameraIdx(unsigned int cameraIdx);
 
-    unsigned int  AddCamera(const glm::vec4 & eye, const glm::vec4 & at, const glm::vec4 & up);
+    unsigned int  AddCamera(const glm::vec3 & eye, const glm::vec3 & at, const glm::vec3 & up);
     void NextCamera();
 
     void DeleteActiveCamera();
@@ -83,9 +83,8 @@ public:
 
     void TranslateActiveCameraAxis(float value, AXES axis);
 
-    void RotateActiveCameraWorldAxis(float angle, AXES axis);
-   
-    void RotateActiveCameraAxis(float angle, AXES axis);
+    void RotateActiveCamera(float angle, AXES axis);
+    void RotateActiveCameraRelativeToWorld(float angle, AXES axis);
     
 
     //Models API:
@@ -105,12 +104,23 @@ public:
 
     glm::mat4x4 GetActiveModelTransformation();
     
-    void TranslateActiveModelAxis(float value, AXES axis);
+    void TranslateActiveModel(float value, AXES axis);
+
+    void TranslateModel(Model* activeModel, AXES axis, float value);
+
 
     void ScaleActiveModel(float value);
 
-    void RotateActiveModelAxis(float angle, AXES axis);
-    
+    void ScaleModel(Model* activeModel, float value);
+
+    void RotateActiveModel(float angle, AXES axis);
+
+    void RotateModel(Model* activeModel, AXES axis, float angle);
+
+    void RotateActiveModelRelativeToWorld(float angle, AXES axis);
+
+    void RotateModelRelativeToWorld(Model* activeModel, AXES axis, float angle);
+
     void showFacesNormals(bool bDrawFaceNormal) { m_bDrawFaceNormal = bDrawFaceNormal; }
     void showVerticesNormals(bool bDrawVecNormal) { m_bDrawVecNormal = bDrawVecNormal; }
     void showBorderCube(bool bShowBorderCube) { m_bShowBorderCube = bShowBorderCube; }
@@ -123,5 +133,29 @@ public:
     void SetPolygonColor(const glm::vec4& polygonColor);
     glm::vec4 GetWireframeColor();
     void SetWireframeColor(const glm::vec4& wireframeColor);
+
+    //Light API:
+
+    int  GetActiveLightIdx();
+    void SetActiveLightIdx(unsigned int lightIdx);
+
+    void NextLight();
+    void DeleteActiveLight();
+
+    glm::mat4x4 GetActiveLightModelTransformation();
+
+    void TranslateActiveLight(float value, AXES axis);
+
+    void ScaleActiveLightModel(float value);
+
+    void RotateActiveLightModel(float angle, AXES axis);
+    void RotateActiveLightModelRelativeToWorld(float angle, AXES axis);
+
+    bool shouldRenderLight();
+
+
+    int AddLight(LIGHT_SOURCE_TYPE type, float intencity, float* lightCoord, float* direction);
+
+    Light* GetActiveLight();
 
 };

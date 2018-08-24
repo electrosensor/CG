@@ -27,4 +27,3 @@ public:
 
     static glm::vec4 getColor(R_COLOR color);
 };
-

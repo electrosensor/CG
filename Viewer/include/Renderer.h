@@ -2,7 +2,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <imgui/imgui.h>
-#include "Defs.h"
+#include "Face.h"
 
 /*
  * Renderer class. This class takes care of all the rendering operations needed for rendering a full scene to the screen.
@@ -53,32 +53,36 @@ private:
 
     bool m_bSolidModel;
 
-    glm::vec3 toViewPlane(const glm::vec4& point);
+    glm::vec3 toViewPlane(const glm::vec3& point);
+    Face toViewPlane(Face polygon);
     glm::vec3 Barycentric(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c);
-//     BOOL is_point_in_triangle(const glm::vec3& p, const glm::vec3& a, const glm::vec3& b, const glm::vec3& c);
     BOOL isPointInTriangle(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c);
     void getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, IN float d1, IN float d2, OUT float* pDx, OUT float* pDy, OUT float* pDd);
     void getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, OUT float* pDx, OUT float* pDy);
     void yStepErrorUpdate(float dx, float dy, float& error, int& y, const int& ystep);
-    void ProjectPolygon(std::vector<glm::vec3>& polygon);
-    void Fill_A_Triangle(const std::vector<glm::vec3>& polygon);
-    void Fill_V_Triangle(const std::vector<glm::vec3>& polygon);
+    void ProjectPolygon(Face& polygon);
 
 public:
     Renderer();
     Renderer(int w, int h);
     ~Renderer();
-    glm::vec4 processPipeline(const glm::vec4& point, PIPE_TYPE pipeType = FULL);
+    glm::vec3 processPipeline(glm::vec3 point, PIPE_TYPE pipeType = FULL);
+    Face processPipeline(Face polygon, PIPE_TYPE pipeType = FULL);
     // Local initializations of your implementation
     void Init();
 
     // Draws a line by Bresenham algorithm: 
     void DrawLine(const glm::vec3& p1, const glm::vec3& p2, const glm::vec4& color);
-    void PolygonScanConversion(const glm::vec3& viewP1, const glm::vec3& viewP2, const glm::vec3& viewP3);
-    void drawVerticesNormals(const std::vector<glm::vec4>& vertices, const std::vector<glm::vec4>& normals, float normScaleRate);
+    void PolygonScanConversion(const Face& polygon);
+    void drawVerticesNormals(const std::vector<glm::vec3>& vertices, const std::vector<glm::vec3>& normals, float normScaleRate);
     // Draws wireframe triangles to the color buffer
-    void DrawTriangles(const std::vector<glm::vec4>& vertices, bool bDrawFaceNormals = false, const glm::vec4* modelCentroid = nullptr, float normScaleRate = 1, bool bIsCamera = false);
-    void drawFaceNormal(const glm::vec4& nrm1, const glm::vec4& nrm2, const glm::vec4& nrm3, float normScaleRate);
+    void DrawTriangles(const std::vector<Face>& vertices, bool bDrawFaceNormals = false, const glm::vec3* modelCentroid = nullptr, float normScaleRate = 1, bool bIsCamera = false);
+
+
+
+    void DrawPolygonLines(const Face& polygon);
+
+    void drawFaceNormal(const Face& face, float normScaleRate);
     // Draws surrounding border cube;
     void drawBordersCube(CUBE borderCube);
     // Sets the camera transformations with relation to world coordinates

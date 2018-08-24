@@ -5,7 +5,7 @@ using namespace glm;
 
 
 
-Camera::Camera(const vec4& eye, const vec4& at, const vec4& up) : m_cameraTransform(I_MATRIX), m_cameraProjection(I_MATRIX)
+Camera::Camera(const vec3& eye, const vec3& at, const vec3& up) : m_cameraTransform(I_MATRIX), m_cameraProjection(I_MATRIX)
 {
     m_cameraModel = (PModel) new CamMeshModel(eye);
     LookAt(eye, at, up);

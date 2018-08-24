@@ -9,22 +9,24 @@
  * MeshModel class. Mesh model object represents a triangle mesh (loaded fron an obj file).
  * 
  */
+
 class MeshModel : public Model
 {
 	protected :
 
         size_t m_verticesSize;
-        glm::vec4 *m_vertices;
-        size_t m_vertexNormSize;
-		glm::vec4 *m_vertexPositions;
-		size_t m_vertexPosSize;
-        glm::vec4 *m_vertexNormals;
+        glm::vec3 *m_vertices;
+        size_t m_verticesNormSize;
+        Face *m_polygons;
+		size_t m_polygonsSize;
+        glm::vec3 *m_vertexNormals;
 
 		// Add more attributes.
         glm::mat4x4 m_modelTransformation;
 		glm::mat4x4 m_worldTransformation;
 		glm::mat4x4 m_normalTransformation;
-        glm::vec4   m_modelCentroid;
+        glm::vec3   m_modelCentroid;
+        Surface m_surface;
 
 	public:
 		MeshModel(const std::string& fileName);
@@ -39,8 +41,8 @@ class MeshModel : public Model
 		void SetNormalTransformation(glm::mat4x4& transformation) override;
 
 		void LoadFile(const std::string& fileName);
-		void Draw(std::tuple<std::vector<glm::vec4>, std::vector<glm::vec4>, std::vector<glm::vec4> >& modelData) override;
-        glm::vec4 getCentroid() override { return  m_modelCentroid; }
+		void Draw(std::tuple<std::vector<Face>, std::vector<glm::vec3>, std::vector<glm::vec3> >& modelData) override;
+        glm::vec3 getCentroid() override { return  m_modelCentroid; }
 
 
 
@@ -49,6 +51,7 @@ class MeshModel : public Model
 class PrimMeshModel : public MeshModel
 {
 public:
+    PrimMeshModel() = delete;
 	PrimMeshModel(PRIM_MODEL primModel) : MeshModel(*setPrimModelFilePath(primModel))
 	{
 		if (m_pPrimModelString)
@@ -57,7 +60,7 @@ public:
 			m_pPrimModelString = nullptr;
 		}
 	}
-
+    ~PrimMeshModel() = default;
 private:
     std::string* setPrimModelFilePath(PRIM_MODEL primModel);
 
@@ -68,7 +71,8 @@ private:
 class CamMeshModel : public MeshModel
 {
 public:
-    CamMeshModel(glm::vec4 camCoords) : MeshModel(CAMERA_OBJ_FILE)
+    CamMeshModel() = delete;
+    CamMeshModel(glm::vec3 camCoords) : MeshModel(CAMERA_OBJ_FILE)
     {
         m_camCoords = camCoords;
 //         glm::mat4x4 eyeTranslation = glm::mat4x4(TRANSLATION_MATRIX(camCoords.x, camCoords.y, camCoords.x))*GetModelTransformation();
@@ -76,19 +80,19 @@ public:
         m_bShouldRender = false;
     }
 
-    glm::vec4 m_camCoords;
+    glm::vec3 m_camCoords;
 
-    void setCamCoords(glm::vec4 camCoords)
+    void setCamCoords(glm::vec3 camCoords)
     {
         m_camCoords = camCoords;
     }
 
-    glm::vec4 getCamCoords()
+    glm::vec3 getCamCoords()
     {
         return m_camCoords;
     }
 
-    void Draw(std::tuple<std::vector<glm::vec4>, std::vector<glm::vec4>, std::vector<glm::vec4> >& modelData) override;
+    void Draw(std::tuple<std::vector<Face>, std::vector<glm::vec3>, std::vector<glm::vec3> >& modelData) override;
 
     ~CamMeshModel() = default;
 };
@@ -97,7 +101,7 @@ class LightMeshModel : public MeshModel
 {
 public:
 
-    LightMeshModel() : MeshModel(CAMERA_OBJ_FILE) {} // change to light
+    LightMeshModel() : MeshModel(LIGHT_OBJ_FILE) {} // change to light
    ~LightMeshModel() = default;
    
 };

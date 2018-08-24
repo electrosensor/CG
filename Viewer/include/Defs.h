@@ -17,6 +17,7 @@
 #define MAX_WIDTH_4K                     3840
 
 #define CAMERA_OBJ_FILE                  "PrimModels/camera.obj"
+#define LIGHT_OBJ_FILE                   "PrimModels/sphere_BLENDER.obj"
 
 #define DISABLED                         -1
 #define PI                               3.141592653589793238462643383279502884L
@@ -25,6 +26,7 @@
 #define FACE_ELEMENTS                    3
 #define TO_RADIAN(angle)                 ((angle) * PI / 180.0f)
 #define ZERO_MATRIX                      { {0,0,0,0},{ 0,0,0,0 },{ 0,0,0,0 },{ 0,0,0,0 } }
+#define ZERO_VEC3                        {0,0,0}
 #define I_MATRIX                         { {1,0,0,0},{ 0,1,0,0 },{ 0,0,1,0 },{ 0,0,0,1 } }
 #define SCALING_MATRIX4(value)           { {(value),0,0,0},{ 0,(value),0,0 },{ 0,0,(value),0 },{ 0,0,0,1 } }
 #define TRANSLATION_MATRIX(x, y, z)      { {1,0,0,0},{ 0,1,0,0 },{ 0,0,1,0 },{ (x),(y),(z),1 } }
@@ -34,7 +36,7 @@
 #define ROTATING_MATRIX_Y_AXIS(angle)    { {cos(angle),0,-sin(angle),0},{ 0,1,0,0 },{ sin(angle),0,cos(angle),0 },{ 0,0,0,1 } }
 #define ROTATING_MATRIX_Z_AXIS(angle)    { {cos(angle),sin(angle),0,0},{ -sin(angle),cos(angle),0,0 },{ 0,0,1,0 },{ 0,0,0,1 } }
 #define PERSPECTIVE_MATRIX(d)            { {1,0,0,0},{ 0,1,0,0 },{ 0,0,1,1.0f/(d) },{ 0,0,0,0 } }
-#define DEFAULT_CAMERA_POSITION          { { 2.f, 2.f, 2.f, 1.0f }, { 0, 0, 0, 1.0f }, { 0, 1, 0, 1.0f } }
+#define DEFAULT_CAMERA_POSITION          { { 2.f, 2.f, 2.f }, { 0, 0, 0 }, { 0, 1, 0, } }
 
 #define MAX(a,b)                         (((a) > (b)) ? (a) : (b))
 #define MAX3(a,b,c)                      (MAX(a,MAX(b,c)))
@@ -43,7 +45,7 @@
 #define NORM_ZERO_TO_ONE(value,min,max)  ((value) - (min)) / ((max) - (min))
 #define NORMALIZE_COORDS(value,min,max)  (((NORM_ZERO_TO_ONE(value,min,max)*2) - 1))
 
-#define TUPLE_POSITIONS                  (0)
+#define TUPLE_POLYGONS                  (0)
 #define TUPLE_VERTICES                   (1)
 #define TUPLE_VNORMALS                   (2)
 
@@ -70,7 +72,10 @@ typedef enum _AXES
 {
     AXIS_X,
     AXIS_Y,
-    AXIS_Z
+    AXIS_Z,
+    AXIS_XY,
+    AXIS_YZ,
+    AXIS_ZX
 }AXES;
 
 typedef enum _ROTATION_REL
@@ -83,9 +88,23 @@ typedef enum _FRAME_TYPE
 {
     FT_CAMERA,
     FT_MODEL,
-    FT_WORLD
+    FT_WORLD,
+    FT_LIGHT
 }FRAME_TYPE;
 
+enum LIGHT_TYPE
+{
+    LT_AMBIENT,
+    LT_SPECULAR,
+    LT_DIFFUSIVE
+};
+
+enum LIGHT_SOURCE_TYPE
+{
+    LST_POINT,
+    LST_PARALLEL,
+    LST_AREA
+};
 
 #define SET_PROJ_PARAMS(projParams)                                           \
                                          float left      = projParams.left;   \
@@ -149,7 +168,7 @@ typedef struct _PERSPECTIVE_PARAMS
 
 typedef struct _CUBE
 {
-    std::pair<glm::vec4, glm::vec4> lines[12];
+    std::pair<glm::vec3, glm::vec3> lines[12];
 }CUBE, *PCUBE;
 
 typedef enum _PIPE_TYPE

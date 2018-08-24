@@ -1,6 +1,6 @@
 ﻿#pragma once
-#include "Model.h"
 
+#include "Defs.h"
 /*
 � Point source : All light originates at a point
 � Rays hit planar surface at different incidence angles
@@ -24,22 +24,32 @@
 /*
  * Light class. Holds light source information and data.
  */
+
+class LightMeshModel;
+
 class Light
 {
 private:
-    PModel m_pLightSourceModel;
-    virtual glm::vec4 DiffuseReflection()  = 0;
-    virtual glm::vec4 SpecularReflection() = 0;
+    LightMeshModel* m_pLightModel;
+    float m_intensity;
 
-    virtual glm::vec4 GouraudShading()     = 0;
-    virtual glm::vec4 PhongShading()       = 0;
 
 public:
-	Light()          = default;
-	virtual ~Light() = default;
+
+//     virtual glm::vec4 GouraudShading()     = 0;
+//     virtual glm::vec4 PhongShading()       = 0;
+// 
+//     virtual glm::vec4 DiffuseReflection(const glm::vec4& color) const  = 0;
+//     virtual glm::vec4 SpecularReflection(const glm::vec4& color) const = 0;
+
+    Light(LightMeshModel* pLightModel) : m_pLightModel(pLightModel), m_intensity(1.f) {}
+    virtual ~Light()
+    {
+        delete m_pLightModel;
+    }
   
-    PModel  GetLightModel() { return m_pLightSourceModel; }
-    virtual glm::vec4 Reflect(const glm::vec3& point, const glm::vec4& color, const std::string/*Surface*/& surf) = 0;
+    LightMeshModel*  GetLightModel() { return m_pLightModel; }
+
 };
 
 
@@ -47,10 +57,10 @@ public:
 
 class PointSourceLight : public Light
 {
-private:
-
+private:
 public:
-     PointSourceLight() = default;
+
+    PointSourceLight(LightMeshModel* pLightModel) : Light(pLightModel) {}
     ~PointSourceLight() = default;
 };
 
@@ -62,7 +72,7 @@ class ParallelSourceLight : public Light
 private:
 
 public:
-     ParallelSourceLight() = default;
+     ParallelSourceLight(LightMeshModel* pLightModel) : Light(pLightModel) {}
     ~ParallelSourceLight() = default;
 };
 
@@ -74,6 +84,6 @@ class DistributedSourceLight : public Light
 private:
 
 public:
-     DistributedSourceLight() = default;
+     DistributedSourceLight(LightMeshModel* pLightModel) : Light(pLightModel) {}
     ~DistributedSourceLight() = default;
 };

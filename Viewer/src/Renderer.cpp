@@ -27,29 +27,37 @@ Renderer::~Renderer()
     delete[] zBuffer;
 }
 
-
-vec4 Renderer::processPipeline(const vec4& point, PIPE_TYPE pipeType /*= FULL*/)
+vec3 Renderer::processPipeline(vec3 point, PIPE_TYPE pipeType /*= FULL*/)
 {
     glm::vec4 piped;
+    glm::vec4 homogPoint = Util::toHomogeneousForm(point);
 
     switch (pipeType)
     {
     case FULL:
-        piped =  m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * point;
+        piped =  m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * homogPoint;
         break;
     case AXIS:
-        piped =  m_cameraProjection * m_cameraTransform * point;
+        piped =  m_cameraProjection * m_cameraTransform * homogPoint;
         break;
     case MODEL:
-        piped =  m_cameraProjection * m_cameraTransform * m_objectTransform * point;
+        piped =  m_cameraProjection * m_cameraTransform * m_objectTransform * homogPoint;
         break;
     default:
         piped =  HOMOGENEOUS_VECTOR4;
         break;
     }
 
-    return piped;
+    return Util::toCartesianForm(piped);
 
+}
+
+Face Renderer::processPipeline(Face polygon, PIPE_TYPE pipeType /*= FULL*/)
+{
+    polygon.m_p1 = processPipeline(polygon.m_p1, pipeType);
+    polygon.m_p2 = processPipeline(polygon.m_p2, pipeType);
+    polygon.m_p3 = processPipeline(polygon.m_p3, pipeType);
+    return polygon;
 }
 
 void Renderer::Init()
@@ -57,86 +65,63 @@ void Renderer::Init()
 
 }
 
-void Renderer::DrawTriangles(const vector<vec4>& vertices, bool bDrawFaceNormals /*= false*/, const vec4* modelCentroid /*= NULL*/, float normScaleRate /*= 1*/, bool bIsCamera /*= false*/)
+void Renderer::DrawTriangles(const vector<Face>& vPolygons, bool bDrawFaceNormals /*= false*/, const vec3* modelCentroid /*= NULL*/, float normScaleRate /*= 1*/, bool bIsCamera /*= false*/)
 {
-    auto it = vertices.begin();
     
-    static int maxX = std::numeric_limits<int>::lowest();
-    static int maxY = std::numeric_limits<int>::lowest();
-    static int maxZ = std::numeric_limits<int>::lowest();
-
-    while (it != vertices.end())
+    for (auto it = vPolygons.begin(); it != vPolygons.end(); it++)
     {
-        auto p1 = *(it++);
-        if (it == vertices.end()) break;
-        auto p2 = *(it++);
-        if (it == vertices.end()) break;
-        auto p3 = *(it++);
-
-        auto nrm1 = p1;
-        auto nrm2 = p2;
-        auto nrm3 = p3;
-
-        p1 = processPipeline(p1);
-        p2 = processPipeline(p2);
-        p3 = processPipeline(p3);
-
-        auto viewP1 = toViewPlane(p1);
-        auto viewP2 = toViewPlane(p2);
-        auto viewP3 = toViewPlane(p3);
-
+        auto polygon = *it;
+        auto pipedPolygon(processPipeline(polygon, FULL));
+        auto viewPolygon(toViewPlane(pipedPolygon));
+     
         if (m_bSolidModel)
         {
-            PolygonScanConversion(viewP1, viewP2, viewP3);
+            PolygonScanConversion(viewPolygon);
         }
         else
         {
-            DrawLine(viewP1, viewP2, m_wireframeColor);
-            DrawLine(viewP2, viewP3, m_wireframeColor);
-            DrawLine(viewP3, viewP1, m_wireframeColor);
+            DrawPolygonLines(viewPolygon);
         }
        
         if (bDrawFaceNormals)
         {
-            drawFaceNormal(nrm1, nrm2, nrm3, normScaleRate);
+            drawFaceNormal(polygon, normScaleRate);
         }
-
-        //printf("max: %f\n%f\n%f\n%f\n%f\n%f\n", p1.x, p1.y, p1.z, p2.x, p2.y, p2.z);
     }
 }
 
-void Renderer::drawFaceNormal(const vec4& nrm1, const vec4& nrm2, const vec4& nrm3, float normScaleRate)
+
+void Renderer::DrawPolygonLines(const Face& polygon)
 {
-    auto nrm1_3 = Util::toCartesianForm(nrm1);
-    auto nrm2_3 = Util::toCartesianForm(nrm2);
-    auto nrm3_3 = Util::toCartesianForm(nrm3);
+    DrawLine(polygon.m_p1, polygon.m_p2, m_wireframeColor);
+    DrawLine(polygon.m_p2, polygon.m_p3, m_wireframeColor);
+    DrawLine(polygon.m_p3, polygon.m_p1, m_wireframeColor);
+}
 
-    auto subs1 = nrm3_3 - nrm1_3;
-    auto subs2 = nrm2_3 - nrm1_3;
+void Renderer::drawFaceNormal(const Face& polygon, float normScaleRate)
+{
+    auto faceCenter = (polygon.m_p1 + polygon.m_p2 + polygon.m_p3) / 3.0f;
 
-    auto faceNormal = cross(subs1, subs2);
-
-    auto faceCenter = (nrm1_3 + nrm2_3 + nrm3_3) / 3.0f;
-
-    auto normalizedFaceNormal = Util::isVecEqual(faceNormal, vec3(0)) ? faceNormal : normalize(faceNormal);
+    auto normalizedFaceNormal = polygon.m_normal;
 
     normalizedFaceNormal.x *= normScaleRate;
     normalizedFaceNormal.y *= normScaleRate;
     normalizedFaceNormal.z *= normScaleRate;
 
-    auto nP1 = processPipeline(Util::toHomogeneousForm(faceCenter));
-    auto nP2 = processPipeline(Util::toHomogeneousForm(faceCenter + normalizedFaceNormal));
+    auto nP1 = processPipeline(faceCenter);
+    auto nP2 = processPipeline(faceCenter + normalizedFaceNormal);
 
     DrawLine(toViewPlane(nP1), toViewPlane(nP2), COLOR(LIME));
 }
 
 
-void Renderer::PolygonScanConversion(const vec3& viewP1, const vec3& viewP2, const vec3& viewP3)
+void Renderer::PolygonScanConversion(const Face& polygon)
 {
+
     ivec2 upperRight, lowerLeft;
-    upperRight = { MAX3(viewP1.x, viewP2.x, viewP3.x),MAX3(viewP1.y, viewP2.y, viewP3.y) };
-    lowerLeft = { MIN3(viewP1.x, viewP2.x, viewP3.x),MIN3(viewP1.y, viewP2.y, viewP3.y) };
-    float maxZ = MAX3(viewP1.z, viewP2.z, viewP3.z);
+    upperRight = { MAX3(polygon.m_p1.x, polygon.m_p2.x, polygon.m_p3.x),MAX3(polygon.m_p1.y, polygon.m_p2.y, polygon.m_p3.y) };
+    lowerLeft = { MIN3(polygon.m_p1.x, polygon.m_p2.x, polygon.m_p3.x),MIN3(polygon.m_p1.y, polygon.m_p2.y, polygon.m_p3.y) };
+    float maxZ = MAX3(polygon.m_p1.z, polygon.m_p2.z, polygon.m_p3.z);
 
     upperRight.x = upperRight.x > m_width  ? m_width  : upperRight.x;
     upperRight.y = upperRight.y > m_height ? m_height : upperRight.y;
@@ -149,23 +134,23 @@ void Renderer::PolygonScanConversion(const vec3& viewP1, const vec3& viewP2, con
     {
         for (int y = lowerLeft.y ; y <= upperRight.y; y++)
 
-            if (isPointInTriangle({ x,y }, { viewP1.x,viewP1.y }, { viewP2.x,viewP2.y }, { viewP3.x,viewP3.y }))
+            if (isPointInTriangle({ x,y }, { polygon.m_p1.x,polygon.m_p1.y }, { polygon.m_p2.x,polygon.m_p2.y }, { polygon.m_p3.x,polygon.m_p3.y }))
             {
-                putPixel(x, y, maxZ, m_polygonColor);
+                putPixel(x, y, maxZ, polygon.m_actualColor);
             }
     }
 
-    DrawLine(viewP1, viewP2, COLOR(LIME));
-    DrawLine(viewP2, viewP3, COLOR(LIME));
-    DrawLine(viewP3, viewP1, COLOR(LIME));
+    DrawLine(polygon.m_p1, polygon.m_p2, COLOR(LIME));
+    DrawLine(polygon.m_p2, polygon.m_p3, COLOR(LIME));
+    DrawLine(polygon.m_p3, polygon.m_p1, COLOR(LIME));
 }
 
-void Renderer::drawVerticesNormals(const vector<vec4>& vertices, const vector<vec4>& normals, float normScaleRate)
+void Renderer::drawVerticesNormals(const vector<vec3>& vertices, const vector<vec3>& normals, float normScaleRate)
 {
     for (int i = 0; i < normals.size() && i < vertices.size(); i++)
     {
-        auto vertex       = Util::toCartesianForm(vertices[i]);
-        auto vertexNormal = Util::toCartesianForm(normals[i] );
+        auto vertex       = vertices[i];
+        auto vertexNormal = normals[i];
 
         auto normalizedVertexNormal = Util::isVecEqual(vertexNormal, vec3(0)) ? vertexNormal : normalize(vertexNormal);
 
@@ -190,7 +175,7 @@ void Renderer::drawBordersCube(CUBE borderCube)
 }
 
 
-// glm::vec3 Renderer::toViewPlane(const glm::vec4& point)
+// glm::vec3 Renderer::toViewPlane(const glm::vec3& point)
 // {
 //     // convert to raster space 
 //     vec3 screenPoint;
@@ -214,50 +199,32 @@ void Renderer::drawBordersCube(CUBE borderCube)
 // }
 
 
-glm::vec3 Renderer::toViewPlane(const glm::vec4& point)
+glm::vec3 Renderer::toViewPlane(const glm::vec3& point)
 {
-
     // convert to raster space 
     vec3 screenPoint;
 
-    vec3 cartPoint = Util::toCartesianForm(point);
+    vec3 cartPoint = point;
 
     screenPoint.x = cartPoint.x;
     screenPoint.y = cartPoint.y;
     screenPoint.z = cartPoint.z;
-
-    //     printf("x = %f, y = %f, z = %f\n", cartPoint.x, cartPoint.y, cartPoint.z);
-
-    //     screenPoint.x = round((screenPoint.x - (m_width  / 2.0f)) * (VIEW_SCALING * m_width ) + (m_width  / 2.0f));
-    //     screenPoint.y = round((screenPoint.y - (m_height / 2.0f)) * (VIEW_SCALING * m_height) + (m_height / 2.0f));
 
     screenPoint.x = round(((m_width / 2.f) * screenPoint.x/((float) m_width/m_height) + (m_width / 2.f)));
     screenPoint.y = round(((m_height / 2)  * screenPoint.y + (m_height / 2)));
 //     screenPoint.z = round(((screenPoint.z * ((m_projParams.zFar - m_projParams.zNear) / 2) + ((m_projParams.zFar + m_projParams.zNear) / 2))));
 
     return vec3(screenPoint.x, screenPoint.y, screenPoint.z);
-//     // convert to raster space 
-//     vec3 screenPoint;
-// 
-//     screenPoint.x = ((point.x + 1) * m_width / 2.0f);
-//     screenPoint.y = ((point.y + 1) * m_height / 2.0f);
-//     //   screenPoint.z = ((point.z + 1) * (m_height + m_width) / 2.0f);
-// 
-//     screenPoint.x = round((screenPoint.x - (m_width / 2.0f)) * (250.0f / m_width) + (m_width / 2.0f));
-//     screenPoint.y = round((screenPoint.y - (m_height / 2.0f)) * (250.0f / m_height) + (m_height / 2.0f));
-//     screenPoint.z = ((point.z * ((m_projParams.zFar - m_projParams.zNear) / 2) + ((m_projParams.zFar + m_projParams.zNear) / 2)));
-// 
-// 
-//     if (screenPoint.x <0 || screenPoint.x >m_width || screenPoint.y < 0 || screenPoint.y > m_height)
-//     {
-//         screenPoint.z = numeric_limits<float>::lowest();
-//     }
-//     else
-//     {
-//         screenPoint.z = ((point.z * ((m_projParams.zFar - m_projParams.zNear) / 2) + ((m_projParams.zFar + m_projParams.zNear) / 2)));
-//     }
-//     
-//     return vec3((int)screenPoint.x, (int)screenPoint.y, screenPoint.z);
+
+}
+
+Face Renderer::toViewPlane(Face polygon)
+{
+    polygon.m_p1 = toViewPlane(polygon.m_p1);
+    polygon.m_p2 = toViewPlane(polygon.m_p2);
+    polygon.m_p3 = toViewPlane(polygon.m_p3);
+
+    return polygon;
 }
 
 glm::vec3 Renderer::Barycentric(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c)
@@ -345,7 +312,7 @@ void Renderer::putPixel(int i, int j, float d, const vec4& color)
     }
     else if(color.x == 0 && color.y == 0 && color.z ==0 && zBuffer[Z_BUF_INDEX(m_width, i, j)] == numeric_limits<float>::lowest())
     {
-        printf("i = %d, j = %d, d = %f\n");
+//        printf("i = %d, j = %d, d = %f\n");
     }
 
 }
@@ -453,23 +420,20 @@ void Renderer::orderPoints(float& x1, float& x2, float& y1, float& y2, float& d1
 
 void Renderer::drawAxis()
 {
-    vec4 axisX = m_worldTransformation[0];
-    vec4 axisY = m_worldTransformation[1];
-    vec4 axisZ = m_worldTransformation[2];
-    axisX.w = 1;
-    axisY.w = 1;
-    axisZ.w = 1;
+    vec3 axisX = m_worldTransformation[0];
+    vec3 axisY = m_worldTransformation[1];
+    vec3 axisZ = m_worldTransformation[2];
 
-    vec4 zeroPoint = HOMOGENEOUS_VECTOR4;
+    vec3 zeroPoint = ZERO_VEC3;
 
     axisX     = processPipeline(axisX,     AXIS);
     axisY     = processPipeline(axisY,     AXIS);
     axisZ     = processPipeline(axisZ,     AXIS);
     zeroPoint = processPipeline(zeroPoint, AXIS);
 // 
-    axisX = mat4x4(SCALING_MATRIX4(2))*axisX;
-    axisY = mat4x4(SCALING_MATRIX4(2))*axisY;
-    axisZ = mat4x4(SCALING_MATRIX4(2))*axisZ;
+    axisX = 2.f * axisX;
+    axisY = 2.f * axisY;
+    axisZ = 2.f * axisZ;
 
     auto viewAxisX     = toViewPlane(axisX);
     auto viewAxisY     = toViewPlane(axisY);
@@ -487,10 +451,10 @@ void Renderer::drawAxis()
 
 void Renderer::drawModelAxis()
 {
-    vec4 axisX = { 1,0,0,1 };
-    vec4 axisY = { 0,1,0,1 };
-    vec4 axisZ = { 0,0,1,1 };
-    vec4 zeroPoint = { m_objectTransform[0][3],m_objectTransform[1][3],m_objectTransform[2][3] , 1 };
+    vec3 axisX = { 1,0,0 };
+    vec3 axisY = { 0,1,0 };
+    vec3 axisZ = { 0,0,1 };
+    vec3 zeroPoint = { m_objectTransform[0][3],m_objectTransform[1][3],m_objectTransform[2][3] };
 
     axisX     = processPipeline(axisX,     MODEL);
     axisY     = processPipeline(axisY,     MODEL);
@@ -596,83 +560,12 @@ void Renderer::yStepErrorUpdate(float dx, float dy, float& error, int& y, const 
     }
 }
 
-void Renderer::ProjectPolygon(std::vector<glm::vec3>& polygon)
+void Renderer::ProjectPolygon(Face& polygon)
 {
-    float zMax = MAX3(polygon[0].z, polygon[1].z, polygon[2].z);
-    for (auto poly : polygon)
-    {
-        poly.z = zMax;
-    }
-}
+    polygon.m_p1.z = MAX3(polygon.m_p1.z, polygon.m_p2.z, polygon.m_p3.z);
+    polygon.m_p2.z = MAX3(polygon.m_p1.z, polygon.m_p2.z, polygon.m_p3.z);
+    polygon.m_p3.z = MAX3(polygon.m_p1.z, polygon.m_p2.z, polygon.m_p3.z);
 
-void Renderer::Fill_A_Triangle(const std::vector<glm::vec3>& polygon)
-{
-    pair<vec2, vec2> firstEdge(polygon[0], (polygon[1]));
-    pair<vec2, vec2> secondEdge(polygon[0], (polygon[2]));
-
-    float firstEdgeFirstX   = firstEdge.first .x;
-    float firstEdgeFirstY   = firstEdge.first .y;
-    float firstEdgeSecondX  = firstEdge.second.x;
-    float firstEdgeSecondY  = firstEdge.second.y;
-
-    float secondEdgeFirstX  = secondEdge.first .x;
-    float secondEdgeFirstY  = secondEdge.first .y;
-    float secondEdgeSecondX = secondEdge.second.x;
-    float secondEdgeSecondY = secondEdge.second.y;
-
-    float dX_1 = 0, dY_1 = 0;
-    float dX_2 = 0, dY_2 = 0;
-
-    getDeltas(firstEdgeFirstX, firstEdgeFirstY, firstEdgeSecondX, firstEdgeSecondY, &dX_1, &dY_1);
-    getDeltas(secondEdgeFirstX, secondEdgeFirstY, secondEdgeSecondX, secondEdgeSecondY, &dX_2, &dY_2);
-
-    float firstEdgeGradient = (dY_1 != 0) ? dX_1 / dY_1 : 1.f;
-    float secondEdgeGradient = (dY_2 != 0) ? dX_2 / dY_2 : -1.f;
-   
-    int xEnd = static_cast<int>(secondEdgeFirstX);
-    int yEnd = static_cast<int>(firstEdgeSecondY);
-    int x = static_cast<int>(firstEdgeFirstX);
-    for (int y = static_cast<int>(firstEdgeFirstY); y <= yEnd; y++)
-    {
-        DrawLine(vec3(x, y, polygon[0].z), vec3(xEnd, yEnd, polygon[0].z), { 0, 0, 0, 1 });
-        x -= firstEdgeGradient;
-        xEnd += secondEdgeGradient;
-    }
-}
-
-void Renderer::Fill_V_Triangle(const std::vector<glm::vec3>& polygon)
-{
-    pair<vec2, vec2> firstEdge(polygon[0], (polygon[1]));
-    pair<vec2, vec2> secondEdge(polygon[0], (polygon[2]));
-
-    float firstEdgeFirstX = firstEdge.first.x;
-    float firstEdgeFirstY = firstEdge.first.y;
-    float firstEdgeSecondX = firstEdge.second.x;
-    float firstEdgeSecondY = firstEdge.second.y;
-
-    float secondEdgeFirstX = secondEdge.first.x;
-    float secondEdgeFirstY = secondEdge.first.y;
-    float secondEdgeSecondX = secondEdge.second.x;
-    float secondEdgeSecondY = secondEdge.second.y;
-
-    float dX_1 = 0, dY_1 = 0;
-    float dX_2 = 0, dY_2 = 0;
-
-    getDeltas(firstEdgeFirstX, firstEdgeFirstY, firstEdgeSecondX, firstEdgeSecondY, &dX_1, &dY_1);
-    getDeltas(secondEdgeFirstX, secondEdgeFirstY, secondEdgeSecondX, secondEdgeSecondY, &dX_2, &dY_2);
-
-    float firstEdgeGradient = (dY_1 != 0) ? dX_1 / dY_1 : -1.f;
-    float secondEdgeGradient = (dY_2 != 0) ? dX_2 / dY_2 : 1.f;
-
-    float xEnd =                  secondEdgeFirstX;
-    int   yEnd = static_cast<int>(round(firstEdgeSecondY));
-    float x    =                  firstEdgeFirstX;
-    for (int y = static_cast<int>(firstEdgeFirstY); y <= yEnd; y++)
-    {
-        DrawLine(vec3(x, y, polygon[0].z), vec3(xEnd, y, polygon[0].z), { 0, 0, 0, 1 });
-        x += firstEdgeGradient;
-        xEnd -= secondEdgeGradient;
-    }
 }
 
 void Renderer::createOpenGLBuffer()

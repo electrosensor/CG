@@ -10,7 +10,12 @@ using namespace std;
 using namespace glm;
 
 bool showDemoWindow = false;
-bool modelControlWindow = false;
+bool modelControlWindow = true;
+static bool bModelControlFrame = false;
+
+bool lightingMenu = true;
+static bool bLightControlFrame = false;
+
 bool colorMenu = false;
 bool showFile = false;
 vec4 clearColor = vec4(0.4f, 0.55f, 0.60f, 1.00f);
@@ -49,21 +54,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         ImGui::Text(sWorldTransform.c_str());
 
         //cene->updateCurrentDims((int) ImGui::GetWindowHeight(), (int) ImGui::GetWindowWidth());
-        ImGui::Text("-------------- Primitives Models: --------------");
 
-        if (ImGui::Button("Add Cube model"))
-        {
-            int idx = scene->AddPrimitiveModel(PM_CUBE);
-            scene->SetActiveModelIdx(idx);
-            modelControlWindow = true;
-        }
-
-        if (ImGui::Button("Add Sphere model"))
-        {
-            int idx = scene->AddPrimitiveModel(PM_SPHERE);
-            scene->SetActiveModelIdx(idx);
-            modelControlWindow = true;
-        }
 
 
         ImGui::Text("------------------- Cameras: -------------------");
@@ -76,7 +67,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         ImGui::Text("Look at: (%d, %d, %d)", at[0], at[1], at[2]);
         if (ImGui::Button("Add new camera"))
         {
-            int idx = scene->AddCamera({ eye[0], eye[1], eye[2], 1.0f }, { at[0], at[1], at[2], 1.0f }, { 0, 1, 0, 1.0f });
+            int idx = scene->AddCamera({ eye[0], eye[1], eye[2]}, { at[0], at[1], at[2] }, { 0, 1, 0 });
             scene->SetActiveCameraIdx(idx);
         }
         ImGui::SameLine();
@@ -127,24 +118,82 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 
         ImGui::Text("---------------- Camera Control: ----------------");
 
-        ImGui::Text("Rotate:");
-        static auto rotAngle = static_cast<float>( PI / 36.0f );
-        ImGui::SliderAngle("rotation angle", &rotAngle, 1.0f, 180.0f);
 
         static int currentFrame = FRAME_TYPE::FT_CAMERA;
         static AXES currentAxis = AXES::AXIS_Y;
         static int currentRel = ROTATION_REL::RR_WORLD;
-        static const char AxisList[6] = { 'X','\0','Y','\0','Z','\0' };
-        static const char Relations[11] = { 'W','o','r','l','d','\0',
-                                            'S','e','l','f','\0'
-                                           };
-        static const char Frames[19] = { 'C','a','m','e','r','a','\0' ,
-                                        'M','o','d','e','l','\0',
-                                        'W','o','r','l','d','\0'
-                                      };
-        ImGui::Combo("Frame", &currentFrame, Frames);
-        ImGui::Combo("Relation", &currentRel, Relations);
-        ImGui::Combo("Axis", (int*) &currentAxis, AxisList);
+
+        static string sCurrentFrame = "Camera";
+        static string sCurrentAxis = "Y-axis";
+        static string sCurrentRel = "World";
+        
+        ImGui::TextColored( { 1.f, 0.4f, 0.4f, 1.f }, (sCurrentFrame + " relative to " + sCurrentAxis + " of " + sCurrentRel).c_str());
+
+        ImGui::Text("Frame: ");
+        ImGui::SameLine();
+        if (ImGui::SmallButton("World"))
+        {
+            sCurrentFrame = "World";
+            currentFrame = FT_WORLD;
+        }
+        ImGui::SameLine();
+        if (ImGui::SmallButton("Camera"))
+        {
+            sCurrentFrame = "Camera";
+            currentFrame = FT_CAMERA;
+        }
+        ImGui::SameLine();
+        if (ImGui::SmallButton("Model"))
+        {
+            sCurrentFrame = "Model";
+            currentFrame = FT_MODEL;
+        }
+        ImGui::SameLine();
+        if (ImGui::SmallButton("Light"))
+        {
+            sCurrentFrame = "Light";
+            currentFrame = FT_LIGHT;
+        }
+
+        ImGui::Text("Relative to: ");
+        ImGui::SameLine();
+        if (ImGui::SmallButton("itself"))
+        {
+            sCurrentRel = "itself";
+            currentRel = RR_SELF;
+        }
+        ImGui::SameLine();
+        if (ImGui::SmallButton("world"))
+        {
+            sCurrentRel = "World";
+            currentRel = RR_WORLD;
+        }
+
+        ImGui::Text("Axis: ");
+        ImGui::SameLine();
+        if (ImGui::SmallButton("X-axis"))
+        {
+            sCurrentAxis = "X-axis";
+            currentAxis = AXIS_X;
+        }
+        ImGui::SameLine();
+        if (ImGui::SmallButton("Y-axis"))
+        {
+            sCurrentAxis = "Y-axis";
+            currentAxis = AXIS_Y;
+        }
+        ImGui::SameLine();
+        if (ImGui::SmallButton("Z-axis"))
+        {
+            sCurrentAxis = "Z-axis";
+            currentAxis = AXIS_Z;
+        }
+
+
+        ImGui::Text("Rotate:");
+        static auto rotAngle = static_cast<float>( PI / 36.0f );
+        ImGui::SliderAngle("rotation angle", &rotAngle, 1.0f, 180.0f);
+
         if (!ImGui::IsMouseHoveringAnyWindow() && io.MouseDown[0] && io.MouseDelta.x)
         {
             auto direction = static_cast<int>(io.MouseDelta.x / abs(io.MouseDelta.x));
@@ -157,11 +206,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
                     {
                         case ROTATION_REL::RR_WORLD:
                         {
-                            scene->RotateActiveCameraWorldAxis(rotAngle * direction, currentAxis);
+                            scene->RotateActiveCameraRelativeToWorld(rotAngle * direction, currentAxis);
                         } break;
                         case ROTATION_REL::RR_SELF:
                         {
-                            scene->RotateActiveCameraAxis(rotAngle * direction, currentAxis);
+                            scene->RotateActiveCamera(rotAngle * direction, currentAxis);
                         } break;
                         default: break;
                     }
@@ -170,11 +219,30 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
                 {
                     switch (currentRel)
                     {
+                        case ROTATION_REL::RR_WORLD:
+                        {
+                            scene->RotateActiveModelRelativeToWorld(rotAngle * direction, currentAxis);
+                        } break;
                         case ROTATION_REL::RR_SELF:
                         {
-                            scene->RotateActiveModelAxis(rotAngle * direction, currentAxis);
+                            scene->RotateActiveModel(rotAngle * direction, currentAxis);
                         } break;
                         default: break;
+                    }
+                } break;
+                case FRAME_TYPE::FT_LIGHT:
+                {
+                    switch (currentRel)
+                    {
+                    case ROTATION_REL::RR_WORLD:
+                    {
+                        scene->RotateActiveLightModelRelativeToWorld(rotAngle * direction, currentAxis);
+                    } break;
+                    case ROTATION_REL::RR_SELF:
+                    {
+                        scene->RotateActiveLightModel(rotAngle * direction, currentAxis);
+                    } break;
+                    default: break;
                     }
                 } break;
                 default: break;
@@ -198,6 +266,10 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             {
                 scene->ScaleActiveModel(camScaleFactor);
             } break;
+            case FRAME_TYPE::FT_LIGHT:
+            {
+                scene->ScaleActiveLightModel(camScaleFactor);
+            } break;
             default: break;
             }
             
@@ -214,6 +286,10 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             case FRAME_TYPE::FT_MODEL:
             {
                 scene->ScaleActiveModel(1.0f / camScaleFactor);
+            } break;
+            case FRAME_TYPE::FT_LIGHT:
+            {
+                scene->ScaleActiveLightModel(1.0f / camScaleFactor);
             } break;
             default: break;
             }
@@ -235,7 +311,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
                 } break;
                 case FRAME_TYPE::FT_MODEL:
                 {
-                    scene->TranslateActiveModelAxis(-moveFactor, AXES::AXIS_X);
+                    scene->TranslateActiveModel(-moveFactor, AXES::AXIS_X);
+                } break;
+                case FRAME_TYPE::FT_LIGHT:
+                {
+                    scene->TranslateActiveLight(-moveFactor, AXES::AXIS_X);
                 } break;
                 default: break;
             }
@@ -251,7 +331,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             } break;
             case FRAME_TYPE::FT_MODEL:
             {
-                scene->TranslateActiveModelAxis(moveFactor, AXES::AXIS_X);
+                scene->TranslateActiveModel(moveFactor, AXES::AXIS_X);
+            } break;
+            case FRAME_TYPE::FT_LIGHT:
+            {
+                scene->TranslateActiveLight(moveFactor, AXES::AXIS_X);
             } break;
             default: break;
             }
@@ -266,7 +350,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             } break;
             case FRAME_TYPE::FT_MODEL:
             {
-                scene->TranslateActiveModelAxis(moveFactor, AXES::AXIS_Y);
+                scene->TranslateActiveModel(moveFactor, AXES::AXIS_Y);
+            } break;
+            case FRAME_TYPE::FT_LIGHT:
+            {
+                scene->TranslateActiveLight(moveFactor, AXES::AXIS_Y);
             } break;
             default: break;
             }
@@ -282,7 +370,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             } break;
             case FRAME_TYPE::FT_MODEL:
             {
-                scene->TranslateActiveModelAxis(-moveFactor, AXES::AXIS_Y);
+                scene->TranslateActiveModel(-moveFactor, AXES::AXIS_Y);
+            } break;
+            case FRAME_TYPE::FT_LIGHT:
+            {
+                scene->TranslateActiveLight(-moveFactor, AXES::AXIS_Y);
             } break;
             default: break;
             }
@@ -297,7 +389,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             } break;
             case FRAME_TYPE::FT_MODEL:
             {
-                scene->TranslateActiveModelAxis(moveFactor, AXES::AXIS_Z);
+                scene->TranslateActiveModel(moveFactor, AXES::AXIS_Z);
+            } break;
+            case FRAME_TYPE::FT_LIGHT:
+            {
+                scene->TranslateActiveLight(moveFactor, AXES::AXIS_Z);
             } break;
             default: break;
             }
@@ -313,7 +409,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             } break;
             case FRAME_TYPE::FT_MODEL:
             {
-                scene->TranslateActiveModelAxis(-moveFactor, AXES::AXIS_Z);
+                scene->TranslateActiveModel(-moveFactor, AXES::AXIS_Z);
+            } break;
+            case FRAME_TYPE::FT_LIGHT:
+            {
+                scene->TranslateActiveLight(-moveFactor, AXES::AXIS_Z);
             } break;
             default: break;
             }
@@ -406,23 +506,6 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         ImGui::Text("Camera Projection:\n");
         ImGui::Text(sCameraProjection.c_str());
 
-    /////////////////////////////////////////////////////////////////////
-
-        //static float f = 1.0f;
-        //static int counter = 0;
-        //ImGui::Text("Hello, world!");                           // Display some text (you can use a format string too)
-        //ImGui::SliderFloat("float", &f, -100.0f, 100.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
-        //{
-        //}
-        //	ImGui::Checkbox("Demo Window", &showDemoWindow);      // Edit bools storing our windows open/close state
-        //ImGui::Checkbox("Another Window", &modelControlWindow);
-
-        //ImGui::ColorEdit3("clear color", (float*)&clearColor); // Edit 3 floats representing a color
-
-        //ImGui::SameLine();
-        //ImGui::Text("counter = %d", counter);
-
-        //ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
         ImGui::End();
     }
 
@@ -430,69 +513,156 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
     if (modelControlWindow)
     {
         ImGui::Begin("Models");
-        ImGui::Text("-------------- Models Control: --------------");
+        ImGui::Text("-------------- Primitives Models: --------------");
 
-        if (ImGui::Button("Next model"))
+        if (ImGui::Button("Add Cube model"))
         {
-            scene->NextModel();
-        }
-        if (ImGui::Button("Delete model"))
-        {
-            scene->DeleteActiveModel();
-        }
-        ImGui::Text("Active model: %d", scene->GetActiveModelIdx());
-
-        static mat4x4 activeModelTransformation;
-        activeModelTransformation = scene->GetActiveModelTransformation();
-        string sModelTransformation = "";
-        for (int i = 0; i < 4; i++)
-        {
-            for (int j = 0; j < 4; j++)
-            {
-                sModelTransformation.append(std::to_string(activeModelTransformation[i][j]) + " ");
-            }
-            sModelTransformation.append("\n");
+            int idx = scene->AddPrimitiveModel(PM_CUBE);
+            scene->SetActiveModelIdx(idx);
+            bModelControlFrame = true;
         }
 
-        ImGui::Text("Model transformation:\n");
-        ImGui::Text(sModelTransformation.c_str());
-
-        static float normals[2] = { 0.1f, 0.1f };
-        ImGui::SliderFloat2("vn/fn", normals, 0.1f, 2.0f);
-
-        scene->SetvnScale(normals[0]);
-        scene->SetfnScale(normals[1]);
-
-        bool        bShowVertNorms  = normals[0] > 0.1f ? true : false;
-        bool        bShowFaceNorms  = normals[1] > 0.1f ? true : false;
-        static bool bShowBorderCube = false;
-        static bool bShowSolidColor = true;
+        if (ImGui::Button("Add Sphere model"))
+        {
+            int idx = scene->AddPrimitiveModel(PM_SPHERE);
+            scene->SetActiveModelIdx(idx);
+            bModelControlFrame = true;
+        }
         
-        scene->showVerticesNormals(bShowVertNorms);
-        scene->showFacesNormals(bShowFaceNorms);
-        scene->showBorderCube(bShowBorderCube);
-        scene->showSolidColor(bShowSolidColor);
+        
+        if(bModelControlFrame)
+        {
+            ImGui::Text("-------------- Models Control: --------------");
 
-        ImGui::Checkbox("Show vertices normals", &bShowVertNorms);
-        ImGui::Checkbox("Show face normals", &bShowFaceNorms);
-        ImGui::Checkbox("Show Border Cube", &bShowBorderCube);
-        ImGui::Checkbox("Show Solid Color", &bShowSolidColor);
+            if (ImGui::Button("Next model"))
+            {
+                scene->NextModel();
+            }
+            if (ImGui::Button("Delete model"))
+            {
+                scene->DeleteActiveModel();
+                if (scene->GetActiveModelIdx() == DISABLED)
+                {
+                    bModelControlFrame = false;
+                }
+            }
+            ImGui::Text("Active model: %d", scene->GetActiveModelIdx());
 
+            static mat4x4 activeModelTransformation;
+            activeModelTransformation = scene->GetActiveModelTransformation();
+            string sModelTransformation = "";
+            for (int i = 0; i < 3; i++)
+            {
+                for (int j = 0; j < 3; j++)
+                {
+                    sModelTransformation.append(std::to_string(activeModelTransformation[i][j]) + " ");
+                }
+                sModelTransformation.append("\n");
+            }
 
-        //int val[2]; val[0] = io.MousePos.x; val[1] = io.MousePos.y;
-        //ImGui::Begin("Another Window", &modelControlWindow);
-        //ImGui::InputInt2("(x,y)", val, 3);
-        //ImGui::Text("Hello from another window!");
-        //if (ImGui::Button("Close Me"))
-        //	modelControlWindow = false;
+            ImGui::Text("Model transformation:\n");
+            ImGui::Text(sModelTransformation.c_str());
+
+            static float normals[2] = { 0.1f, 0.1f };
+            ImGui::SliderFloat2("vn/fn", normals, 0.1f, 2.0f);
+
+            scene->SetvnScale(normals[0]);
+            scene->SetfnScale(normals[1]);
+
+            bool        bShowVertNorms = normals[0] > 0.1f ? true : false;
+            bool        bShowFaceNorms = normals[1] > 0.1f ? true : false;
+            static bool bShowBorderCube = false;
+            static bool bShowSolidColor = true;
+
+            scene->showVerticesNormals(bShowVertNorms);
+            scene->showFacesNormals(bShowFaceNorms);
+            scene->showBorderCube(bShowBorderCube);
+            scene->showSolidColor(bShowSolidColor);
+
+            ImGui::Checkbox("Show vertices normals", &bShowVertNorms);
+            ImGui::Checkbox("Show face normals", &bShowFaceNorms);
+            ImGui::Checkbox("Show Border Cube", &bShowBorderCube);
+            ImGui::Checkbox("Show Solid Color", &bShowSolidColor);
+        }
+
         ImGui::End();
     }
 
-    // 3. Show the ImGui demo window. Most of the sample code is in ImGui::ShowDemoWindow(). Read its code to learn more about Dear ImGui!
-    if (showDemoWindow)
+    if (lightingMenu)
     {
-        ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiCond_FirstUseEver); // Normally user code doesn't need/want to call this because positions are saved in .ini file anyway. Here we just want to make the demo initial state a bit more friendly!
-        ImGui::ShowDemoWindow(&showDemoWindow);
+        ImGui::Begin("Light");
+        ImGui::Text("-------------- Light: --------------");
+
+        static int currentLight = LT_AMBIENT;
+    
+        static const char LightTypes[28] = { "Ambient\0Specular\0Diffusive\0" };
+        ImGui::Combo("Light Source", &currentLight, LightTypes);
+        static float direction[3] = { 2,2,2 };
+        static float lightCoord[3] = { 0,0,0 };
+        static float intencity = 1.f;
+        ImGui::SliderFloat3("Light from: (x,y,z)", direction, -10, 10);
+        ImGui::SliderFloat3("Light at: (x,y,z)", lightCoord, -10, 10);
+        ImGui::SliderFloat("Light Intencity: ", &intencity, -10, 10);
+
+        ImGui::Text("Light from: (%d, %d, %d)", direction[0], direction[1], direction[2]);
+        ImGui::SameLine();
+        ImGui::Text("at: (%d, %d, %d)", lightCoord[0], lightCoord[1], lightCoord[2]);
+        ImGui::SameLine();
+        ImGui::Text("with intencity: %d", intencity);
+
+        if (ImGui::Button("Add new light"))
+        {
+            int idx = scene->AddLight(static_cast<LIGHT_SOURCE_TYPE>(currentLight), intencity, lightCoord, direction);
+            scene->SetActiveLightIdx(idx);
+            bLightControlFrame = true;
+        }
+
+        static bool bShowLight = false;
+        bShowLight = (scene->GetActiveLight() == nullptr) ? false : scene->GetActiveLight()->GetLightModel()->isModelRenderingActive();
+        ImGui::SameLine();
+        if (ImGui::Checkbox("Show Light", &bShowLight))
+        {
+            if (scene->GetActiveLight() != nullptr) {
+                scene->GetActiveLight()->GetLightModel()->setModelRenderingState(bShowLight);
+            }
+        }
+
+        if (bLightControlFrame)
+        {
+            ImGui::Text("-------------- Light Control: --------------");
+
+            if (ImGui::Button("Next light model"))
+            {
+                scene->NextLight();
+            }
+            if (ImGui::Button("Delete light model"))
+            {
+                scene->DeleteActiveLight();
+                if (scene->GetActiveLightIdx() == DISABLED)
+                {
+                    bLightControlFrame = false;
+                }
+            }
+            ImGui::Text("Active light: %d", scene->GetActiveLightIdx());
+
+            static mat4x4 activeLightModelTransformation;
+            activeLightModelTransformation = scene->GetActiveLightModelTransformation();
+            string sLightModelTransformation = "";
+            for (int i = 0; i < 4; i++)
+            {
+                for (int j = 0; j < 4; j++)
+                {
+                    sLightModelTransformation.append(std::to_string(activeLightModelTransformation[i][j]) + " ");
+                }
+                sLightModelTransformation.append("\n");
+            }
+
+            ImGui::Text("Light Model transformation:\n");
+            ImGui::Text(sLightModelTransformation.c_str());
+
+        }
+
+        ImGui::End();
     }
 
     if (colorMenu)
@@ -534,8 +704,9 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
                     if (result == NFD_OKAY) {
                         ImGui::Text("Hello from another window!");
                         scene->LoadOBJModel(outPath);
+                        bModelControlFrame = true;
                         free(outPath);
-                        modelControlWindow = true;
+
                     }
                     else if (result == NFD_CANCEL) {
                     }

@@ -22,11 +22,9 @@ void Scene::Draw()
     // 2. Tell all models to draw themselves
     Camera* activeCamera = nullptr;
 
-    vector<vec4> vPositions;//TODO: RESERVE
-    vector<vec4> vVertices;
-    vector<vec4> vVerticesNormals;
-
-
+    vector<Face> vPolygons;//TODO: RESERVE
+    vector<vec3> vVertices;
+    vector<vec3> vVerticesNormals;
 
     if (m_activeCamera != DISABLED)
     {
@@ -43,8 +41,6 @@ void Scene::Draw()
     renderer->setProjectionParams(activeCamera->getProjectionParams());
     renderer->SetProjection(activeCamera->GetProjection());
 
-    
-
     renderer->SetBgColor(m_bgColor);
     renderer->SetPolygonColor(m_polygonColor);
     renderer->SetWireframeColor(m_wireframeColor);
@@ -53,20 +49,43 @@ void Scene::Draw()
 
     renderer->setWorldTransformation(m_worldTransformation);
 
+    for each(Light* light in m_lights)
+    {
+        auto lightModel = light->GetLightModel();
+        if (lightModel->isModelRenderingActive())
+        {
+            tuple lightModelData(vPolygons, vVertices, vVerticesNormals);
+            mat4x4 cameraModelTransformation = lightModel->GetModelTransformation();
+            renderer->SetObjectMatrices(cameraModelTransformation, mat4x4(I_MATRIX));
+            lightModel->Draw(lightModelData);
+            renderer->DrawTriangles(get<TUPLE_POLYGONS>(lightModelData));
+        }
+    }
+
     for each (Model* model in m_models)
     {
-        tuple modelData(vPositions, vVertices, vVerticesNormals);
+        tuple modelData(vPolygons, vVertices, vVerticesNormals);
         model->Draw(modelData);
-        tie(vPositions, vVertices, vVerticesNormals) = modelData;
+
+        vector<Face>& polygonsToLight = get<TUPLE_POLYGONS>(modelData);
+        for each(Light* light in m_lights)
+        {
+            if (/*light->isOn()*/ true)
+            {
+                for each(auto polygon in polygonsToLight)
+                {
+                    polygon.Reflect(*light);
+                }
+            }
+        }
+        tie(vPolygons, vVertices, vVerticesNormals) = modelData;
 
         renderer->SetObjectMatrices(model->GetModelTransformation(), model->GetNormalTransformation());
-        renderer->DrawTriangles(vPositions, m_bDrawFaceNormal, &model->getCentroid(), m_fnScaleFactor);
-
+        renderer->DrawTriangles(vPolygons, m_bDrawFaceNormal, &model->getCentroid(), m_fnScaleFactor);
         if (m_bDrawVecNormal && !vVerticesNormals.empty())
         {
             renderer->drawVerticesNormals(vVertices , vVerticesNormals, m_vnScaleFactor);
         }
-        
         if (m_bShowBorderCube)
         {
             renderer->drawBordersCube(model->getBordersCube());
@@ -79,36 +98,14 @@ void Scene::Draw()
         if (camModel->isModelRenderingActive() && camera != activeCamera)
         {
             vVerticesNormals.reserve(0);
-            tuple camModelData(vPositions, vVertices, vVerticesNormals);
-
+            tuple camModelData(vPolygons, vVertices, vVerticesNormals);
             mat4x4 cameraModelTransformation = camModel->GetModelTransformation();
-
             renderer->SetObjectMatrices(cameraModelTransformation, mat4x4(I_MATRIX));
-
             camModel->Draw(camModelData);
-
-            renderer->DrawTriangles(get<TUPLE_POSITIONS>(camModelData), FALSE, NULL, 1, IS_CAMERA);
+            renderer->DrawTriangles(get<TUPLE_POLYGONS>(camModelData), FALSE, NULL, 1, IS_CAMERA);
         }
     }
 
-    for each(Light* light in m_lights)
-    {
-        auto lightModel = (LightMeshModel*)light->GetLightModel();
-        if (lightModel->isModelRenderingActive() && light != m_lights[m_activeLight])
-        {
-
-            tuple lightModelData(vPositions, vVertices, vVerticesNormals);
-
-            mat4x4 cameraModelTransformation = lightModel->GetModelTransformation();
-
-            renderer->SetObjectMatrices(cameraModelTransformation, mat4x4(I_MATRIX));
-
-            lightModel->Draw(lightModelData);
-
-            renderer->DrawTriangles(get<TUPLE_POSITIONS>(lightModelData));
-        }
-    }
-    
     renderer->SwapBuffers();
 
 }
@@ -123,6 +120,71 @@ void Scene::SetWorldTransformation(const mat4x4 world)
     m_worldTransformation = world;
 }
 
+
+
+
+
+
+
+void Scene::TranslateModel(Model* activeModel, AXES axis, float value)
+{
+    mat4x4 currTransf = activeModel->GetModelTransformation();
+    mat4x4 translateTransform(TRANSLATION_MATRIX(axis == AXIS_X ? value : 0, axis == AXIS_Y ? value : 0, axis == AXIS_Z ? value : 0));
+    activeModel->SetModelTransformation(translateTransform * currTransf);
+}
+
+void Scene::ScaleModel(Model* activeModel, float value)
+{
+    mat4x4 currTransf = activeModel->GetModelTransformation();
+    mat4x4 scaleTransform(SCALING_MATRIX4(value));
+    activeModel->SetModelTransformation(scaleTransform * currTransf);
+}
+
+
+void Scene::RotateModel(Model* activeModel, AXES axis, float angle)
+{
+    mat4x4 currTransf = activeModel->GetModelTransformation(); /* activeModel->GetWorldTransformation();*/
+    mat4x4 toOrigin(TRANSLATION_MATRIX(-currTransf[3][0], -currTransf[3][1], -currTransf[3][2]));
+    mat4x4 toPlace(TRANSLATION_MATRIX(currTransf[3][0], currTransf[3][1], currTransf[3][2]));
+
+    mat4x4 rotateTransform;
+
+    switch (axis)
+    {
+    case AXIS_X: rotateTransform = ROTATING_MATRIX_X_AXIS(angle); break;
+    case AXIS_Y: rotateTransform = ROTATING_MATRIX_Y_AXIS(angle); break;
+    case AXIS_Z: rotateTransform = ROTATING_MATRIX_Z_AXIS(angle); break;
+    default:; break;
+    }
+
+    activeModel->SetModelTransformation(toPlace * rotateTransform * toOrigin * currTransf);
+}
+
+void Scene::RotateModelRelativeToWorld(Model* activeModel, AXES axis, float angle)
+{
+    mat4x4 currTransf = activeModel->GetModelTransformation();
+
+    mat4x4 rotateTransform;
+
+    switch (axis)
+    {
+    case AXIS_X: rotateTransform = ROTATING_MATRIX_X_AXIS(angle); break;
+    case AXIS_Y: rotateTransform = ROTATING_MATRIX_Y_AXIS(angle); break;
+    case AXIS_Z: rotateTransform = ROTATING_MATRIX_Z_AXIS(angle); break;
+    default:; break;
+    }
+
+    activeModel->SetModelTransformation(rotateTransform * currTransf);
+}
+
+
+
+
+
+
+
+
+
 //////////////////// Camera ////////////////////////
 /*
 * Adds camera to vector of scene cameras.
@@ -131,7 +193,7 @@ void Scene::SetWorldTransformation(const mat4x4 world)
 * up – The upside(y) direction of the camera
 * returns: current index of added camera.
 */
-unsigned int Scene::AddCamera(const vec4& eye, const vec4& at, const vec4& up)
+unsigned int Scene::AddCamera(const vec3& eye, const vec3& at, const vec3& up)
 {
     auto* newCamera = new Camera(eye, at, up);
     m_cameras.push_back(newCamera);
@@ -249,11 +311,11 @@ void Scene::TranslateActiveCameraAxis(float value, AXES axis)
 
         //model update
         PModel p_cameraModel = p_activeCamera->getCameraModel();
-        p_cameraModel->SetModelTransformation(translateTransform * p_cameraModel->GetModelTransformation());
+        TranslateModel(p_cameraModel, axis, value);
     }
 }
 
-void Scene::RotateActiveCameraWorldAxis(float angle, AXES axis)
+void Scene::RotateActiveCameraRelativeToWorld(float angle, AXES axis)
 {
     if (m_activeCamera != DISABLED)
     {
@@ -272,11 +334,11 @@ void Scene::RotateActiveCameraWorldAxis(float angle, AXES axis)
         p_activeCamera->SetTransformation(inverse(rotateTransform * inverse(currTransf)));
 
         PModel p_cameraModel = p_activeCamera->getCameraModel();
-        p_cameraModel->SetModelTransformation(rotateTransform * p_cameraModel->GetModelTransformation());
+        RotateModelRelativeToWorld(p_cameraModel, axis, angle);
     }
 }
 
-void Scene::RotateActiveCameraAxis(float angle, AXES axis)
+void Scene::RotateActiveCamera(float angle, AXES axis)
 {
     if (m_activeCamera != DISABLED)
     {
@@ -299,18 +361,18 @@ void Scene::RotateActiveCameraAxis(float angle, AXES axis)
         p_activeCamera->SetTransformation(inverse(toPlace * rotateTransform * toOrigin * inverse(currTransf)));
 
         PModel p_cameraModel = p_activeCamera->getCameraModel();
-        p_cameraModel->SetModelTransformation(rotateTransform * p_cameraModel->GetModelTransformation());
+        RotateModel(p_cameraModel, axis, angle);
     }
 }
+
+
 //////////////////// Model ////////////////////////
-void Scene::TranslateActiveModelAxis(float value, AXES axis)
+void Scene::TranslateActiveModel(float value, AXES axis)
 {
     if (m_activeModel != DISABLED)
     {
         Model* activeModel = m_models[m_activeModel];
-        mat4x4 currTransf = activeModel->GetModelTransformation();
-        mat4x4 translateTransform(TRANSLATION_MATRIX(axis == AXIS_X ? value : 0, axis == AXIS_Y ? value : 0, axis == AXIS_Z ? value : 0));
-        activeModel->SetModelTransformation(translateTransform * currTransf);
+        TranslateModel(activeModel, axis, value);
     }
 }
 
@@ -319,32 +381,25 @@ void Scene::ScaleActiveModel(float value)
     if (m_activeModel != DISABLED)
     {
         Model* activeModel = m_models[m_activeModel];
-        mat4x4 currTransf = activeModel->GetModelTransformation();
-        mat4x4 scaleTransform(SCALING_MATRIX4(value));
-        activeModel->SetModelTransformation(scaleTransform * currTransf);
+        ScaleModel(activeModel, value);
     }
 }
 
-void Scene::RotateActiveModelAxis(float angle, AXES axis)
+void Scene::RotateActiveModel(float angle, AXES axis)
 {
     if (m_activeModel != DISABLED)
     {
         Model* activeModel = m_models[m_activeModel];
-        mat4x4 currTransf = activeModel->GetModelTransformation(); /* activeModel->GetWorldTransformation();*/
-        mat4x4 toOrigin (TRANSLATION_MATRIX(-currTransf[3][0], -currTransf[3][1], -currTransf[3][2]));
-        mat4x4 toPlace(TRANSLATION_MATRIX(currTransf[3][0], currTransf[3][1], currTransf[3][2]));
-        
-        mat4x4 rotateTransform;
+        RotateModel(activeModel, axis, angle);
+    }
+}
 
-        switch (axis)
-        {
-        case AXIS_X: rotateTransform = ROTATING_MATRIX_X_AXIS(angle); break;
-        case AXIS_Y: rotateTransform = ROTATING_MATRIX_Y_AXIS(angle); break;
-        case AXIS_Z: rotateTransform = ROTATING_MATRIX_Z_AXIS(angle); break;
-        default:; break;
-        }
-
-        activeModel->SetModelTransformation(toPlace * rotateTransform * toOrigin * currTransf);
+void Scene::RotateActiveModelRelativeToWorld(float angle, AXES axis)
+{
+    if (m_activeModel != DISABLED)
+    {
+        Model* activeModel = m_models[m_activeModel];
+        RotateModelRelativeToWorld(activeModel, axis, angle);
     }
 }
 
@@ -356,7 +411,6 @@ bool Scene::shouldRenderCamera(int cameraIndex)
     }
     else return false;
 }
-
 
 vec4 Scene::GetBgColor()
 {
@@ -387,6 +441,132 @@ void Scene::SetWireframeColor(const vec4& newWireframeColor)
 {
     m_wireframeColor = newWireframeColor;
 }
+
+
+
+
+
+int Scene::GetActiveLightIdx()
+{
+    return m_activeLight;
+}
+
+void Scene::SetActiveLightIdx(unsigned int lightIdx)
+{
+    if (m_lights.size() > lightIdx)
+    {
+        m_activeLight = lightIdx;
+    }
+}
+
+void Scene::NextLight()
+{
+    if (m_activeLight != DISABLED)
+    {
+        m_activeLight = (m_activeLight + 1) % m_lights.size();
+    }
+}
+
+void Scene::DeleteActiveLight()
+{
+    if (m_activeLight != DISABLED)
+    {
+        m_lights.erase(m_lights.begin() + m_activeLight);
+        m_activeLight = (unsigned)m_lights.size() - 1;
+    }
+}
+
+glm::mat4x4 Scene::GetActiveLightModelTransformation()
+{
+    if (m_activeLight != DISABLED)
+    {
+        Model* activeLightModel = m_lights[m_activeLight]->GetLightModel();
+        return activeLightModel->GetModelTransformation();
+    }
+    else
+    {
+        return ZERO_MATRIX;
+    }
+}
+
+void Scene::TranslateActiveLight(float value, AXES axis)
+{
+    if (m_activeLight != DISABLED)
+    {
+        Model* activeLightModel = m_lights[m_activeLight]->GetLightModel();
+        TranslateModel(activeLightModel, axis, value);
+    }
+}
+
+void Scene::ScaleActiveLightModel(float value)
+{
+    if (m_activeLight != DISABLED)
+    {
+        Model* activeLightModel = m_lights[m_activeLight]->GetLightModel();
+        ScaleModel(activeLightModel, value);
+    }
+}
+
+void Scene::RotateActiveLightModel(float angle, AXES axis)
+{
+    if (m_activeLight != DISABLED)
+    {
+        Model* activeLightModel = m_lights[m_activeLight]->GetLightModel();
+        RotateModel(activeLightModel, axis, angle);
+    }
+}
+
+void Scene::RotateActiveLightModelRelativeToWorld(float angle, AXES axis)
+{
+    if (m_activeLight != DISABLED)
+    {
+        Model* activeLightModel = m_lights[m_activeLight]->GetLightModel();
+        RotateModelRelativeToWorld(activeLightModel, axis, angle);
+    }
+}
+
+bool Scene::shouldRenderLight()
+{
+    if (m_activeLight != DISABLED)
+    {
+        return m_lights[m_activeLight]->GetLightModel()->isModelRenderingActive();
+    }
+    else return false;
+}
+
+int Scene::AddLight(LIGHT_SOURCE_TYPE lightType, float intencity, float *lightCoord, float *direction)
+{
+    Light* p_newLight = nullptr;
+
+    switch (lightType)
+    {
+    case LST_POINT:
+        p_newLight = new PointSourceLight(new LightMeshModel());
+        break;
+    case LST_PARALLEL:
+        p_newLight = new ParallelSourceLight(new LightMeshModel());
+        break;
+    case LST_AREA:
+        p_newLight = new DistributedSourceLight(new LightMeshModel());
+        break;
+
+    default:
+        break;
+    }
+
+    m_lights.push_back(p_newLight);
+    return (unsigned)m_lights.size() - 1;
+}
+
+
+Light* Scene::GetActiveLight()
+{
+    if (m_activeLight != DISABLED) {
+        return m_lights[m_activeLight];
+    }
+    else return NULL;
+}
+
 
 float Scene::GetvnScale()
 {
