@@ -572,17 +572,14 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             bool        bShowVertNorms = normals[0] > 0.1f ? true : false;
             bool        bShowFaceNorms = normals[1] > 0.1f ? true : false;
             static bool bShowBorderCube = false;
-            static bool bShowSolidColor = true;
 
             scene->showVerticesNormals(bShowVertNorms);
             scene->showFacesNormals(bShowFaceNorms);
             scene->showBorderCube(bShowBorderCube);
-            scene->showSolidColor(bShowSolidColor);
 
             ImGui::Checkbox("Show vertices normals", &bShowVertNorms);
             ImGui::Checkbox("Show face normals", &bShowFaceNorms);
             ImGui::Checkbox("Show Border Cube", &bShowBorderCube);
-            ImGui::Checkbox("Show Solid Color", &bShowSolidColor);
         }
 
         ImGui::End();
@@ -590,10 +587,10 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 
     if (lightingMenu)
     {
-        ImGui::Begin("Light");
+        ImGui::Begin("Lighting & Shading");
         ImGui::Text("-------------- Light: --------------");
 
-        static int currentLight = LT_AMBIENT;
+        static int currentLight = (int)LT_AMBIENT;
     
         static const char LightTypes[28] = { "Ambient\0Specular\0Diffusive\0" };
         ImGui::Combo("Light Source", &currentLight, LightTypes);
@@ -626,6 +623,21 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
                 scene->GetActiveLight()->GetLightModel()->setModelRenderingState(bShowLight);
             }
         }
+
+        ImGui::Text("-------------- Shading: --------------");
+
+        static bool bDrawWireframe = true;
+        if(ImGui::RadioButton("Show Wireframe", bDrawWireframe))
+        {
+            bDrawWireframe = bDrawWireframe ? false : true;
+            scene->DrawWireframe(bDrawWireframe);
+        }
+
+        static int currentShading = (int)ST_SOLID;
+        static const char ShadingTypes[26] = { "None\0Solid\0Phong\0Gouraud\0" };
+        ImGui::Combo("Shading Type", &currentShading, ShadingTypes);
+
+        scene->SetShadingType(static_cast<SHADING_TYPE>(currentShading));
 
         if (bLightControlFrame)
         {

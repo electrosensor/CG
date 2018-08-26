@@ -36,19 +36,17 @@ private:
 
 public:
 
-//     virtual glm::vec4 GouraudShading()     = 0;
-//     virtual glm::vec4 PhongShading()       = 0;
+
 // 
 //     virtual glm::vec4 DiffuseReflection(const glm::vec4& color) const  = 0;
 //     virtual glm::vec4 SpecularReflection(const glm::vec4& color) const = 0;
 
     Light(LightMeshModel* pLightModel) : m_pLightModel(pLightModel), m_intensity(1.f) {}
-    virtual ~Light()
-    {
-        delete m_pLightModel;
-    }
+    virtual ~Light() { }
   
     LightMeshModel*  GetLightModel() { return m_pLightModel; }
+
+    float GetIntencity() { return m_intensity; }
 
 };
 

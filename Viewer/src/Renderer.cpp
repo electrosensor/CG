@@ -65,24 +65,22 @@ void Renderer::Init()
 
 }
 
-void Renderer::DrawTriangles(const vector<Face>& vPolygons, bool bDrawFaceNormals /*= false*/, const vec3* modelCentroid /*= NULL*/, float normScaleRate /*= 1*/, bool bIsCamera /*= false*/)
+void Renderer::DrawTriangles(const std::vector<Face>& vertices, const glm::vec3* modelCentroid /*= nullptr*/, bool bDrawFaceNormals /*= false*/, float normScaleRate /*= 1*/)
 {
     
-    for (auto it = vPolygons.begin(); it != vPolygons.end(); it++)
+    for (auto it = vertices.begin(); it != vertices.end(); it++)
     {
         auto polygon = *it;
         auto pipedPolygon(processPipeline(polygon, FULL));
         auto viewPolygon(toViewPlane(pipedPolygon));
      
-        if (m_bSolidModel)
-        {
-            PolygonScanConversion(viewPolygon);
-        }
-        else
+        PolygonScanConversion(viewPolygon);
+
+        if (m_bDrawWireframe)
         {
             DrawPolygonLines(viewPolygon);
         }
-       
+
         if (bDrawFaceNormals)
         {
             drawFaceNormal(polygon, normScaleRate);
@@ -123,26 +121,51 @@ void Renderer::PolygonScanConversion(const Face& polygon)
     lowerLeft = { MIN3(polygon.m_p1.x, polygon.m_p2.x, polygon.m_p3.x),MIN3(polygon.m_p1.y, polygon.m_p2.y, polygon.m_p3.y) };
     float maxZ = MAX3(polygon.m_p1.z, polygon.m_p2.z, polygon.m_p3.z);
 
-    upperRight.x = upperRight.x > m_width  ? m_width  : upperRight.x;
+    upperRight.x = upperRight.x > m_width ? m_width : upperRight.x;
     upperRight.y = upperRight.y > m_height ? m_height : upperRight.y;
 
-    lowerLeft.x  = lowerLeft .x > m_width  ? m_width  : lowerLeft.x;
-    lowerLeft.y  = lowerLeft .y > m_height ? m_height : lowerLeft.y;
+    lowerLeft.x = lowerLeft.x > m_width ? m_width : lowerLeft.x;
+    lowerLeft.y = lowerLeft.y > m_height ? m_height : lowerLeft.y;
 
-
-    for (int x = lowerLeft.x ; x <= upperRight.x; x++)
+    switch (m_shadingType)
     {
-        for (int y = lowerLeft.y ; y <= upperRight.y; y++)
+    case ST_SOLID:
+    {
+        for (int x = lowerLeft.x; x <= upperRight.x; x++)
+        {
+            for (int y = lowerLeft.y; y <= upperRight.y; y++)
 
-            if (isPointInTriangle({ x,y }, { polygon.m_p1.x,polygon.m_p1.y }, { polygon.m_p2.x,polygon.m_p2.y }, { polygon.m_p3.x,polygon.m_p3.y }))
-            {
-                putPixel(x, y, maxZ, polygon.m_actualColor);
-            }
+                if (isPointInTriangle({ x,y }, { polygon.m_p1.x,polygon.m_p1.y }, { polygon.m_p2.x,polygon.m_p2.y }, { polygon.m_p3.x,polygon.m_p3.y }))
+                {
+                    putPixel(x, y, maxZ, m_polygonColor);
+                }
+        }
+    } break;
+    case ST_PHONG:
+        break;
+    case ST_GOURAUD:
+    {
+        for (int x = lowerLeft.x; x <= upperRight.x; x++)
+        {
+            for (int y = lowerLeft.y; y <= upperRight.y; y++)
+
+                if (isPointInTriangle({ x,y }, { polygon.m_p1.x,polygon.m_p1.y }, { polygon.m_p2.x,polygon.m_p2.y }, { polygon.m_p3.x,polygon.m_p3.y }))
+                {
+                    vec3 interpolatedColor = Barycentric({ x,y }, polygon.m_p1, polygon.m_p2, polygon.m_p3);
+                    vec4 actualColor = (
+                        interpolatedColor.x / 3 * polygon.m_actualColorP1 +
+                        interpolatedColor.y / 3 * polygon.m_actualColorP2 +
+                        interpolatedColor.z / 3 * polygon.m_actualColorP3
+                        );
+
+                    putPixel(x, y, maxZ, Util::toHomogeneousForm(actualColor));
+                }
+        }
+    } break;
+    default:
+        break;
     }
 
-    DrawLine(polygon.m_p1, polygon.m_p2, COLOR(LIME));
-    DrawLine(polygon.m_p2, polygon.m_p3, COLOR(LIME));
-    DrawLine(polygon.m_p3, polygon.m_p1, COLOR(LIME));
 }
 
 void Renderer::drawVerticesNormals(const vector<vec3>& vertices, const vector<vec3>& normals, float normScaleRate)
@@ -391,14 +414,24 @@ void Renderer::createBuffers(int w, int h)
     }
 }
 
-void Renderer::setWorldTransformation(mat4x4 worldTransformation)
+void Renderer::SetWorldTransformation(mat4x4 worldTransformation)
 {
     m_worldTransformation = worldTransformation;
 }
 
-void Renderer::setSolidColor(bool bShowSolidColor)
+// void Renderer::SetSolidColor(bool bShowSolidColor)
+// {
+//     m_bSolidModel = bShowSolidColor;
+// }
+
+void Renderer::SetShadingType(SHADING_TYPE shading)
 {
-    m_bSolidModel = bShowSolidColor;
+    m_shadingType = shading;
+}
+
+void Renderer::DrawWireframe(bool bDrawn)
+{
+    m_bDrawWireframe = bDrawn;
 }
 
 void Renderer::orderPoints(float& x1, float& x2, float& y1, float& y2, float& d1, float& d2)
@@ -418,7 +451,7 @@ void Renderer::orderPoints(float& x1, float& x2, float& y1, float& y2, float& d1
     }
 }
 
-void Renderer::drawAxis()
+void Renderer::DrawAxis()
 {
     vec3 axisX = m_worldTransformation[0];
     vec3 axisY = m_worldTransformation[1];

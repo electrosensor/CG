@@ -32,7 +32,10 @@ public:
     glm::vec3 m_p3;
     glm::vec3 m_normal;
     Surface* m_surface; 
-    glm::vec4 m_actualColor;
+    glm::vec4 m_actualColorP1;
+    glm::vec4 m_actualColorP2;
+    glm::vec4 m_actualColorP3;
+
 
     void Reflect(const Light& light) 
     {
@@ -42,7 +45,15 @@ public:
 
     Face() = default;
     Face(const Face&) = default;
-    Face(const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, const glm::vec3& normal, Surface* surf) : m_p1(p1), m_p2(p2), m_p3(p3), m_normal(normal), m_surface(surf) {}
+    Face(const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, const glm::vec3& normal, Surface* surf) : m_p1(p1), m_p2(p2), m_p3(p3), m_actualColorP1(COLOR(RED)), m_actualColorP2(COLOR(GREEN)), m_actualColorP3(COLOR(BLUE)), m_normal(normal), m_surface(surf) 
+    {
+//         if (m_surface)
+//         {
+//             m_actualColorP1 = surf->m_baseColor;
+//             m_actualColorP3 = surf->m_baseColor;
+//             m_actualColorP2 = surf->m_baseColor;
+//         }
+    }
     ~Face() = default;
 
 };

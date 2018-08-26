@@ -26,17 +26,18 @@ private:
     glm::vec4 m_wireframeColor;
     glm::vec4 m_bgColor;
 
+    bool m_bDrawWireframe;
     bool m_bDrawVecNormal;
     float m_vnScaleFactor;
     bool m_bDrawFaceNormal;
     float m_fnScaleFactor;
     bool m_bShowBorderCube;
-    bool m_bShowSolidColor;
 
+    SHADING_TYPE m_shading;
 
 public:
     Scene() = delete;
-    Scene(Renderer *renderer) : renderer(renderer), m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamera(DISABLED), m_bDrawVecNormal(false), m_vnScaleFactor(2.f), m_fnScaleFactor(2.f), m_bgColor(Util::getColor(YURI_BG)), m_polygonColor(Util::getColor(YURI_POLYGON)), m_wireframeColor(Util::getColor(YURI_WIRE))
+    Scene(Renderer *renderer) : renderer(renderer), m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamera(DISABLED), m_bDrawVecNormal(false), m_vnScaleFactor(2.f), m_fnScaleFactor(2.f), m_bgColor(Util::getColor(YURI_BG)), m_polygonColor(Util::getColor(YURI_POLYGON)), m_wireframeColor(Util::getColor(YURI_WIRE)), m_bDrawWireframe(true)
     {
         m_worldTransformation = I_MATRIX ;
         m_worldTransformation[3].w = 1;
@@ -124,7 +125,6 @@ public:
     void showFacesNormals(bool bDrawFaceNormal) { m_bDrawFaceNormal = bDrawFaceNormal; }
     void showVerticesNormals(bool bDrawVecNormal) { m_bDrawVecNormal = bDrawVecNormal; }
     void showBorderCube(bool bShowBorderCube) { m_bShowBorderCube = bShowBorderCube; }
-    void showSolidColor(bool bShowSolidColor) { m_bShowSolidColor = bShowSolidColor; }
 
     bool shouldRenderCamera(int cameraIndex);
     glm::vec4 GetBgColor();
@@ -158,4 +158,6 @@ public:
 
     Light* GetActiveLight();
 
+    void SetShadingType(SHADING_TYPE shading);
+    void DrawWireframe(bool bDrawn);
 };

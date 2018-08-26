@@ -68,7 +68,7 @@
 };
 
 
-typedef enum _AXES
+enum AXES
 {
     AXIS_X,
     AXIS_Y,
@@ -76,21 +76,29 @@ typedef enum _AXES
     AXIS_XY,
     AXIS_YZ,
     AXIS_ZX
-}AXES;
+};
 
-typedef enum _ROTATION_REL
+enum ROTATION_REL
 {
     RR_WORLD,
     RR_SELF
-}ROTATION_REL;
+};
 
-typedef enum _FRAME_TYPE
+enum FRAME_TYPE
 {
     FT_CAMERA,
     FT_MODEL,
     FT_WORLD,
     FT_LIGHT
-}FRAME_TYPE;
+};
+
+enum SHADING_TYPE
+{
+    ST_NO_SHADING,
+    ST_SOLID,
+    ST_PHONG,
+    ST_GOURAUD
+};
 
 enum LIGHT_TYPE
 {
@@ -130,22 +138,22 @@ enum LIGHT_SOURCE_TYPE
                                          float zFar     = perspParams.zFar;   \
 
 
-typedef enum _RETURN_CODE
+enum RETURN_CODE
 {
     RC_SUCCESS = 0,
     RC_FAILURE,
     RC_UNDEFINED,
     RC_IO_ERROR
 
-}RETURN_CODE;
+};
 
-typedef enum _PRIM_MODEL
+enum PRIM_MODEL
 {
     PM_SPHERE = 0,
     PM_CUBE,
     PRV_CAMERA
 
-}PRIM_MODEL;
+};
 
 typedef struct _PROJ_PARAMS
 {

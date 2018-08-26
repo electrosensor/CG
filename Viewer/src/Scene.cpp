@@ -36,6 +36,7 @@ void Scene::Draw()
         activeCamera = m_cameras.front();
         m_activeCamera++;
     }
+    renderer->SetWorldTransformation(m_worldTransformation);
 
     renderer->SetCameraTransform(activeCamera->GetTransformation());
     renderer->setProjectionParams(activeCamera->getProjectionParams());
@@ -44,10 +45,10 @@ void Scene::Draw()
     renderer->SetBgColor(m_bgColor);
     renderer->SetPolygonColor(m_polygonColor);
     renderer->SetWireframeColor(m_wireframeColor);
-    renderer->setSolidColor(m_bShowSolidColor);
-    renderer->drawAxis();
+    renderer->SetShadingType(m_shading);
+    renderer->DrawWireframe(m_bDrawWireframe);
+    renderer->DrawAxis();
 
-    renderer->setWorldTransformation(m_worldTransformation);
 
     for each(Light* light in m_lights)
     {
@@ -81,7 +82,7 @@ void Scene::Draw()
         tie(vPolygons, vVertices, vVerticesNormals) = modelData;
 
         renderer->SetObjectMatrices(model->GetModelTransformation(), model->GetNormalTransformation());
-        renderer->DrawTriangles(vPolygons, m_bDrawFaceNormal, &model->getCentroid(), m_fnScaleFactor);
+        renderer->DrawTriangles(vPolygons, &model->getCentroid(), m_bDrawFaceNormal, m_fnScaleFactor);
         if (m_bDrawVecNormal && !vVerticesNormals.empty())
         {
             renderer->drawVerticesNormals(vVertices , vVerticesNormals, m_vnScaleFactor);
@@ -102,7 +103,7 @@ void Scene::Draw()
             mat4x4 cameraModelTransformation = camModel->GetModelTransformation();
             renderer->SetObjectMatrices(cameraModelTransformation, mat4x4(I_MATRIX));
             camModel->Draw(camModelData);
-            renderer->DrawTriangles(get<TUPLE_POLYGONS>(camModelData), FALSE, NULL, 1, IS_CAMERA);
+            renderer->DrawTriangles(get<TUPLE_POLYGONS>(camModelData));
         }
     }
 
@@ -567,6 +568,16 @@ Light* Scene::GetActiveLight()
     else return NULL;
 }
 
+
+void Scene::SetShadingType(SHADING_TYPE shading)
+{
+    m_shading = shading;
+}
+
+void Scene::DrawWireframe(bool bDrawn)
+{
+    m_bDrawWireframe = bDrawn;
+}
 
 float Scene::GetvnScale()
 {

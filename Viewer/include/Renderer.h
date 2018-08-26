@@ -44,6 +44,7 @@ private:
 
     PROJ_PARAMS m_projParams;
 
+    bool m_bDrawWireframe;
     glm::vec4 m_bgColor;
     glm::vec4 m_polygonColor;
     glm::vec4 m_wireframeColor;
@@ -51,7 +52,8 @@ private:
     glm::vec3 m_minCoords;
     glm::vec3 m_maxCoords;
 
-    bool m_bSolidModel;
+//     bool m_bSolidModel;
+    SHADING_TYPE m_shadingType;
 
     glm::vec3 toViewPlane(const glm::vec3& point);
     Face toViewPlane(Face polygon);
@@ -76,9 +78,7 @@ public:
     void PolygonScanConversion(const Face& polygon);
     void drawVerticesNormals(const std::vector<glm::vec3>& vertices, const std::vector<glm::vec3>& normals, float normScaleRate);
     // Draws wireframe triangles to the color buffer
-    void DrawTriangles(const std::vector<Face>& vertices, bool bDrawFaceNormals = false, const glm::vec3* modelCentroid = nullptr, float normScaleRate = 1, bool bIsCamera = false);
-
-
+    void DrawTriangles(const std::vector<Face>& vertices, const glm::vec3* modelCentroid = nullptr, bool bDrawFaceNormals = false, float normScaleRate = 1);
 
     void DrawPolygonLines(const Face& polygon);
 
@@ -124,12 +124,14 @@ public:
     // Clears the z buffer to zero.
     void ClearDepthBuffer();
 
-    void setWorldTransformation(glm::mat4x4 m_worldTransformation);
-    void setSolidColor(bool m_bShowSolidColor);
+    void SetWorldTransformation(glm::mat4x4 m_worldTransformation);
+    void SetShadingType(SHADING_TYPE shading);
+    void DrawWireframe(bool bDrawn);
+
 private:
     void orderPoints(float& x1, float& x2, float& y1, float& y2, float& d1, float& d2);
     bool isSlopeBiggerThanOne(float x1, float x2, float y1, float y2) { return (std::fabs(y2 - y1) > std::fabs(x2 - x1)); }
 public:
-    void drawAxis();
+    void DrawAxis();
     void drawModelAxis();
 };
