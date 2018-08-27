@@ -39,6 +39,8 @@ private:
     int                  m_bBlurY;
     float                m_sigma;
     float m_bloomIntensity;
+    glm::vec4 m_bloomThreshold;
+    float m_bloomThresh;
 public:
     Scene() = delete;
     Scene(Renderer *renderer) : renderer(renderer), m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamera(DISABLED), m_bDrawVecNormal(false), m_vnScaleFactor(2.f), m_fnScaleFactor(2.f), m_bgColor(COLOR(YURI_BG)), m_polygonColor(COLOR(YURI_POLYGON)), m_wireframeColor(COLOR(YURI_WIRE)), m_bDrawWireframe(true), m_bBlurX(1), m_bBlurY(1), m_sigma(1.f), m_ePostEffect(NONE)
@@ -164,11 +166,13 @@ public:
         const glm::vec4& diffusiveC, float diffusiveI, 
         const glm::vec4& specularC, float specularI);
 
+    int AddLight(LIGHTS_INFO lightInfo);
+
     Light* GetActiveLight();
 
     void SetShadingType(SHADING_TYPE shading);
     void DrawWireframe(bool bDrawn);
-    void configPostEffect(POST_EFFECT postEffect, int blurX, int blurY, float sigma, float bloomIntensity, float bloomThreshold);
+    void configPostEffect(POST_EFFECT postEffect, int blurX, int blurY, float sigma, float bloomIntensity, glm::vec4 bloomThreshold, float bloomThresh);
 private:
     bool m_bBloomActive;
     POST_EFFECT m_ePostEffect;

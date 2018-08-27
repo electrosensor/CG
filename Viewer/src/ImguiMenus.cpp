@@ -723,11 +723,11 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
        
         vec4 currentPolygonCol = scene->GetPolygonColor();
         static float ambientColor[3] = { 1 ,1 ,1 };
-        static float ambiantIntensity = 0.1f;
+        static float ambientIntensity = 0.1f;
         ImGui::Text("Ambient Color");
         ImGui::ColorEdit3("AC", ambientColor);
         ImGui::Text("Ambient Intensity");
-        ImGui::SliderFloat("AI: ", &ambiantIntensity, 0, 2);
+        ImGui::SliderFloat("AI: ", &ambientIntensity, 0, 2);
 
         static float diffusiveColor[3] = { 1 ,1 ,1 };
         static float diffusiveIntensity = 0.3f;
@@ -749,11 +749,20 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 
         if (ImGui::Button("Add new light"))
         {
-            int idx = scene->AddLight(
-                static_cast<LIGHT_SOURCE_TYPE>(currentLight), { lightCoord[0], lightCoord[1], lightCoord[2] },
-                { ambientColor[0], ambientColor[1], ambientColor[2], 1 }, ambiantIntensity,
-                { diffusiveColor[0], diffusiveColor[1], diffusiveColor[2], 1 }, diffusiveIntensity,
-                { specularColor[0], specularColor[1], specularColor[2], 1 }, specularIntensity );
+            LIGHTS_INFO lightsInfo;
+            lightsInfo.lightSourceType     = static_cast<LIGHT_SOURCE_TYPE>(currentLight);
+            lightsInfo.location            = { lightCoord[0], lightCoord[1], lightCoord[2] };
+            
+            lightsInfo.ambient.color       = { ambientColor[0]  , ambientColor[1]  , ambientColor[2]  , 1 };
+            lightsInfo.ambient.intensity   = ambientIntensity;
+
+            lightsInfo.specular.color      = { specularColor[0] , specularColor[1] , specularColor[2] , 1 };
+            lightsInfo.specular.intensity  = specularIntensity;
+
+            lightsInfo.diffusive.color     = { diffusiveColor[0], diffusiveColor[1], diffusiveColor[2], 1 };
+            lightsInfo.diffusive.intensity = diffusiveIntensity;
+
+            int idx = scene->AddLight(lightsInfo);
 
             scene->SetActiveLightIdx(idx);
             bLightControlFrame = true;
@@ -849,6 +858,8 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         static float       sigma          = 1.0f;
         static float       bloomIntensity = 1.0f;
         static float       bloomThreshold = 1.0f;
+//         static glm::vec3 bloomIntensity3 = { 1.f,1.f,1.f};
+        static glm::vec4 bloomIntensity4 = { 1.f,1.f,1.f, 1.f };
 
 
         static const char Steps[] = { "One\0Three\0Five\0Seven\0Nine\0Eleven\0Thirteen\0Fifteen\0" };
@@ -858,9 +869,14 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         blurXFinal = 2 * blurX + 1;
         blurYFinal = 2 * blurY + 1;
         
+
+        static float bloomThresh[3] = { 1.f,1.f,1.f };
+
+
         ImGui::SliderFloat("Blur Intensity", &sigma, 0.125f, 5.f,"%.3f",2.5f);
         ImGui::SliderFloat("Bloom Intensity", &bloomIntensity, 0.f, 4.f);
         ImGui::SliderFloat("Bloom Threshold", &bloomThreshold, 0.1f, 1.0f);
+        ImGui::ColorEdit3("Bloom Intensity", bloomThresh);
 
         static const char postEffectNames[] = { "None\0Blur\0Bloom\0" };
 
@@ -871,8 +887,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             swap(blurX, blurY);
         }
 
-        scene->configPostEffect(postEffect, postEffect != NONE ? blurXFinal : 1, postEffect != NONE ? blurYFinal : 1, sigma, bloomIntensity, bloomThreshold);
-        
+        scene->configPostEffect(postEffect, postEffect != NONE ? blurXFinal : 1, postEffect != NONE ? blurYFinal : 1, sigma, bloomIntensity, {bloomThresh[0],bloomThresh[1],bloomThresh[2] , 1.f }, bloomThreshold);        
 
         ImGui::End();
     }

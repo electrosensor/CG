@@ -9,14 +9,14 @@ class Model
 {
 public:
 	virtual ~Model() {}
-    virtual const   glm::mat4x4& GetModelTransformation()                                                              = 0;
-    virtual const   glm::mat4x4& GetWorldTransformation()                                                              = 0;
-    virtual const   glm::mat4x4& GetNormalTransformation()                                                             = 0;
-    virtual void    SetModelTransformation(glm::mat4x4& transformation)                                                = 0;
-	virtual void    SetWorldTransformation(glm::mat4x4& transformation)                                                = 0;
-	virtual void    SetNormalTransformation(glm::mat4x4& transformation)                                               = 0;
-	virtual void    Draw(std::tuple<std::vector<Face> , std::vector<glm::vec3> , std::vector<glm::vec3> >& modelData) = 0;
-    virtual glm::vec3 getCentroid() = 0;
+    virtual const     glm::mat4x4& GetModelTransformation()                                                              = 0;
+    virtual const     glm::mat4x4& GetWorldTransformation()                                                              = 0;
+    virtual const     glm::mat4x4& GetNormalTransformation()                                                             = 0;
+    virtual void      SetModelTransformation(glm::mat4x4& transformation)                                                = 0;
+	virtual void      SetWorldTransformation(glm::mat4x4& transformation)                                                = 0;
+	virtual void      SetNormalTransformation(glm::mat4x4& transformation)                                               = 0;
+	virtual void      Draw(std::tuple<std::vector<Face> , std::vector<glm::vec3> , std::vector<glm::vec3> >& modelData)  = 0;
+    virtual glm::vec3 getCentroid()                                                                                      = 0;
 
     bool isModelRenderingActive()                               { return m_bShouldRender; }
     void setModelRenderingState(bool bIsRenderingStateActive)   { m_bShouldRender = bIsRenderingStateActive; }
@@ -35,16 +35,16 @@ protected:
     {
         INIT_CUBE_COORDS(m_maxCoords, m_minCoords);
                                                                 
-        glm::vec3    RBN = {   cRight  ,  cBottom  ,  cNear   };  //            _________________________RTF=m_maxCoords(x,y,z)
-        glm::vec3    RBF = {   cRight  ,  cBottom  ,  cFar    };  //           /LTF___________________  /|
-        glm::vec3    LBF = {   cLeft   ,  cBottom  ,  cFar    };  //          / / ___________________/ / |
-        glm::vec3    LBN = {   cLeft   ,  cBottom  ,  cNear   };  //         / / /| |               / /  |
-        glm::vec3    RTN = {   cRight  ,  cTop     ,  cNear   };  //        / / / | |              / / . |
-        glm::vec3    RTF = {   cRight  ,  cTop     ,  cFar    };  //       / / /| | |             / / /| |
-        glm::vec3    LTF = {   cLeft   ,  cTop     ,  cFar    };  //      / / / | | |            / / / | |
-        glm::vec3    LTN = {   cLeft   ,  cTop     ,  cNear   };  //     / / /  | | |           / / /| | |
+        glm::vec3       RBN = { cRight  ,  cBottom  ,  cNear  };  //            _________________________RTF=m_maxCoords(x,y,z)
+        glm::vec3       RBF = { cRight  ,  cBottom  ,  cFar   };  //           /LTF___________________  /|
+        glm::vec3       LBF = { cLeft   ,  cBottom  ,  cFar   };  //          / / ___________________/ / |
+        glm::vec3       LBN = { cLeft   ,  cBottom  ,  cNear  };  //         / / /| |               / /  |
+        glm::vec3       RTN = { cRight  ,  cTop     ,  cNear  };  //        / / / | |              / / . |
+        glm::vec3       RTF = { cRight  ,  cTop     ,  cFar   };  //       / / /| | |             / / /| |
+        glm::vec3       LTF = { cLeft   ,  cTop     ,  cFar   };  //      / / / | | |            / / / | |
+        glm::vec3       LTN = { cLeft   ,  cTop     ,  cNear  };  //     / / /  | | |           / / /| | |
                                                                   //    / /_/__________________/ / / | | |
-                                                                  //   /LTN___________________ _/ /  | | |
+                                                                  //   /LTN_____________________/ /  | | |
         cubeLines.lines[0 ] = {      RBN      ,      RBF      };  //   | ____________________RTN| |  | | |
         cubeLines.lines[1 ] = {      RBN      ,      LBN      };  //   | | |    | | |_________| | |__| | |
         cubeLines.lines[2 ] = {      RBN      ,      RTN      };  //   | | |    | |___________| | |____| |

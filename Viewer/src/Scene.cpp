@@ -6,6 +6,7 @@ using namespace glm;
 
 #define IS_CAMERA true
 
+
 void Scene::LoadOBJModel(std::string fileName, const Surface& material)
 {
     auto* model = new MeshModel(fileName, material);
@@ -578,6 +579,47 @@ int Scene::AddLight(LIGHT_SOURCE_TYPE type, const glm::vec3& lightCoord, const g
     return (unsigned)m_lights.size() - 1;
 }
 
+int Scene::AddLight(LIGHTS_INFO lightsInfo)
+{
+    Light* p_newLight = nullptr;
+
+    switch (lightsInfo.lightSourceType)
+    {
+    case LST_POINT:
+        p_newLight = new PointSourceLight(   lightsInfo.location, 
+                                             lightsInfo.ambient.color,
+                                             lightsInfo.ambient.intensity,
+                                             lightsInfo.diffusive.color,
+                                             lightsInfo.diffusive.intensity,
+                                             lightsInfo.specular.color,
+                                             lightsInfo.specular.intensity);
+        break;
+    case LST_PARALLEL:
+        p_newLight = new ParallelSourceLight(lightsInfo.location,
+                                             lightsInfo.ambient.color,
+                                             lightsInfo.ambient.intensity,
+                                             lightsInfo.diffusive.color,
+                                             lightsInfo.diffusive.intensity,
+                                             lightsInfo.specular.color,
+                                             lightsInfo.specular.intensity);
+        break;
+    case LST_AREA:
+        p_newLight = new DistributedSourceLight(lightsInfo.location,
+                                                lightsInfo.ambient.color,
+                                                lightsInfo.ambient.intensity,
+                                                lightsInfo.diffusive.color,
+                                                lightsInfo.diffusive.intensity,
+                                                lightsInfo.specular.color,
+                                                lightsInfo.specular.intensity);
+        break;
+
+    default:
+        break;
+    }
+
+    m_lights.push_back(p_newLight);
+    return (unsigned)m_lights.size() - 1;
+}
 
 Light* Scene::GetActiveLight()
 {
@@ -598,16 +640,18 @@ void Scene::DrawWireframe(bool bDrawn)
     m_bDrawWireframe = bDrawn;
 }
 
-void Scene::configPostEffect(POST_EFFECT postEffect, int blurX, int blurY, float sigma, float bloomIntensity, float bloomThreshold)
+void Scene::configPostEffect(POST_EFFECT postEffect, int blurX, int blurY, float sigma, float bloomIntensity, glm::vec4 bloomThreshold, float bloomThresh)
 {
-    if (postEffect != m_ePostEffect || blurX != m_bBlurX || blurY != m_bBlurY || sigma != m_sigma || bloomIntensity != m_bloomIntensity)
+    if (postEffect != m_ePostEffect || blurX != m_bBlurX || blurY != m_bBlurY || sigma != m_sigma || bloomIntensity != m_bloomIntensity || bloomThresh != m_bloomThresh || !memcmp(&bloomThreshold,&m_bloomThreshold,sizeof(glm::vec4)))
     {
-        m_bBlurX = blurX;
-        m_bBlurY = blurY;
-        m_sigma = sigma;
-        m_ePostEffect = postEffect;
+        m_bBlurX         = blurX;
+        m_bBlurY         = blurY;
+        m_sigma          = sigma;
+        m_ePostEffect    = postEffect;
         m_bloomIntensity = bloomIntensity;
-        renderer->configPostEffect(m_ePostEffect, m_bBlurX, m_bBlurY, m_sigma, m_bloomIntensity, bloomThreshold);
+        m_bloomThreshold = bloomThreshold;
+        m_bloomThresh    = bloomThresh;
+        renderer->configPostEffect(m_ePostEffect, m_bBlurX, m_bBlurY, m_sigma, m_bloomIntensity, m_bloomThreshold, m_bloomThresh);
     }
     
 }

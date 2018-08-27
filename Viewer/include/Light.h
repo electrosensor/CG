@@ -26,6 +26,25 @@
  * Light class. Holds light source information and data.
  */
 
+typedef struct _LIGHT_DATA
+{
+    float     intensity;
+    glm::vec4 color;
+
+
+}LIGHT_DATA, *PLIGHT_DATA;
+
+typedef struct _LIGHTS_INFO
+{
+    LIGHT_DATA diffusive;
+    LIGHT_DATA specular;
+    LIGHT_DATA ambient;
+
+    glm::vec3 location;
+    LIGHT_SOURCE_TYPE lightSourceType;
+
+}LIGHTS_INFO, *PLIGHTS_INFO;
+
 
 class Light
 {
@@ -59,9 +78,9 @@ public:
 
     LightMeshModel&  GetLightModel() { return *m_pLightModel; }
 
-    void SetAmbientIntensity(float intensity)   { m_ambientLightIntensity   = intensity; }
-    void SetDiffusiveIntensity(float intensity) { m_diffusiveLightIntensity = intensity; }
-    void SetSpecularIntensity(float intensity)  { m_specularLightIntensity  = intensity; }
+    void SetAmbientIntensity(float   intensity)   { m_ambientLightIntensity   = intensity; }
+    void SetDiffusiveIntensity(float intensity)   { m_diffusiveLightIntensity = intensity; }
+    void SetSpecularIntensity(float  intensity)   { m_specularLightIntensity  = intensity; }
 
     float GetAmbientIntensity()   { return m_ambientLightIntensity;   }
     float GetDiffusiveIntensity() { return m_diffusiveLightIntensity; }
@@ -69,7 +88,7 @@ public:
 
     void SetAmbientColor(const glm::vec4& color)    { m_ambientLightColor   = color; }
     void SetDiffusiveColor(const glm::vec4& color)  { m_diffusiveLightColor = color; }
-    void SetSpecularColor(const glm::vec4& color)  { m_specularLightColor   = color; }
+    void SetSpecularColor(const glm::vec4& color)   { m_specularLightColor  = color; }
 
     glm::vec4 GetAmbientColor()   { return m_ambientLightColor; }
     glm::vec4 GetDiffusiveColor() { return m_diffusiveLightColor; }
@@ -92,8 +111,7 @@ public:
         glm::vec4 speculativeC = polygon.m_surface->m_specularColor + m_specularLightColor;
 
         glm::vec3 centroid = GetLightModel().getCentroid();
-        polygon.m_diffusiveColorAndSource.push_back({ { diffusiveI, diffusiveC }, { centroid , lightModelTransf }
-    });
+        polygon.m_diffusiveColorAndSource.push_back({ { diffusiveI, diffusiveC }, { centroid , lightModelTransf } });
         polygon.m_speculativeColorAndSource.push_back({ {speculativeI, speculativeC}, { centroid, lightModelTransf } });
     }
 };

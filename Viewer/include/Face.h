@@ -62,6 +62,7 @@ public:
     glm::vec3 m_vn2;
     glm::vec3 m_vn3;
 
+    
 
     std::vector < std::pair<std::pair<float, glm::vec4>, std::pair<glm::vec3, glm::mat4x4>>> m_diffusiveColorAndSource;
     std::vector < std::pair<std::pair<float, glm::vec4>, std::pair<glm::vec3, glm::mat4x4>>> m_speculativeColorAndSource

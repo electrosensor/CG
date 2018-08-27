@@ -28,7 +28,7 @@ private:
 
 
     // Draws a pixel in location p with color color
-    void putPixel(int i, int j, float d, const glm::vec4& color );
+    void putPixel(int i, int j, float d, const glm::vec4& color, Face* face = nullptr );
     void putPixel(int x, int y, bool steep, float d, const glm::vec4& color);
     bool putZ(int x, int y, float d);
     // creates float array of dimension [3,w,h]
@@ -42,48 +42,48 @@ private:
     void initOpenGLRendering();
     //##############################
 
-    glm::mat4x4 m_worldTransformation;
-    glm::mat4x4 m_cameraTransform;
-    glm::mat4x4 m_cameraProjection;
-    glm::mat4x4 m_objectTransform;
-    glm::mat4x4 m_normalTransform;
+    glm::mat4x4       m_worldTransformation;
+    glm::mat4x4       m_cameraTransform;
+    glm::mat4x4       m_cameraProjection;
+    glm::mat4x4       m_objectTransform;
+    glm::mat4x4       m_normalTransform;
 
-    PROJ_PARAMS m_projParams;
+    PROJ_PARAMS       m_projParams;
 
-    bool m_bDrawWireframe;
-    glm::vec4 m_bgColor;
-    glm::vec4 m_polygonColor;
-    glm::vec4 m_wireframeColor;
+    bool              m_bDrawWireframe;
+    glm::vec4         m_bgColor;
+    glm::vec4         m_polygonColor;
+    glm::vec4         m_wireframeColor;
 
-    glm::vec3 m_minCoords;
-    glm::vec3 m_maxCoords;
+    glm::vec3         m_minCoords;
+    glm::vec3         m_maxCoords;
 
-//     bool m_bSolidModel;
-    SHADING_TYPE m_shadingType;
+    SHADING_TYPE      m_shadingType;
     GENERATED_TEXTURE m_generatedTexture;
 
     glm::vec3 toViewPlane(const glm::vec3& point);
-    Face toViewPlane(Face polygon);
+    Face      toViewPlane(Face polygon);
     glm::vec3 Barycentric(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c);
-    BOOL isPointInTriangle(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c);
-    void getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, IN float d1, IN float d2, OUT float* pDx, OUT float* pDy, OUT float* pDd);
-    void getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, OUT float* pDx, OUT float* pDy);
-    void yStepErrorUpdate(float dx, float dy, float& error, int& y, const int& ystep);
-    void ProjectPolygon(Face& polygon);
-    void orderPoints(float& x1, float& x2, float& y1, float& y2, float& d1, float& d2);
-    bool isSlopeBiggerThanOne(float x1, float x2, float y1, float y2) { return (std::fabs(y2 - y1) > std::fabs(x2 - x1)); }
+    BOOL      isPointInTriangle(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c);
+    void      getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, IN float d1, IN float d2, OUT float* pDx, OUT float* pDy, OUT float* pDd);
+    void      getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, OUT float* pDx, OUT float* pDy);
+    void      yStepErrorUpdate(float dx, float dy, float& error, int& y, const int& ystep);
+    void      ProjectPolygon(Face& polygon);
+    void      orderPoints(float& x1, float& x2, float& y1, float& y2, float& d1, float& d2);
+    bool      isSlopeBiggerThanOne(float x1, float x2, float y1, float y2) { return (std::fabs(y2 - y1) > std::fabs(x2 - x1)); }
 
-    float m_faceNormScaleFactor;
-    bool m_bDrawFaceNormals;
-    float m_sigma;
-    bool m_bBloomActive;
+    float       m_faceNormScaleFactor;
+    bool        m_bDrawFaceNormals;
+    float       m_sigma;
+    bool        m_bBloomActive;
     POST_EFFECT m_ePostEffect;
-    float m_bloomIntensity;
-    float * pDispBuffer;
+    float       m_bloomIntensity;
+    float       * pDispBuffer;
 
-    int m_blurX;
-    int m_blurY;
-    float m_bloomThreshold;
+    int         m_blurX;
+    int         m_blurY;
+    glm::vec4       m_bloomThreshold;
+    float m_bloomThresh;
 public:
     Renderer();
     Renderer(int w, int h);
@@ -151,13 +151,14 @@ public:
     void DrawWireframe(bool bDrawn);
 
     void applyPostEffect(int kernelSizeX, int kernelSizeY, float sigma, POST_EFFECT postEffect = NONE);
+    float colorTruncate(float color);
     void makeKernel(float gaussianKernel[][29], int kernelSizeX, int kernelSizeY, float sigma);
-    void configPostEffect(POST_EFFECT postEffect, int blurX, int blurY, float sigma, float bloomIntensity, float bloomThreshold);
+    void configPostEffect(POST_EFFECT postEffect, int blurX, int blurY, float sigma, float bloomIntensity, glm::vec4 bloomThreshold, float bloomThresh);
     void DrawFaceNormal(bool bDrawn);
     void SetFaceNormScaleFactor(float scaleFactor);
 private:
-    void orderPoints(float& x1, float& x2, float& y1, float& y2, float& d1, float& d2);
-    bool isSlopeBiggerThanOne(float x1, float x2, float y1, float y2) { return (std::fabs(y2 - y1) > std::fabs(x2 - x1)); }
+//     void orderPoints(float& x1, float& x2, float& y1, float& y2, float& d1, float& d2);
+//     bool isSlopeBiggerThanOne(float x1, float x2, float y1, float y2) { return (std::fabs(y2 - y1) > std::fabs(x2 - x1)); }
     bool m_bBlurActive = false;
 public:
     void DrawAxis();

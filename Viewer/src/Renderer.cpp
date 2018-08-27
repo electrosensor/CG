@@ -188,7 +188,7 @@ void Renderer::DrawFaceNormal(Face& face)
     normalizedFaceNormal.z *= m_faceNormScaleFactor;
 
     auto nP1 = processPipeline(faceCenter);
-//    auto nP2 = processPipeline(faceCenter + normalizedFaceNormal);
+    auto nP2 = processPipeline(faceCenter + normalizedFaceNormal);
     if (m_bDrawFaceNormals)
     {
         DrawLine(toViewPlane(nP1), toViewPlane(nP2), COLOR(LIME));
@@ -200,8 +200,8 @@ void Renderer::PolygonScanConversion(Face& polygon)
 {
 
     ivec2 upperRight, lowerLeft;
-    upperRight = { MAX3(polygon.m_p1.x, polygon.m_p2.x, polygon.m_p3.x),MAX3(polygon.m_p1.y, polygon.m_p2.y, polygon.m_p3.y) };
-    lowerLeft = { MIN3(polygon.m_p1.x, polygon.m_p2.x, polygon.m_p3.x),MIN3(polygon.m_p1.y, polygon.m_p2.y, polygon.m_p3.y) };
+    upperRight = { MAX3(polygon.m_p1.x, polygon.m_p2.x, polygon.m_p3.x), MAX3(polygon.m_p1.y, polygon.m_p2.y, polygon.m_p3.y) };
+    lowerLeft  = { MIN3(polygon.m_p1.x, polygon.m_p2.x, polygon.m_p3.x), MIN3(polygon.m_p1.y, polygon.m_p2.y, polygon.m_p3.y) };
     float maxZ = MAX3(polygon.m_p1.z, polygon.m_p2.z, polygon.m_p3.z);
 
     upperRight.x = upperRight.x > m_width  ? m_width  : upperRight.x;
@@ -255,7 +255,7 @@ void Renderer::PolygonScanConversion(Face& polygon)
                     } break;
                 }
 
-                putPixel(x, y, maxZ, actualColor);
+                putPixel(x, y, maxZ, actualColor, &polygon);
             }
         }
     }
@@ -372,7 +372,7 @@ void Renderer::SetObjectMatrices(const mat4x4 & oTransform, const mat4x4 & nTran
 }
 
 
-void Renderer::putPixel(int i, int j, float d, const vec4& color)
+void Renderer::putPixel(int i, int j, float d, const vec4& color, Face* face)
 {
     if (i < 0) return; if (i >= m_width) return;
     if (j < 0) return; if (j >= m_height) return;
@@ -381,16 +381,23 @@ void Renderer::putPixel(int i, int j, float d, const vec4& color)
         colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 0)] = color.x;
         colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 1)] = color.y;
         colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 2)] = color.z;
-        vec3 color3Vec = { color.x,color.y,color.z };
-        float dotIntensity = sqrt(color.x*color.x / 3 + color.y*color.y / 3 + color.z*color.z / 3);
-        if (dotIntensity > m_bloomThreshold)
+        
+        if (face)
         {
-            bloomBuffer[COLOR_BUF_INDEX(m_width, i, j, 0)] = color.x;
-            bloomBuffer[COLOR_BUF_INDEX(m_width, i, j, 1)] = color.y;
-            bloomBuffer[COLOR_BUF_INDEX(m_width, i, j, 2)] = color.z;
+            float brightness = glm::dot({ color.x,color.y,color.z }, vec3(m_bloomThreshold.x, m_bloomThreshold.y, m_bloomThreshold.z));
+
+//             float dotIntensity = sqrt(color.x*color.x / 3 + color.y*color.y / 3 + color.z*color.z / 3);
+            if (brightness > m_bloomThresh)
+            {
+                vec3 color3Vec = { color.x,color.y,color.z };
+                bloomBuffer[COLOR_BUF_INDEX(m_width, i, j, 0)] = color.x;
+                bloomBuffer[COLOR_BUF_INDEX(m_width, i, j, 1)] = color.y;
+                bloomBuffer[COLOR_BUF_INDEX(m_width, i, j, 2)] = color.z;
+            }
         }
-    }
-    else if(color.x == 0 && color.y == 0 && color.z ==0 && zBuffer[Z_BUF_INDEX(m_width, i, j)] == numeric_limits<float>::lowest())
+        }
+
+    else if(color.x == 0 && color.y == 0 && color.z == 0 && zBuffer[Z_BUF_INDEX(m_width, i, j)] == numeric_limits<float>::lowest())
     {
 //        printf("i = %d, j = %d, d = %f\n");
     }
@@ -457,41 +464,18 @@ void Renderer::putPixel(int x, int y, bool steep, float d, const vec4& color)
 void Renderer::createBuffers(int w, int h)
 {
     createOpenGLBuffer(); //Do not remove this line.
-    colorBuffer   = new float[3 * w*h];
-    blurredBuffer = new float[3 * w*h];
-    bloomBuffer   = new float[3 * w*h];
-    bloomDestBuff = new float[3 * w*h];
-    zBuffer       = new float[1 * w*h];
+    colorBuffer   = new float[3 * w * h];
+    blurredBuffer = new float[3 * w * h];
+    bloomBuffer   = new float[3 * w * h];
+    bloomDestBuff = new float[3 * w * h];
+    zBuffer       = new float[1 * w * h];
 
-    memset(colorBuffer, 0.f, 3 * w*h);
-    memset(blurredBuffer, 0.f, 3 * w*h);
-    memset(bloomBuffer, 0.f, 3 * w*h);
-    memset(bloomDestBuff, 0.f, 3 * w*h);
-    memset(zBuffer, -std::numeric_limits<float>::infinity(), w*h);
+    memset(colorBuffer  ,                  0.f                   , sizeof(float) * 3 * w * h);
+    memset(blurredBuffer,                  0.f                   , sizeof(float) * 3 * w * h);
+    memset(bloomBuffer  ,                  0.f                   , sizeof(float) * 3 * w * h);
+    memset(bloomDestBuff,                  0.f                   , sizeof(float) * 3 * w * h);
+    memset(zBuffer      , -std::numeric_limits<float>::infinity(), sizeof(float) * 1 * w * h);
 
-
-
-//     colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 0)] = 0.f;
-
-//     for (int i = 0; i < w; i++)
-//     {
-//         for (int j = 0; j < h; j++)
-//         {
-//             colorBuffer  [COLOR_BUF_INDEX(m_width, i, j, 0)] = 0.f;
-//             colorBuffer  [COLOR_BUF_INDEX(m_width, i, j, 1)] = 0.f;
-//             colorBuffer  [COLOR_BUF_INDEX(m_width, i, j, 2)] = 0.f;
-//             blurredBuffer[COLOR_BUF_INDEX(m_width, i, j, 0)] = 0.f;
-//             blurredBuffer[COLOR_BUF_INDEX(m_width, i, j, 1)] = 0.f;
-//             blurredBuffer[COLOR_BUF_INDEX(m_width, i, j, 2)] = 0.f;
-//             bloomBuffer  [COLOR_BUF_INDEX(m_width, i, j, 0)] = 0.f;
-//             bloomBuffer  [COLOR_BUF_INDEX(m_width, i, j, 1)] = 0.f;
-//             bloomBuffer  [COLOR_BUF_INDEX(m_width, i, j, 2)] = 0.f;
-//             bloomDestBuff[COLOR_BUF_INDEX(m_width, i, j, 0)] = 0.f;
-//             bloomDestBuff[COLOR_BUF_INDEX(m_width, i, j, 1)] = 0.f;
-//             bloomDestBuff[COLOR_BUF_INDEX(m_width, i, j, 2)] = 0.f;
-//             zBuffer[Z_BUF_INDEX(m_width, i, j)] = -std::numeric_limits<float>::infinity();
-//         }
-//     }
 }
 
 void Renderer::SetWorldTransformation(mat4x4 worldTransformation)
@@ -760,13 +744,13 @@ void Renderer::ClearColorBuffer()
 
     if (m_ePostEffect == BLUR_SCENE)
     {
-        memset(blurredBuffer, 0, sizeof(float)*m_width*m_height * 3);
+        memset(blurredBuffer, 0.f, sizeof(float) * m_width * m_height * 3);
 
     }
     else if (m_ePostEffect == BLOOM)
     {
-        memset(bloomDestBuff, 0.f, sizeof(float)* m_width*m_height * 3);
-        memset(bloomBuffer, 0.f, sizeof(float)* m_width*m_height * 3);
+        memset(bloomDestBuff, 0.f, sizeof(float) * m_width * m_height * 3);
+        memset(bloomBuffer  , 0.f, sizeof(float) * m_width * m_height * 3);
     }
 
 }
@@ -889,22 +873,25 @@ void Renderer::applyPostEffect(int kernelSizeX, int kernelSizeY, float sigma, PO
         break;
     }
 
-    for (int x = kernelSizeX / 2; x < m_width - kernelSizeX / 2; x++)
+    int halfX = kernelSizeX / 2;
+    int halfY = kernelSizeY / 2;
+
+    for (int x = halfX; x < m_width - halfX; x++)
     {
-        for (int y = kernelSizeY / 2; y < m_height - kernelSizeY / 2; y++)
+        for (int y = halfY; y < m_height - halfY; y++)
         {
             for (int color = 0; color < 3; color++)
             {
                 float sum = 0.0f;
                 float sumBloom = 0.0f;
-                for (int kX = -kernelSizeX / 2; kX <= kernelSizeX / 2; kX++)
+                for (int kX = -halfX; kX <= halfX; kX++)
                 {
-                    for (int kY = -kernelSizeY / 2; kY <= kernelSizeY / 2; kY++)
+                    for (int kY = -halfY; kY <= halfY; kY++)
                     {
-                        sum += kernel[kX][kY] * source[COLOR_BUF_INDEX(m_width, x + kX, y + kY, color)];
+                        sum += kernel[kX + halfX][kY + halfY] * colorTruncate(source[COLOR_BUF_INDEX(m_width, x + kX, y + kY, color)]);
                         if (postEffect == BLOOM)
                         {
-                            sumBloom += kernel[kX][kY] * colorBuffer[COLOR_BUF_INDEX(m_width, x + kX, y + kY, color)];
+                            sumBloom += kernel[kX + halfX][kY + halfY] * colorTruncate(colorBuffer[COLOR_BUF_INDEX(m_width, x + kX, y + kY, color)]);
                         }
                     }
                 }
@@ -931,13 +918,30 @@ void Renderer::applyPostEffect(int kernelSizeX, int kernelSizeY, float sigma, PO
     }
 }
 
-void Renderer::configPostEffect(POST_EFFECT postEffect, int blurX, int blurY, float sigma, float bloomIntensity, float bloomThreshold)
+float Renderer::colorTruncate(float color)
 {
-    m_blurX          = blurX;
-    m_blurY          = blurY;
-    m_ePostEffect    = postEffect;
+    if (color >= 0 && color <= 1)
+    {
+        return color;
+    }
+    else if (color < 0)
+    {
+        return 0;
+    }
+    else
+    {
+        return 1; 
+    }
+}
+
+void Renderer::configPostEffect(POST_EFFECT postEffect, int blurX, int blurY, float sigma, float bloomIntensity, glm::vec4 bloomThreshold, float bloomThresh)
+{
+    m_blurX = blurX;
+    m_blurY = blurY;
+    m_ePostEffect = postEffect;
     m_bloomIntensity = bloomIntensity;
     m_bloomThreshold = bloomThreshold;
+    m_bloomThresh = bloomThresh;
 }
 
 void Renderer::makeKernel(float gaussianKernel[][29], int kernelSizeX, int kernelSizeY, float sigma)
