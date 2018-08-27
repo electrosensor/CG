@@ -13,6 +13,12 @@ class Renderer
 private:
     // 3*width*height
     float *colorBuffer;
+    // 3*width*height
+    float *blurredBuffer;
+    // 3*width*height
+    float *bloomBuffer;
+    // 3*width*height
+    float *bloomDestBuff;
     // width*height
     float *zBuffer;
 
@@ -69,6 +75,15 @@ private:
 
     float m_faceNormScaleFactor;
     bool m_bDrawFaceNormals;
+    float m_sigma;
+    bool m_bBloomActive;
+    POST_EFFECT m_ePostEffect;
+    float m_bloomIntensity;
+    float * pDispBuffer;
+
+    int m_blurX;
+    int m_blurY;
+    float m_bloomThreshold;
 public:
     Renderer();
     Renderer(int w, int h);
@@ -134,8 +149,17 @@ public:
     void SetWorldTransformation(glm::mat4x4 m_worldTransformation);
     void SetShadingType(SHADING_TYPE shading);
     void DrawWireframe(bool bDrawn);
+
+    void applyPostEffect(int kernelSizeX, int kernelSizeY, float sigma, POST_EFFECT postEffect = NONE);
+    void makeKernel(float gaussianKernel[][29], int kernelSizeX, int kernelSizeY, float sigma);
+    void configPostEffect(POST_EFFECT postEffect, int blurX, int blurY, float sigma, float bloomIntensity, float bloomThreshold);
     void DrawFaceNormal(bool bDrawn);
     void SetFaceNormScaleFactor(float scaleFactor);
+private:
+    void orderPoints(float& x1, float& x2, float& y1, float& y2, float& d1, float& d2);
+    bool isSlopeBiggerThanOne(float x1, float x2, float y1, float y2) { return (std::fabs(y2 - y1) > std::fabs(x2 - x1)); }
+    bool m_bBlurActive = false;
+public:
     void DrawAxis();
     void DrawModelAxis();
     void SetGeneratedTexture(GENERATED_TEXTURE texture);

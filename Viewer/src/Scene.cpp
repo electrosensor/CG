@@ -111,6 +111,9 @@ void Scene::Draw()
         }
     }
 
+    renderer->applyPostEffect(m_bBlurX, m_bBlurY, m_sigma, m_ePostEffect);
+
+
     renderer->SwapBuffers();
 
 }
@@ -593,6 +596,20 @@ void Scene::SetShadingType(SHADING_TYPE shading)
 void Scene::DrawWireframe(bool bDrawn)
 {
     m_bDrawWireframe = bDrawn;
+}
+
+void Scene::configPostEffect(POST_EFFECT postEffect, int blurX, int blurY, float sigma, float bloomIntensity, float bloomThreshold)
+{
+    if (postEffect != m_ePostEffect || blurX != m_bBlurX || blurY != m_bBlurY || sigma != m_sigma || bloomIntensity != m_bloomIntensity)
+    {
+        m_bBlurX = blurX;
+        m_bBlurY = blurY;
+        m_sigma = sigma;
+        m_ePostEffect = postEffect;
+        m_bloomIntensity = bloomIntensity;
+        renderer->configPostEffect(m_ePostEffect, m_bBlurX, m_bBlurY, m_sigma, m_bloomIntensity, bloomThreshold);
+    }
+    
 }
 
 float Scene::GetvnScale()

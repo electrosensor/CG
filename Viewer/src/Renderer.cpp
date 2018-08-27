@@ -15,7 +15,7 @@ Renderer::Renderer() : m_width(DEFAULT_WIDTH), m_height(DEFAULT_HEIGHT)
     createBuffers(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 }
 
-Renderer::Renderer(int w, int h) : m_width(w), m_height(h), m_normalTransform(I_MATRIX), m_cameraTransform(I_MATRIX), m_objectTransform(I_MATRIX), m_cameraProjection(I_MATRIX), m_worldTransformation(I_MATRIX), m_bgColor(Util::getColor(CLEAR)), m_polygonColor(Util::getColor(BLACK)), m_wireframeColor(Util::getColor(WHITE))
+Renderer::Renderer(int w, int h) : m_width(w), m_height(h), m_normalTransform(I_MATRIX), m_cameraTransform(I_MATRIX), m_objectTransform(I_MATRIX), m_cameraProjection(I_MATRIX), m_worldTransformation(I_MATRIX), m_bgColor(Util::getColor(CLEAR)), m_polygonColor(Util::getColor(BLACK)), m_wireframeColor(Util::getColor(WHITE)), m_ePostEffect(NONE), m_bloomIntensity(1.f), m_bloomThreshold(1.f)
 {
     initOpenGLRendering();
     createBuffers(w, h);
@@ -24,6 +24,9 @@ Renderer::Renderer(int w, int h) : m_width(w), m_height(h), m_normalTransform(I_
 Renderer::~Renderer()
 {
     delete[] colorBuffer;
+    delete[] bloomBuffer;
+    delete[] bloomDestBuff;
+    delete[] blurredBuffer;
     delete[] zBuffer;
 }
 
@@ -185,8 +188,7 @@ void Renderer::DrawFaceNormal(Face& face)
     normalizedFaceNormal.z *= m_faceNormScaleFactor;
 
     auto nP1 = processPipeline(faceCenter);
-    auto nP2 = processPipeline(faceCenter + normalizedFaceNormal);
-
+//    auto nP2 = processPipeline(faceCenter + normalizedFaceNormal);
     if (m_bDrawFaceNormals)
     {
         DrawLine(toViewPlane(nP1), toViewPlane(nP2), COLOR(LIME));
@@ -202,11 +204,11 @@ void Renderer::PolygonScanConversion(Face& polygon)
     lowerLeft = { MIN3(polygon.m_p1.x, polygon.m_p2.x, polygon.m_p3.x),MIN3(polygon.m_p1.y, polygon.m_p2.y, polygon.m_p3.y) };
     float maxZ = MAX3(polygon.m_p1.z, polygon.m_p2.z, polygon.m_p3.z);
 
-    upperRight.x = upperRight.x > m_width ? m_width : upperRight.x;
+    upperRight.x = upperRight.x > m_width  ? m_width  : upperRight.x;
     upperRight.y = upperRight.y > m_height ? m_height : upperRight.y;
 
-    lowerLeft.x = lowerLeft.x > m_width ? m_width : lowerLeft.x;
-    lowerLeft.y = lowerLeft.y > m_height ? m_height : lowerLeft.y;
+    lowerLeft.x  = lowerLeft .x > m_width  ? m_width  : lowerLeft.x;
+    lowerLeft.y  = lowerLeft .y > m_height ? m_height : lowerLeft.y;
 
 
     for (int x = lowerLeft.x; x <= upperRight.x; x++)
@@ -257,6 +259,7 @@ void Renderer::PolygonScanConversion(Face& polygon)
             }
         }
     }
+
 }
 
 void Renderer::drawVerticesNormals(const vector<vec3>& vertices, const vector<vec3>& normals, float normScaleRate)
@@ -287,30 +290,6 @@ void Renderer::drawBordersCube(CUBE borderCube)
         DrawLine(toViewPlane(processPipeline(line.first)), toViewPlane(processPipeline(line.second)), COLOR(BLUE));
     }
 }
-
-
-// glm::vec3 Renderer::toViewPlane(const glm::vec3& point)
-// {
-//     // convert to raster space 
-//     vec3 screenPoint;
-// 
-//     vec3 cartPoint = Util::toCartesianForm(point);
-// 
-//     screenPoint.x = cartPoint.x;
-//     screenPoint.y = cartPoint.y;
-//     screenPoint.z = cartPoint.z;
-// 
-// //     printf("x = %f, y = %f, z = %f\n", cartPoint.x, cartPoint.y, cartPoint.z);
-// 
-//     screenPoint.x = round((screenPoint.x - (m_width / 2.0f)) * (VIEW_SCALING * m_width) + (m_width / 2.0f));
-//     screenPoint.y = round((screenPoint.y - (m_height / 2.0f)) * (VIEW_SCALING * m_height) + (m_height / 2.0f));
-// 
-// //     screenPoint.x = ((m_width  / 2 ) * screenPoint.x +   ( m_width  / 2));
-// //     screenPoint.y = ((m_height / 2)  * screenPoint.y +    (m_height / 2));
-//     screenPoint.z = ((screenPoint.z * ((m_projParams.zFar - m_projParams.zNear) / 2) + ((m_projParams.zFar + m_projParams.zNear) / 2)));
-// 
-//     return vec3(screenPoint.x, screenPoint.y, screenPoint.z);
-// }
 
 
 glm::vec3 Renderer::toViewPlane(const glm::vec3& point)
@@ -359,27 +338,6 @@ glm::vec3 Renderer::Barycentric(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2
 }
 
 
-// bool Renderer::is_point_in_triangle(const glm::vec2& p, const glm::vec2& a, const glm::vec2& b, const glm::vec2& c)
-// {
-// 
-//     
-// 
-//     vec2 v0 = b - a, v1 = c - a, v2 = p - a;
-// 
-//     vec2 d00 = v0 * v0;
-//     vec2 d01 = v0 * v1;
-//     vec2 d11 = v1 * v1;
-//     vec2 d20 = v2 * v0;
-//     vec2 d21 = v2 * v1;
-//     vec2 denom = d00 * d11 - d01 * d01;
-// 
-//     // compute parametric coordinates
-//     float v = (d11 * d20 - d01 * d21) / denom;
-//     float w = (d00 * d21 - d01 * d20) / denom;
-//     return v >= 0. && w >= 0. && v + w <= 1.;
-// }
-
-
 BOOL Renderer::isPointInTriangle(glm::vec2 p, glm::vec2 a, glm::vec2 b, glm::vec2 c)
 {
     vec3 bc = Barycentric(p, a, b, c);
@@ -423,6 +381,14 @@ void Renderer::putPixel(int i, int j, float d, const vec4& color)
         colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 0)] = color.x;
         colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 1)] = color.y;
         colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 2)] = color.z;
+        vec3 color3Vec = { color.x,color.y,color.z };
+        float dotIntensity = sqrt(color.x*color.x / 3 + color.y*color.y / 3 + color.z*color.z / 3);
+        if (dotIntensity > m_bloomThreshold)
+        {
+            bloomBuffer[COLOR_BUF_INDEX(m_width, i, j, 0)] = color.x;
+            bloomBuffer[COLOR_BUF_INDEX(m_width, i, j, 1)] = color.y;
+            bloomBuffer[COLOR_BUF_INDEX(m_width, i, j, 2)] = color.z;
+        }
     }
     else if(color.x == 0 && color.y == 0 && color.z ==0 && zBuffer[Z_BUF_INDEX(m_width, i, j)] == numeric_limits<float>::lowest())
     {
@@ -491,18 +457,41 @@ void Renderer::putPixel(int x, int y, bool steep, float d, const vec4& color)
 void Renderer::createBuffers(int w, int h)
 {
     createOpenGLBuffer(); //Do not remove this line.
-    colorBuffer = new float[3*w*h];
-    zBuffer     = new float[w*h];
-    for (int i = 0; i < w; i++)
-    {
-        for (int j = 0; j < h; j++)
-        {
-            colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 0)] = 0.f;
-            colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 1)] = 0.f;
-            colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 2)] = 0.f;
-            zBuffer    [Z_BUF_INDEX    (m_width, i, j)   ] = std::numeric_limits<float>::lowest();
-        }
-    }
+    colorBuffer   = new float[3 * w*h];
+    blurredBuffer = new float[3 * w*h];
+    bloomBuffer   = new float[3 * w*h];
+    bloomDestBuff = new float[3 * w*h];
+    zBuffer       = new float[1 * w*h];
+
+    memset(colorBuffer, 0.f, 3 * w*h);
+    memset(blurredBuffer, 0.f, 3 * w*h);
+    memset(bloomBuffer, 0.f, 3 * w*h);
+    memset(bloomDestBuff, 0.f, 3 * w*h);
+    memset(zBuffer, -std::numeric_limits<float>::infinity(), w*h);
+
+
+
+//     colorBuffer[COLOR_BUF_INDEX(m_width, i, j, 0)] = 0.f;
+
+//     for (int i = 0; i < w; i++)
+//     {
+//         for (int j = 0; j < h; j++)
+//         {
+//             colorBuffer  [COLOR_BUF_INDEX(m_width, i, j, 0)] = 0.f;
+//             colorBuffer  [COLOR_BUF_INDEX(m_width, i, j, 1)] = 0.f;
+//             colorBuffer  [COLOR_BUF_INDEX(m_width, i, j, 2)] = 0.f;
+//             blurredBuffer[COLOR_BUF_INDEX(m_width, i, j, 0)] = 0.f;
+//             blurredBuffer[COLOR_BUF_INDEX(m_width, i, j, 1)] = 0.f;
+//             blurredBuffer[COLOR_BUF_INDEX(m_width, i, j, 2)] = 0.f;
+//             bloomBuffer  [COLOR_BUF_INDEX(m_width, i, j, 0)] = 0.f;
+//             bloomBuffer  [COLOR_BUF_INDEX(m_width, i, j, 1)] = 0.f;
+//             bloomBuffer  [COLOR_BUF_INDEX(m_width, i, j, 2)] = 0.f;
+//             bloomDestBuff[COLOR_BUF_INDEX(m_width, i, j, 0)] = 0.f;
+//             bloomDestBuff[COLOR_BUF_INDEX(m_width, i, j, 1)] = 0.f;
+//             bloomDestBuff[COLOR_BUF_INDEX(m_width, i, j, 2)] = 0.f;
+//             zBuffer[Z_BUF_INDEX(m_width, i, j)] = -std::numeric_limits<float>::infinity();
+//         }
+//     }
 }
 
 void Renderer::SetWorldTransformation(mat4x4 worldTransformation)
@@ -724,13 +713,31 @@ void Renderer::createOpenGLBuffer()
 }
 
 void Renderer::SwapBuffers()
-{
+{    
+    pDispBuffer = colorBuffer;
+    
+    if (m_blurX > 1 || m_blurY > 1)
+    {
+        switch (m_ePostEffect)
+        {
+        case BLUR_SCENE:
+            pDispBuffer = blurredBuffer;
+            break;
+        case BLOOM:
+            pDispBuffer = blurredBuffer;
+            break;
+        default:
+            pDispBuffer = colorBuffer;
+            break;
+        }
+    }
+
     // Makes GL_TEXTURE0 the current active texture unit
     glActiveTexture(GL_TEXTURE0);
     // Makes glScreenTex (which was allocated earlier) the current texture.
     glBindTexture(GL_TEXTURE_2D, glScreenTex);
     // memcopy's colorBuffer into the gpu.
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_width, m_height, GL_RGB, GL_FLOAT, colorBuffer);
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_width, m_height, GL_RGB, GL_FLOAT, pDispBuffer);
     // Tells opengl to use mipmapping
     glGenerateMipmap(GL_TEXTURE_2D);
     // Make glScreenVtc current VAO
@@ -751,6 +758,16 @@ void Renderer::ClearColorBuffer()
         }
     }
 
+    if (m_ePostEffect == BLUR_SCENE)
+    {
+        memset(blurredBuffer, 0, sizeof(float)*m_width*m_height * 3);
+
+    }
+    else if (m_ePostEffect == BLOOM)
+    {
+        memset(bloomDestBuff, 0.f, sizeof(float)* m_width*m_height * 3);
+        memset(bloomBuffer, 0.f, sizeof(float)* m_width*m_height * 3);
+    }
 
 }
 
@@ -760,12 +777,17 @@ void Renderer::Viewport(int w, int h)
     {
         return;
     }
-    m_width = w;
-    m_height = h;
+    m_width       = w;
+    m_height      = h;
     delete[] colorBuffer;
+    delete[] blurredBuffer;
+    delete[] bloomDestBuff;
     delete[] zBuffer;
-    colorBuffer = new float[3 * h*w];
-    zBuffer = new float[h*w];
+    colorBuffer   = new float[3 * h*w];
+    blurredBuffer = new float[3 * h*w];
+    bloomBuffer   = new float[3 * h*w];
+    bloomDestBuff = new float[3 * h*w];
+    zBuffer       = new float[h*w];
     createOpenGLBuffer();
 }
 
@@ -807,6 +829,138 @@ void Renderer::ClearDepthBuffer()
         for (int j = 0; j < m_height; j++)
         {
             zBuffer[Z_BUF_INDEX(m_width, i, j)] = -std::numeric_limits<float>::infinity();
+        }
+    }
+}
+
+
+void Renderer::applyPostEffect(int kernelSizeX, int kernelSizeY, float sigma, POST_EFFECT postEffect /*= NONE*/)
+{
+    static int kerSizeX = -1;
+    static int kerSizeY = -1;
+
+    float* source;
+    float* destination;
+
+    static float kernel[29][29] = { 0 };
+
+    if (kernelSizeX <= 2 && kernelSizeY <= 2 || postEffect == NONE)
+    {
+        pDispBuffer = colorBuffer;
+        return;
+    }
+
+
+    if (kerSizeX != kernelSizeX || kerSizeY != kernelSizeY || sigma != m_sigma)
+    {
+        kerSizeX = kernelSizeX;
+        kerSizeY = kernelSizeY;
+        m_sigma = sigma;
+
+        Renderer::makeKernel(kernel, kernelSizeX, kernelSizeY, sigma);
+
+        static int counter = 0;
+        printf("%d: kernel size is x,y:%d,%d with sigma %f\n", ++counter, kernelSizeX, kernelSizeY, sigma);
+        for (int kX = 0; kX < kernelSizeX; ++kX)
+        {
+            for (int kY = 0; kY < kernelSizeY; ++kY)
+            {
+                printf("%f\t\t", kernel[kX][kY]);
+            }
+            printf("\n\n");
+        }
+    }
+
+    switch (postEffect)
+    {
+    case NONE:
+        return;
+        break;
+    case BLUR_SCENE:
+        source = colorBuffer;
+        destination = blurredBuffer;
+        break;
+    case BLOOM:
+        source = bloomBuffer;
+        destination = bloomDestBuff;
+        break;
+    default:
+        return;
+        break;
+    }
+
+    for (int x = kernelSizeX / 2; x < m_width - kernelSizeX / 2; x++)
+    {
+        for (int y = kernelSizeY / 2; y < m_height - kernelSizeY / 2; y++)
+        {
+            for (int color = 0; color < 3; color++)
+            {
+                float sum = 0.0f;
+                float sumBloom = 0.0f;
+                for (int kX = -kernelSizeX / 2; kX <= kernelSizeX / 2; kX++)
+                {
+                    for (int kY = -kernelSizeY / 2; kY <= kernelSizeY / 2; kY++)
+                    {
+                        sum += kernel[kX][kY] * source[COLOR_BUF_INDEX(m_width, x + kX, y + kY, color)];
+                        if (postEffect == BLOOM)
+                        {
+                            sumBloom += kernel[kX][kY] * colorBuffer[COLOR_BUF_INDEX(m_width, x + kX, y + kY, color)];
+                        }
+                    }
+                }
+                destination[COLOR_BUF_INDEX(m_width, x, y, color)] = sum;
+                if (postEffect == BLOOM)
+                {
+                    blurredBuffer[COLOR_BUF_INDEX(m_width, x, y, color)] = sumBloom;
+                }
+            }
+        }
+    }
+
+
+    if (postEffect == BLOOM)
+    {   
+        for (int x = 0; x < m_width; x++)
+        {
+            for (int y = 0; y < m_height; y++)
+            {
+                for (int color = 0; color < 3; color++)
+                    blurredBuffer[COLOR_BUF_INDEX(m_width, x, y, color)] += m_bloomIntensity * bloomDestBuff[COLOR_BUF_INDEX(m_width, x, y, color)];
+            }
+        }
+    }
+}
+
+void Renderer::configPostEffect(POST_EFFECT postEffect, int blurX, int blurY, float sigma, float bloomIntensity, float bloomThreshold)
+{
+    m_blurX          = blurX;
+    m_blurY          = blurY;
+    m_ePostEffect    = postEffect;
+    m_bloomIntensity = bloomIntensity;
+    m_bloomThreshold = bloomThreshold;
+}
+
+void Renderer::makeKernel(float gaussianKernel[][29], int kernelSizeX, int kernelSizeY, float sigma)
+{
+    float meanX = kernelSizeX / 2;
+    float meanY = kernelSizeY / 2;
+    float sum = 0.0; // For accumulating the kernel values
+
+    for (int x = 0; x < kernelSizeX; ++x)
+    {
+        for (int y = 0; y < kernelSizeY; ++y)
+        {
+            gaussianKernel[x][y] = exp(-0.5 * (pow((x - meanX) / sigma, 2.0) + pow((y - meanY) / sigma, 2.0))) / (2 * PI * pow(sigma, 2));
+            sum += gaussianKernel[x][y];
+        }
+    }
+
+    // Normalize the kernel
+    for (int x = 0; x < kernelSizeX ; x++)
+    {
+        for (int y = 0; y < kernelSizeY; y++)
+        {
+            gaussianKernel[x][y] /= sum;
         }
     }
 }

@@ -12,32 +12,36 @@
 
 class Scene {
 private:
-    std::vector<Model*> m_models;
-    std::vector<Light*> m_lights;
+    std::vector<Model*>  m_models;
+    std::vector<Light*>  m_lights;
     std::vector<Camera*> m_cameras;
-    Renderer *renderer;
+    Renderer            *renderer;
 
-    int m_activeModel;
-    int m_activeLight;
-    int m_activeCamera;
-    glm::mat4x4 m_worldTransformation;
+    int                  m_activeModel;
+    int                  m_activeLight;
+    int                  m_activeCamera;
+    glm::mat4x4          m_worldTransformation;
 
-    glm::vec4 m_polygonColor;
-    glm::vec4 m_wireframeColor;
-    glm::vec4 m_bgColor;
+    glm::vec4            m_polygonColor;
+    glm::vec4            m_wireframeColor;
+    glm::vec4            m_bgColor;
 
-    bool m_bDrawWireframe;
-    bool m_bDrawVecNormal;
-    float m_vnScaleFactor;
-    bool m_bDrawFaceNormal;
-    float m_fnScaleFactor;
-    bool m_bShowBorderCube;
+    bool                 m_bDrawWireframe;
+    bool                 m_bDrawVecNormal;
+    float                m_vnScaleFactor;
+    bool                 m_bDrawFaceNormal;
+    float                m_fnScaleFactor;
+    bool                 m_bShowBorderCube;
 
-    SHADING_TYPE m_shading;
+    SHADING_TYPE         m_shading;
 
+    int                  m_bBlurX;
+    int                  m_bBlurY;
+    float                m_sigma;
+    float m_bloomIntensity;
 public:
     Scene() = delete;
-    Scene(Renderer *renderer) : renderer(renderer), m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamera(DISABLED), m_bDrawVecNormal(false), m_vnScaleFactor(2.f), m_fnScaleFactor(2.f), m_bgColor(Util::getColor(YURI_BG)), m_polygonColor(Util::getColor(YURI_POLYGON)), m_wireframeColor(Util::getColor(YURI_WIRE)), m_bDrawWireframe(true)
+    Scene(Renderer *renderer) : renderer(renderer), m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamera(DISABLED), m_bDrawVecNormal(false), m_vnScaleFactor(2.f), m_fnScaleFactor(2.f), m_bgColor(COLOR(YURI_BG)), m_polygonColor(COLOR(YURI_POLYGON)), m_wireframeColor(COLOR(YURI_WIRE)), m_bDrawWireframe(true), m_bBlurX(1), m_bBlurY(1), m_sigma(1.f), m_ePostEffect(NONE)
     {
         m_worldTransformation = I_MATRIX ;
         m_worldTransformation[3].w = 1;
@@ -164,4 +168,8 @@ public:
 
     void SetShadingType(SHADING_TYPE shading);
     void DrawWireframe(bool bDrawn);
+    void configPostEffect(POST_EFFECT postEffect, int blurX, int blurY, float sigma, float bloomIntensity, float bloomThreshold);
+private:
+    bool m_bBloomActive;
+    POST_EFFECT m_ePostEffect;
 };

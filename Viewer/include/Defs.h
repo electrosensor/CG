@@ -198,4 +198,62 @@ typedef enum _PIPE_TYPE
 
 }PIPE_TYPE, *PPIPE_TYPE;
 
+typedef enum _POST_EFFECT
+{
+    NONE = 0,
+    BLUR_SCENE,
+    BLOOM
+}POST_EFFECT, *PPOST_EFFECT;
+
+// 
+// typedef struct _GUI_CONFIG
+// {
+//     //Main menu
+//     bool showDemoWindow = false;
+//     bool modelControlWindow = true;
+//     bool bModelControlFrame = false;
+// 
+//     bool lightingMenu = true;
+//     bool bLightControlFrame = false;
+// 
+//     bool colorMenu = false;
+//     bool showFile = false;
+// 
+//     int world[3] = { 1,1,1 };
+//     glm::mat4x4 worldTransformation = ZERO_MATRIX;
+// 
+//     //Cameras:
+//     float eye[3] = { 2,2,2 };
+//     float at[3] = { 0,0,0 };
+// 
+//     bool bShowCamera = false;
+// 
+//     int cameraIndex = 0;
+//     mat4x4 activeCameraTransformation = ZERO_MATRIX;
+// 
+//     //Camera controls:
+//     int currentFrame = FRAME_TYPE::FT_CAMERA;
+//     AXES currentAxis = AXES::AXIS_Y;
+//     int currentRel = ROTATION_REL::RR_WORLD;
+// 
+//     float rotAngle = PI / 36.0f;
+// 
+//     //camera scaling:
+//     float camScaleFactor = 1.5f;
+// 
+//     float moveFactor = 0.5f;
+// 
+//     //Projection:
+//     PROJ_PARAMS projParams =
+//         {
+//             projParams.left = -1,
+//             projParams.right = 1,
+//             projParams.bottom = -1,
+//             projParams.top = 1,
+//             projParams.zNear = 0.1f,
+//             projParams.zFar = 2,
+//         };
+// 
+// }GUI_CONFIG, *PGUI_CONFIG;
+// 
 

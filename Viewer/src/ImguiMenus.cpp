@@ -841,6 +841,38 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             ImGui::Text(sLightModelTransformation.c_str());
 
         }
+        static POST_EFFECT postEffect     = NONE;
+        static int         blurParams[2]  = { 1 ,1};
+        static int         blurX          = 0, blurY = 0;
+        static int         blurXFinal     = 0;
+        static int         blurYFinal     = 0;
+        static float       sigma          = 1.0f;
+        static float       bloomIntensity = 1.0f;
+        static float       bloomThreshold = 1.0f;
+
+
+        static const char Steps[] = { "One\0Three\0Five\0Seven\0Nine\0Eleven\0Thirteen\0Fifteen\0" };
+        ImGui::Combo("BlurX", &blurX , Steps);
+        ImGui::Combo("BlurY", &blurY, Steps);
+
+        blurXFinal = 2 * blurX + 1;
+        blurYFinal = 2 * blurY + 1;
+        
+        ImGui::SliderFloat("Blur Intensity", &sigma, 0.125f, 5.f,"%.3f",2.5f);
+        ImGui::SliderFloat("Bloom Intensity", &bloomIntensity, 0.f, 4.f);
+        ImGui::SliderFloat("Bloom Threshold", &bloomThreshold, 0.1f, 1.0f);
+
+        static const char postEffectNames[] = { "None\0Blur\0Bloom\0" };
+
+        ImGui::Combo("Post Effect",(PINT32) &postEffect, postEffectNames);
+
+        if (ImGui::Button("Inverse Blur"))
+        {
+            swap(blurX, blurY);
+        }
+
+        scene->configPostEffect(postEffect, postEffect != NONE ? blurXFinal : 1, postEffect != NONE ? blurYFinal : 1, sigma, bloomIntensity, bloomThreshold);
+        
 
         ImGui::End();
     }
