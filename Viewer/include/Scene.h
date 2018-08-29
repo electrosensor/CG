@@ -154,7 +154,7 @@ public:
     bool shouldRenderLight();
 
 
-    int AddLight(LIGHT_SOURCE_TYPE type, float intencity, float* lightCoord, float* direction);
+    int AddLight(LIGHT_SOURCE_TYPE type, const glm::vec3& lightCoord, const glm::vec4& ambiantC, float ambiantI, const glm::vec4& diffusiveC, float diffusiveI);
 
     Light* GetActiveLight();
 

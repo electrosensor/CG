@@ -183,7 +183,8 @@ typedef enum _PIPE_TYPE
 {
     FULL = 0,
     AXIS,
-    MODEL
+    MODEL,
+    LIGHT
 
 }PIPE_TYPE, *PPIPE_TYPE;
 

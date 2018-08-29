@@ -268,7 +268,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             } break;
             case FRAME_TYPE::FT_LIGHT:
             {
-                scene->ScaleActiveLightModel(camScaleFactor);
+                scene->ScaleActiveLightModel(1.0f / camScaleFactor);
             } break;
             default: break;
             }
@@ -289,7 +289,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             } break;
             case FRAME_TYPE::FT_LIGHT:
             {
-                scene->ScaleActiveLightModel(1.0f / camScaleFactor);
+                scene->ScaleActiveLightModel(camScaleFactor);
             } break;
             default: break;
             }
@@ -588,60 +588,93 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
     if (lightingMenu)
     {
         ImGui::Begin("Lighting & Shading");
-        ImGui::Text("-------------- Light: --------------");
-
-        static int currentLight = (int)LT_AMBIENT;
-    
-        static const char LightTypes[28] = { "Ambient\0Specular\0Diffusive\0" };
-        ImGui::Combo("Light Source", &currentLight, LightTypes);
-        static float direction[3] = { 2,2,2 };
-        static float lightCoord[3] = { 0,0,0 };
-        static float intencity = 1.f;
-        ImGui::SliderFloat3("Light from: (x,y,z)", direction, -10, 10);
-        ImGui::SliderFloat3("Light at: (x,y,z)", lightCoord, -10, 10);
-        ImGui::SliderFloat("Light Intencity: ", &intencity, -10, 10);
-
-        ImGui::Text("Light from: (%d, %d, %d)", direction[0], direction[1], direction[2]);
-        ImGui::SameLine();
-        ImGui::Text("at: (%d, %d, %d)", lightCoord[0], lightCoord[1], lightCoord[2]);
-        ImGui::SameLine();
-        ImGui::Text("with intencity: %d", intencity);
-
-        if (ImGui::Button("Add new light"))
-        {
-            int idx = scene->AddLight(static_cast<LIGHT_SOURCE_TYPE>(currentLight), intencity, lightCoord, direction);
-            scene->SetActiveLightIdx(idx);
-            bLightControlFrame = true;
-        }
-
-        static bool bShowLight = false;
-        bShowLight = (scene->GetActiveLight() == nullptr) ? false : scene->GetActiveLight()->GetLightModel()->isModelRenderingActive();
-        ImGui::SameLine();
-        if (ImGui::Checkbox("Show Light", &bShowLight))
-        {
-            if (scene->GetActiveLight() != nullptr) {
-                scene->GetActiveLight()->GetLightModel()->setModelRenderingState(bShowLight);
-            }
-        }
-
+        
         ImGui::Text("-------------- Shading: --------------");
 
-        static bool bDrawWireframe = true;
+        static bool bDrawWireframe = false;
         if(ImGui::RadioButton("Show Wireframe", bDrawWireframe))
         {
             bDrawWireframe = bDrawWireframe ? false : true;
-            scene->DrawWireframe(bDrawWireframe);
         }
+        scene->DrawWireframe(bDrawWireframe);
 
-        static int currentShading = (int)ST_SOLID;
-        static const char ShadingTypes[26] = { "None\0Solid\0Phong\0Gouraud\0" };
+        static int currentShading = static_cast<int>(ST_GOURAUD);
+        static const char ShadingTypes[] = { "None\0Solid\0Phong\0Gouraud\0" };
         ImGui::Combo("Shading Type", &currentShading, ShadingTypes);
 
         scene->SetShadingType(static_cast<SHADING_TYPE>(currentShading));
 
+        ImGui::Text("-------------- Light: --------------");
+
+        static int currentLight = static_cast<int>(LST_POINT);
+        static const char LightTypes[] = { "Point\0Parallel\0Area\0" };
+        ImGui::Combo("Light Source", &currentLight, LightTypes);
+
+        vec4 currentPolygonCol = scene->GetPolygonColor();
+
+        static float ambientColor[3] = { currentPolygonCol.x ,currentPolygonCol.y ,currentPolygonCol.z };
+        static float ambiantIntensity = 1.f;
+        ImGui::ColorEdit3("Ambient Color", ambientColor);
+        ImGui::SliderFloat("Ambient Intensity: ", &ambiantIntensity, 0, 10);
+
+
+        static float diffusiveColor[3] = { currentPolygonCol.x ,currentPolygonCol.y ,currentPolygonCol.z };
+        static float diffusiveIntensity = 1.f;
+        ImGui::ColorEdit3("Diffusive Color", diffusiveColor);
+        ImGui::SliderFloat("Diffusive Intensity ", &diffusiveIntensity, 0, 10);
+
+        static float lightCoord[3] = { 3.f , 3.f , 3.f };
+        ImGui::SliderFloat3("Light location:", lightCoord, -10, 10);
+
+        if (ImGui::Button("Add new light"))
+        {
+            int idx = scene->AddLight(
+                static_cast<LIGHT_SOURCE_TYPE>(currentLight), { lightCoord[0], lightCoord[1], lightCoord[2] },
+                { ambientColor[0], ambientColor[1], ambientColor[2], 1 }, ambiantIntensity,
+                { diffusiveColor[0], diffusiveColor[1], diffusiveColor[2], 1 }, diffusiveIntensity );
+            scene->SetActiveLightIdx(idx);
+            bLightControlFrame = true;
+        }
+
+
         if (bLightControlFrame)
         {
-            ImGui::Text("-------------- Light Control: --------------");
+            ImGui::Text("-------------- Active Light: --------------");
+
+
+            Light* activeLight = scene->GetActiveLight();
+            Model* activeLightModel = activeLight ? &activeLight->GetLightModel() : nullptr;
+        
+            if(activeLightModel)
+            {
+                static bool bShowLight = false;
+                bShowLight = activeLightModel->isModelRenderingActive();
+
+
+                if (ImGui::Checkbox("Show active light model", &bShowLight))
+                {
+                    activeLightModel->setModelRenderingState(bShowLight);
+                }
+            }
+
+            if(activeLight)
+            {
+                float ambCol[3] = { activeLight->GetAmbientColor().x, activeLight->GetAmbientColor().y, activeLight->GetAmbientColor().z };
+                float ambI = activeLight->GetAmbientIntensity();
+                ImGui::ColorEdit3("Active Ambient Color", ambCol);
+                ImGui::SliderFloat("Active Ambient Intensity: ", &ambI, 0, 10);
+                activeLight->SetAmbientColor({ ambCol[0], ambCol[1], ambCol[2], 1 });
+                activeLight->SetAmbientIntensity(ambI);
+
+
+                float diffCol[3] = { activeLight->GetDiffusiveColor().x, activeLight->GetDiffusiveColor().y, activeLight->GetDiffusiveColor().z };
+                float diffI = activeLight->GetDiffusiveIntensity();
+                ImGui::ColorEdit3("Active Diffusive Color", diffCol);
+                ImGui::SliderFloat("Active Diffusive Intensity ", &diffI, 0, 10);
+                activeLight->SetDiffusiveColor({ diffCol[0], diffCol[1], diffCol[2], 1 });
+                activeLight->SetDiffusiveIntensity(diffI);
+
+            }
 
             if (ImGui::Button("Next light model"))
             {

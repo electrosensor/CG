@@ -47,18 +47,20 @@ void Scene::Draw()
     renderer->SetWireframeColor(m_wireframeColor);
     renderer->SetShadingType(m_shading);
     renderer->DrawWireframe(m_bDrawWireframe);
+    renderer->DrawFaceNormal(m_bDrawFaceNormal);
+    renderer->SetFaceNormScaleFactor(m_fnScaleFactor);
     renderer->DrawAxis();
 
 
     for each(Light* light in m_lights)
     {
-        auto lightModel = light->GetLightModel();
-        if (lightModel->isModelRenderingActive())
+        LightMeshModel& lightModel = light->GetLightModel();
+        if (lightModel.isModelRenderingActive())
         {
             tuple lightModelData(vPolygons, vVertices, vVerticesNormals);
-            mat4x4 cameraModelTransformation = lightModel->GetModelTransformation();
-            renderer->SetObjectMatrices(cameraModelTransformation, mat4x4(I_MATRIX));
-            lightModel->Draw(lightModelData);
+            mat4x4 lightModelTransformation = lightModel.GetModelTransformation();
+            renderer->SetObjectMatrices(lightModelTransformation, mat4x4(I_MATRIX));
+            lightModel.Draw(lightModelData);
             renderer->DrawTriangles(get<TUPLE_POLYGONS>(lightModelData));
         }
     }
@@ -73,20 +75,22 @@ void Scene::Draw()
         {
             if (/*light->isOn()*/ true)
             {
-                for each(auto polygon in polygonsToLight)
+                for(Face& faceIt : polygonsToLight)
                 {
-                    polygon.Reflect(*light);
+                    light->Illuminate(faceIt, light->GetLightModel().GetModelTransformation());
                 }
             }
         }
         tie(vPolygons, vVertices, vVerticesNormals) = modelData;
 
         renderer->SetObjectMatrices(model->GetModelTransformation(), model->GetNormalTransformation());
-        renderer->DrawTriangles(vPolygons, &model->getCentroid(), m_bDrawFaceNormal, m_fnScaleFactor);
+        renderer->DrawTriangles(vPolygons, &model->getCentroid());
+
         if (m_bDrawVecNormal && !vVerticesNormals.empty())
         {
             renderer->drawVerticesNormals(vVertices , vVerticesNormals, m_vnScaleFactor);
         }
+
         if (m_bShowBorderCube)
         {
             renderer->drawBordersCube(model->getBordersCube());
@@ -481,7 +485,7 @@ glm::mat4x4 Scene::GetActiveLightModelTransformation()
 {
     if (m_activeLight != DISABLED)
     {
-        Model* activeLightModel = m_lights[m_activeLight]->GetLightModel();
+        Model* activeLightModel = &m_lights[m_activeLight]->GetLightModel();
         return activeLightModel->GetModelTransformation();
     }
     else
@@ -494,7 +498,7 @@ void Scene::TranslateActiveLight(float value, AXES axis)
 {
     if (m_activeLight != DISABLED)
     {
-        Model* activeLightModel = m_lights[m_activeLight]->GetLightModel();
+        Model* activeLightModel = &m_lights[m_activeLight]->GetLightModel();
         TranslateModel(activeLightModel, axis, value);
     }
 }
@@ -503,7 +507,7 @@ void Scene::ScaleActiveLightModel(float value)
 {
     if (m_activeLight != DISABLED)
     {
-        Model* activeLightModel = m_lights[m_activeLight]->GetLightModel();
+        Model* activeLightModel = &m_lights[m_activeLight]->GetLightModel();
         ScaleModel(activeLightModel, value);
     }
 }
@@ -512,7 +516,7 @@ void Scene::RotateActiveLightModel(float angle, AXES axis)
 {
     if (m_activeLight != DISABLED)
     {
-        Model* activeLightModel = m_lights[m_activeLight]->GetLightModel();
+        Model* activeLightModel = &m_lights[m_activeLight]->GetLightModel();
         RotateModel(activeLightModel, axis, angle);
     }
 }
@@ -521,7 +525,7 @@ void Scene::RotateActiveLightModelRelativeToWorld(float angle, AXES axis)
 {
     if (m_activeLight != DISABLED)
     {
-        Model* activeLightModel = m_lights[m_activeLight]->GetLightModel();
+        Model* activeLightModel = &m_lights[m_activeLight]->GetLightModel();
         RotateModelRelativeToWorld(activeLightModel, axis, angle);
     }
 }
@@ -530,25 +534,25 @@ bool Scene::shouldRenderLight()
 {
     if (m_activeLight != DISABLED)
     {
-        return m_lights[m_activeLight]->GetLightModel()->isModelRenderingActive();
+        return m_lights[m_activeLight]->GetLightModel().isModelRenderingActive();
     }
     else return false;
 }
 
-int Scene::AddLight(LIGHT_SOURCE_TYPE lightType, float intencity, float *lightCoord, float *direction)
+int Scene::AddLight(LIGHT_SOURCE_TYPE type, const glm::vec3& lightCoord, const glm::vec4& ambiantC, float ambiantI, const glm::vec4& diffusiveC, float diffusiveI)
 {
     Light* p_newLight = nullptr;
 
-    switch (lightType)
+    switch (type)
     {
     case LST_POINT:
-        p_newLight = new PointSourceLight(new LightMeshModel());
+        p_newLight = new PointSourceLight(lightCoord, ambiantC, ambiantI, diffusiveC, diffusiveI);
         break;
     case LST_PARALLEL:
-        p_newLight = new ParallelSourceLight(new LightMeshModel());
+        p_newLight = new ParallelSourceLight(lightCoord, ambiantC, ambiantI, diffusiveC, diffusiveI);
         break;
     case LST_AREA:
-        p_newLight = new DistributedSourceLight(new LightMeshModel());
+        p_newLight = new DistributedSourceLight(lightCoord, ambiantC, ambiantI, diffusiveC, diffusiveI);
         break;
 
     default:
@@ -565,7 +569,7 @@ Light* Scene::GetActiveLight()
     if (m_activeLight != DISABLED) {
         return m_lights[m_activeLight];
     }
-    else return NULL;
+    else return nullptr;
 }
 
 

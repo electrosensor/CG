@@ -101,7 +101,10 @@ class LightMeshModel : public MeshModel
 {
 public:
 
-    LightMeshModel() : MeshModel(LIGHT_OBJ_FILE) {} // change to light
+    LightMeshModel(LIGHT_SOURCE_TYPE type, const glm::vec3& location) : MeshModel(LIGHT_OBJ_FILE)
+    {
+        SetModelTransformation(glm::mat4x4(TRANSLATION_MATRIX(location.x, location.y, location.z)) * glm::mat4x4(SCALING_MATRIX4(0.1)));
+    } 
    ~LightMeshModel() = default;
    
 };

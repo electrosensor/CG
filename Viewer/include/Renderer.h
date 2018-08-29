@@ -64,25 +64,27 @@ private:
     void yStepErrorUpdate(float dx, float dy, float& error, int& y, const int& ystep);
     void ProjectPolygon(Face& polygon);
 
+    float m_faceNormScaleFactor;
+    bool m_bDrawFaceNormals;
 public:
     Renderer();
     Renderer(int w, int h);
     ~Renderer();
-    glm::vec3 processPipeline(glm::vec3 point, PIPE_TYPE pipeType = FULL);
-    Face processPipeline(Face polygon, PIPE_TYPE pipeType = FULL);
+    glm::vec3 processPipeline(glm::vec3 point, PIPE_TYPE pipeType = FULL, glm::mat4x4* lightTransform = nullptr);
+    Face processPipeline(Face polygon, PIPE_TYPE pipeType = FULL, glm::mat4x4* lightTransform = nullptr);
     // Local initializations of your implementation
     void Init();
 
     // Draws a line by Bresenham algorithm: 
     void DrawLine(const glm::vec3& p1, const glm::vec3& p2, const glm::vec4& color);
-    void PolygonScanConversion(const Face& polygon);
+    void PolygonScanConversion(Face& polygon);
     void drawVerticesNormals(const std::vector<glm::vec3>& vertices, const std::vector<glm::vec3>& normals, float normScaleRate);
     // Draws wireframe triangles to the color buffer
-    void DrawTriangles(const std::vector<Face>& vertices, const glm::vec3* modelCentroid = nullptr, bool bDrawFaceNormals = false, float normScaleRate = 1);
+    void DrawTriangles(const std::vector<Face>& vertices, const glm::vec3* modelCentroid = nullptr);
 
     void DrawPolygonLines(const Face& polygon);
 
-    void drawFaceNormal(const Face& face, float normScaleRate);
+    void DrawFaceNormal(Face& face);
     // Draws surrounding border cube;
     void drawBordersCube(CUBE borderCube);
     // Sets the camera transformations with relation to world coordinates
@@ -128,6 +130,8 @@ public:
     void SetShadingType(SHADING_TYPE shading);
     void DrawWireframe(bool bDrawn);
 
+    void DrawFaceNormal(bool bDrawn);
+    void SetFaceNormScaleFactor(float scaleFactor);
 private:
     void orderPoints(float& x1, float& x2, float& y1, float& y2, float& d1, float& d2);
     bool isSlopeBiggerThanOne(float x1, float x2, float y1, float y2) { return (std::fabs(y2 - y1) > std::fabs(x2 - x1)); }

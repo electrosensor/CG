@@ -171,7 +171,7 @@ void MeshModel::LoadFile(const string& fileName)
 		}
         else if (lineType == "vn")
         {
-            normals.push_back(Util::toHomogeneousForm(vec3fFromStream(issLine)));
+            normals.push_back(vec3fFromStream(issLine));
         }
 		else if (lineType == "f")
 		{
@@ -211,23 +211,31 @@ void MeshModel::LoadFile(const string& fileName)
        // fprintf(stderr, "x = %f, y = %f, z = %f\n", normalizedVec.x, normalizedVec.y, normalizedVec.z);
         m_vertices[i] = normalizedVec;
     }
+    
+    for (unsigned int i = 0; i < m_verticesNormSize; i++)
+    {
+        m_vertexNormals[i] = normals[i];
+    }
 
 	// iterate through all stored faces and create triangles
 	size_t posIdx = 0;
 	for each (FaceIdx face in faces)
 	{
-        vec3 currentFace[FACE_ELEMENTS];
+        pair<vec3, vec3> currentFace[FACE_ELEMENTS];
 		for (int i = 0; i < FACE_ELEMENTS; i++)
 		{
 			int currentVertexIdx = face.v[i];
             float x = m_vertices[currentVertexIdx - 1].x;
             float y = m_vertices[currentVertexIdx - 1].y;
             float z = m_vertices[currentVertexIdx - 1].z;
-            currentFace[i] = vec3(x, y, z);
+            float vn_x = (currentVertexIdx < m_verticesNormSize) ? m_vertexNormals[currentVertexIdx - 1].x : 0.f;
+            float vn_y = (currentVertexIdx < m_verticesNormSize) ? m_vertexNormals[currentVertexIdx - 1].y : 0.f;
+            float vn_z = (currentVertexIdx < m_verticesNormSize) ? m_vertexNormals[currentVertexIdx - 1].z : 0.f;
+            currentFace[i] = { vec3(x, y, z), vec3(vn_x, vn_y, vn_z) };
 		}
-        auto nrm1_3 = currentFace[0];
-        auto nrm2_3 = currentFace[1];
-        auto nrm3_3 = currentFace[2];
+        auto nrm1_3 = currentFace[0].first;
+        auto nrm2_3 = currentFace[1].first;
+        auto nrm3_3 = currentFace[2].first;
 
         auto subs1 = nrm3_3 - nrm1_3;
         auto subs2 = nrm2_3 - nrm1_3;
@@ -238,14 +246,9 @@ void MeshModel::LoadFile(const string& fileName)
 
         auto normalizedFaceNormal = Util::isVecEqual(faceNormal, vec3(0)) ? faceNormal : normalize(faceNormal);
 
-        Face currentPolygon(currentFace[0], currentFace[1], currentFace[2], normalizedFaceNormal, &m_surface);
+        Face currentPolygon(currentFace[0].first, currentFace[1].first, currentFace[2].first, normalizedFaceNormal, &m_surface, currentFace[0].second, currentFace[1].second, currentFace[2].second);
         m_polygons[posIdx++] = currentPolygon;
 	}
-    
-    for (unsigned int i = 0; i < m_verticesNormSize; i++)
-    {
-        m_vertexNormals[i] = normals[i];
-    }
     
     m_modelCentroid.x = NORMALIZE_COORDS(modelCentroid.x , totalMin, totalMax);
     m_modelCentroid.y = NORMALIZE_COORDS(modelCentroid.y , totalMin, totalMax);

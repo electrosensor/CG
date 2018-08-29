@@ -27,7 +27,7 @@ Renderer::~Renderer()
     delete[] zBuffer;
 }
 
-vec3 Renderer::processPipeline(vec3 point, PIPE_TYPE pipeType /*= FULL*/)
+vec3 Renderer::processPipeline(vec3 point, PIPE_TYPE pipeType /*= FULL*/, glm::mat4x4* lightTransform /*= nullptr*/)
 {
     glm::vec4 piped;
     glm::vec4 homogPoint = Util::toHomogeneousForm(point);
@@ -35,13 +35,16 @@ vec3 Renderer::processPipeline(vec3 point, PIPE_TYPE pipeType /*= FULL*/)
     switch (pipeType)
     {
     case FULL:
-        piped =  m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * homogPoint;
+        piped = m_cameraProjection * m_cameraTransform * m_worldTransformation * m_objectTransform * homogPoint;
         break;
     case AXIS:
-        piped =  m_cameraProjection * m_cameraTransform * homogPoint;
+        piped = m_cameraProjection * m_cameraTransform * homogPoint;
         break;
     case MODEL:
-        piped =  m_cameraProjection * m_cameraTransform * m_objectTransform * homogPoint;
+        piped = m_objectTransform * m_worldTransformation * homogPoint;
+        break;
+    case LIGHT:
+        piped = lightTransform ? *lightTransform * m_worldTransformation * homogPoint : homogPoint;
         break;
     default:
         piped =  HOMOGENEOUS_VECTOR4;
@@ -52,11 +55,11 @@ vec3 Renderer::processPipeline(vec3 point, PIPE_TYPE pipeType /*= FULL*/)
 
 }
 
-Face Renderer::processPipeline(Face polygon, PIPE_TYPE pipeType /*= FULL*/)
+Face Renderer::processPipeline(Face polygon, PIPE_TYPE pipeType /*= FULL*/, glm::mat4x4* lightTransform/* = nullptr*/)
 {
-    polygon.m_p1 = processPipeline(polygon.m_p1, pipeType);
-    polygon.m_p2 = processPipeline(polygon.m_p2, pipeType);
-    polygon.m_p3 = processPipeline(polygon.m_p3, pipeType);
+    polygon.m_p1 = processPipeline(polygon.m_p1, pipeType, lightTransform);
+    polygon.m_p2 = processPipeline(polygon.m_p2, pipeType, lightTransform);
+    polygon.m_p3 = processPipeline(polygon.m_p3, pipeType, lightTransform);
     return polygon;
 }
 
@@ -65,7 +68,7 @@ void Renderer::Init()
 
 }
 
-void Renderer::DrawTriangles(const std::vector<Face>& vertices, const glm::vec3* modelCentroid /*= nullptr*/, bool bDrawFaceNormals /*= false*/, float normScaleRate /*= 1*/)
+void Renderer::DrawTriangles(const std::vector<Face>& vertices, const glm::vec3* modelCentroid /*= nullptr*/)
 {
     
     for (auto it = vertices.begin(); it != vertices.end(); it++)
@@ -74,6 +77,8 @@ void Renderer::DrawTriangles(const std::vector<Face>& vertices, const glm::vec3*
         auto pipedPolygon(processPipeline(polygon, FULL));
         auto viewPolygon(toViewPlane(pipedPolygon));
      
+        DrawFaceNormal(viewPolygon);
+
         PolygonScanConversion(viewPolygon);
 
         if (m_bDrawWireframe)
@@ -81,10 +86,6 @@ void Renderer::DrawTriangles(const std::vector<Face>& vertices, const glm::vec3*
             DrawPolygonLines(viewPolygon);
         }
 
-        if (bDrawFaceNormals)
-        {
-            drawFaceNormal(polygon, normScaleRate);
-        }
     }
 }
 
@@ -96,24 +97,38 @@ void Renderer::DrawPolygonLines(const Face& polygon)
     DrawLine(polygon.m_p3, polygon.m_p1, m_wireframeColor);
 }
 
-void Renderer::drawFaceNormal(const Face& polygon, float normScaleRate)
+void Renderer::DrawFaceNormal(Face& face)
 {
-    auto faceCenter = (polygon.m_p1 + polygon.m_p2 + polygon.m_p3) / 3.0f;
+    auto faceCenter = (face.m_p1 + face.m_p2 + face.m_p3) / 3.0f;
 
-    auto normalizedFaceNormal = polygon.m_normal;
+    auto normalizedFaceNormal = face.m_normal;
 
-    normalizedFaceNormal.x *= normScaleRate;
-    normalizedFaceNormal.y *= normScaleRate;
-    normalizedFaceNormal.z *= normScaleRate;
+    normalizedFaceNormal.x *= m_faceNormScaleFactor;
+    normalizedFaceNormal.y *= m_faceNormScaleFactor;
+    normalizedFaceNormal.z *= m_faceNormScaleFactor;
 
     auto nP1 = processPipeline(faceCenter);
     auto nP2 = processPipeline(faceCenter + normalizedFaceNormal);
 
-    DrawLine(toViewPlane(nP1), toViewPlane(nP2), COLOR(LIME));
+    for (auto lightData : face.m_diffusiveColorAndSource)
+    {
+        glm::vec4 currentLight1 = lightData.first * dot(normalize(processPipeline(face.m_normal, MODEL)), processPipeline(lightData.second.first, LIGHT, &lightData.second.second));
+        glm::vec4 currentLight2 = lightData.first * dot(normalize(processPipeline(face.m_normal, MODEL)), processPipeline(lightData.second.first, LIGHT, &lightData.second.second));
+        glm::vec4 currentLight3 = lightData.first * dot(normalize(processPipeline(face.m_normal, MODEL)), processPipeline(lightData.second.first, LIGHT, &lightData.second.second));
+
+       face.m_actualColorP1 += currentLight1;
+       face.m_actualColorP2 += currentLight2;
+       face.m_actualColorP3 += currentLight3;
+    }
+
+    if (m_bDrawFaceNormals)
+    {
+        DrawLine(toViewPlane(nP1), toViewPlane(nP2), COLOR(LIME));
+    }
 }
 
 
-void Renderer::PolygonScanConversion(const Face& polygon)
+void Renderer::PolygonScanConversion(Face& polygon)
 {
 
     ivec2 upperRight, lowerLeft;
@@ -142,7 +157,24 @@ void Renderer::PolygonScanConversion(const Face& polygon)
         }
     } break;
     case ST_PHONG:
-        break;
+    {
+//         for (int x = lowerLeft.x; x <= upperRight.x; x++)
+//         {
+//             for (int y = lowerLeft.y; y <= upperRight.y; y++)
+// 
+//                 if (isPointInTriangle({ x,y }, { polygon.m_p1.x,polygon.m_p1.y }, { polygon.m_p2.x,polygon.m_p2.y }, { polygon.m_p3.x,polygon.m_p3.y }))
+//                 {
+//                     vec3 interpolatedVN = Barycentric({ x,y }, polygon.m_p1, polygon.m_p2, polygon.m_p3);
+//                     vec4 actualColor = (
+//                         ((interpolatedVN.x / 3) * polygon.m_actualColorP1) +
+//                         ((interpolatedVN.y / 3) * polygon.m_actualColorP2) +
+//                         ((interpolatedVN.z / 3) * polygon.m_actualColorP3)
+//                         );
+// 
+//                     putPixel(x, y, maxZ, actualColor);
+//                 }
+//         }
+    }break;
     case ST_GOURAUD:
     {
         for (int x = lowerLeft.x; x <= upperRight.x; x++)
@@ -153,12 +185,12 @@ void Renderer::PolygonScanConversion(const Face& polygon)
                 {
                     vec3 interpolatedColor = Barycentric({ x,y }, polygon.m_p1, polygon.m_p2, polygon.m_p3);
                     vec4 actualColor = (
-                        interpolatedColor.x / 3 * polygon.m_actualColorP1 +
-                        interpolatedColor.y / 3 * polygon.m_actualColorP2 +
-                        interpolatedColor.z / 3 * polygon.m_actualColorP3
-                        );
+                                         ((interpolatedColor.x / 3) * polygon.m_actualColorP1) +
+                                         ((interpolatedColor.y / 3) * polygon.m_actualColorP2) +
+                                         ((interpolatedColor.z / 3) * polygon.m_actualColorP3)
+                                       );
 
-                    putPixel(x, y, maxZ, Util::toHomogeneousForm(actualColor));
+                    putPixel(x, y, maxZ, actualColor);
                 }
         }
     } break;
@@ -432,6 +464,16 @@ void Renderer::SetShadingType(SHADING_TYPE shading)
 void Renderer::DrawWireframe(bool bDrawn)
 {
     m_bDrawWireframe = bDrawn;
+}
+
+void Renderer::DrawFaceNormal(bool bDrawn)
+{
+    m_bDrawFaceNormals = bDrawn;
+}
+
+void Renderer::SetFaceNormScaleFactor(float scaleFactor)
+{
+    m_faceNormScaleFactor = scaleFactor;
 }
 
 void Renderer::orderPoints(float& x1, float& x2, float& y1, float& y2, float& d1, float& d2)
