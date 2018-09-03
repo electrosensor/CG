@@ -70,11 +70,11 @@ vec2 vec2fFromStream(std::istream& issLine)
 	return vec2(x, y);
 }
 
-MeshModel::MeshModel(const string& fileName) : m_modelTransformation(SCALING_MATRIX4(0.5f)),
+MeshModel::MeshModel(const string& fileName, const Surface& material) : m_modelTransformation(SCALING_MATRIX4(0.5f)),
 											   m_normalTransformation(I_MATRIX),
                                                m_worldTransformation(I_MATRIX),
                                                m_modelCentroid(ZERO_VEC3),
-                                               m_surface(Surface())
+                                               m_surface(material)
 {
 	LoadFile(fileName);
     setModelRenderingState(true);

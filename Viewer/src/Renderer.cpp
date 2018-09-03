@@ -68,7 +68,7 @@ void Renderer::Init()
 
 }
 
-void Renderer::DrawTriangles(const std::vector<Face>& vertices, const glm::vec3* modelCentroid /*= nullptr*/)
+void Renderer::DrawTriangles(const std::vector<Face>& vertices, const glm::vec3* modelCentroid /*= nullptr*/, const glm::vec3 eye /*= ZERO_VEC3*/)
 {
     
     for (auto it = vertices.begin(); it != vertices.end(); it++)
@@ -78,6 +78,42 @@ void Renderer::DrawTriangles(const std::vector<Face>& vertices, const glm::vec3*
         auto viewPolygon(toViewPlane(pipedPolygon));
      
         DrawFaceNormal(viewPolygon);
+
+        auto normAndPipedNormalP1 = normalize(processPipeline(polygon.m_p1 + polygon.m_normal, MODEL));
+        auto normAndPipedNormalP2 = normalize(processPipeline(polygon.m_p2 + polygon.m_normal, MODEL));
+        auto normAndPipedNormalP3 = normalize(processPipeline(polygon.m_p3 + polygon.m_normal, MODEL));
+
+        for (auto lightData : viewPolygon.m_diffusiveColorAndSource)
+        {
+            auto lightCoord = processPipeline(lightData.second.first, LIGHT, &lightData.second.second);
+         
+            auto diffusiveProductP1 = lightData.first * dot(normAndPipedNormalP1, lightCoord);
+            auto diffusiveProductP2 = lightData.first * dot(normAndPipedNormalP2, lightCoord);
+            auto diffusiveProductP3 = lightData.first * dot(normAndPipedNormalP3, lightCoord);
+         
+            viewPolygon.m_actualColorP1 += diffusiveProductP1;
+            viewPolygon.m_actualColorP2 += diffusiveProductP2;
+            viewPolygon.m_actualColorP3 += diffusiveProductP3;
+        }
+
+        for (auto lightData : viewPolygon.m_speculativeColorAndSource)
+        {
+            auto lightCoord = processPipeline(lightData.second.first, LIGHT, &lightData.second.second);
+
+            glm::vec3 reflection1 = ((2.f * dot(normAndPipedNormalP1,lightCoord)) * normAndPipedNormalP1) - lightCoord;
+            glm::vec3 reflection2 = ((2.f * dot(normAndPipedNormalP2,lightCoord)) * normAndPipedNormalP2) - lightCoord;
+            glm::vec3 reflection3 = ((2.f * dot(normAndPipedNormalP3,lightCoord)) * normAndPipedNormalP3) - lightCoord;
+
+            glm::vec3 curr_eye = processPipeline(eye, LIGHT, &(m_cameraTransform*m_objectTransform));
+
+            glm::vec4 specLight1 = lightData.first * glm::pow(dot(reflection1, curr_eye), viewPolygon.m_surface->m_shininess);
+            glm::vec4 specLight2 = lightData.first * glm::pow(dot(reflection2, curr_eye), viewPolygon.m_surface->m_shininess);
+            glm::vec4 specLight3 = lightData.first * glm::pow(dot(reflection3, curr_eye), viewPolygon.m_surface->m_shininess);
+
+            viewPolygon.m_actualColorP1 += specLight1;
+            viewPolygon.m_actualColorP2 += specLight2;
+            viewPolygon.m_actualColorP3 += specLight3;
+        }
 
         PolygonScanConversion(viewPolygon);
 
@@ -108,18 +144,7 @@ void Renderer::DrawFaceNormal(Face& face)
     normalizedFaceNormal.z *= m_faceNormScaleFactor;
 
     auto nP1 = processPipeline(faceCenter);
-    auto nP2 = processPipeline(faceCenter + normalizedFaceNormal);
-
-    for (auto lightData : face.m_diffusiveColorAndSource)
-    {
-        glm::vec4 currentLight1 = lightData.first * dot(normalize(processPipeline(face.m_normal, MODEL)), processPipeline(lightData.second.first, LIGHT, &lightData.second.second));
-        glm::vec4 currentLight2 = lightData.first * dot(normalize(processPipeline(face.m_normal, MODEL)), processPipeline(lightData.second.first, LIGHT, &lightData.second.second));
-        glm::vec4 currentLight3 = lightData.first * dot(normalize(processPipeline(face.m_normal, MODEL)), processPipeline(lightData.second.first, LIGHT, &lightData.second.second));
-
-       face.m_actualColorP1 += currentLight1;
-       face.m_actualColorP2 += currentLight2;
-       face.m_actualColorP3 += currentLight3;
-    }
+    auto nP2 = nP1 - processPipeline(normalizedFaceNormal);
 
     if (m_bDrawFaceNormals)
     {
@@ -141,6 +166,8 @@ void Renderer::PolygonScanConversion(Face& polygon)
 
     lowerLeft.x = lowerLeft.x > m_width ? m_width : lowerLeft.x;
     lowerLeft.y = lowerLeft.y > m_height ? m_height : lowerLeft.y;
+
+
 
     switch (m_shadingType)
     {
@@ -183,11 +210,11 @@ void Renderer::PolygonScanConversion(Face& polygon)
 
                 if (isPointInTriangle({ x,y }, { polygon.m_p1.x,polygon.m_p1.y }, { polygon.m_p2.x,polygon.m_p2.y }, { polygon.m_p3.x,polygon.m_p3.y }))
                 {
-                    vec3 interpolatedColor = Barycentric({ x,y }, polygon.m_p1, polygon.m_p2, polygon.m_p3);
+                    vec3 baryVec = Barycentric({ x,y }, polygon.m_p1, polygon.m_p2, polygon.m_p3);
                     vec4 actualColor = (
-                                         ((interpolatedColor.x / 3) * polygon.m_actualColorP1) +
-                                         ((interpolatedColor.y / 3) * polygon.m_actualColorP2) +
-                                         ((interpolatedColor.z / 3) * polygon.m_actualColorP3)
+                                         ((baryVec.x / 3) * polygon.m_actualColorP1) +
+                                         ((baryVec.y / 3) * polygon.m_actualColorP2) +
+                                         ((baryVec.z / 3) * polygon.m_actualColorP3)
                                        );
 
                     putPixel(x, y, maxZ, actualColor);

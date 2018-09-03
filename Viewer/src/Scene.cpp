@@ -8,7 +8,7 @@ using namespace glm;
 
 void Scene::LoadOBJModel(string fileName)
 {
-    auto* model = new MeshModel(fileName);
+    auto* model = new MeshModel(fileName, Surface());
     if (fileName != CAMERA_OBJ_FILE)
     {
         m_models.push_back(model);
@@ -84,7 +84,7 @@ void Scene::Draw()
         tie(vPolygons, vVertices, vVerticesNormals) = modelData;
 
         renderer->SetObjectMatrices(model->GetModelTransformation(), model->GetNormalTransformation());
-        renderer->DrawTriangles(vPolygons, &model->getCentroid());
+        renderer->DrawTriangles(vPolygons, &model->getCentroid(), activeCamera->getCameraModel()->getCentroid());
 
         if (m_bDrawVecNormal && !vVerticesNormals.empty())
         {
@@ -408,6 +408,8 @@ void Scene::RotateActiveModelRelativeToWorld(float angle, AXES axis)
     }
 }
 
+
+
 bool Scene::shouldRenderCamera(int cameraIndex)
 {
     if (m_activeCamera != DISABLED)
@@ -539,20 +541,20 @@ bool Scene::shouldRenderLight()
     else return false;
 }
 
-int Scene::AddLight(LIGHT_SOURCE_TYPE type, const glm::vec3& lightCoord, const glm::vec4& ambiantC, float ambiantI, const glm::vec4& diffusiveC, float diffusiveI)
+int Scene::AddLight(LIGHT_SOURCE_TYPE type, const glm::vec3& lightCoord, const glm::vec4& ambiantC, float ambiantI, const glm::vec4& diffusiveC, float diffusiveI, const glm::vec4& specularC, float specularI)
 {
     Light* p_newLight = nullptr;
 
     switch (type)
     {
     case LST_POINT:
-        p_newLight = new PointSourceLight(lightCoord, ambiantC, ambiantI, diffusiveC, diffusiveI);
+        p_newLight = new PointSourceLight(lightCoord, ambiantC, ambiantI, diffusiveC, diffusiveI, specularC, specularI);
         break;
     case LST_PARALLEL:
-        p_newLight = new ParallelSourceLight(lightCoord, ambiantC, ambiantI, diffusiveC, diffusiveI);
+        p_newLight = new ParallelSourceLight(lightCoord, ambiantC, ambiantI, diffusiveC, diffusiveI, specularC, specularI);
         break;
     case LST_AREA:
-        p_newLight = new DistributedSourceLight(lightCoord, ambiantC, ambiantI, diffusiveC, diffusiveI);
+        p_newLight = new DistributedSourceLight(lightCoord, ambiantC, ambiantI, diffusiveC, diffusiveI, specularC, specularI);
         break;
 
     default:
@@ -603,9 +605,9 @@ void Scene::SetfnScale(float scale)
     m_fnScaleFactor = scale;
 }
 
-unsigned int Scene::AddPrimitiveModel(PRIM_MODEL primitiveModel)
+unsigned int Scene::AddPrimitiveModel(PRIM_MODEL primitiveModel, const Surface& material)
 {
-    Model* newModel = new PrimMeshModel(primitiveModel);
+    Model* newModel = new PrimMeshModel(primitiveModel, material);
     m_models.push_back(newModel);
     return (unsigned)m_models.size() - 1;
 }

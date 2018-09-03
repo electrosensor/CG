@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "ImguiMenus.h"
 #include "Defs.h"
+#include "Face.h"
 #include <stdio.h>
 #include <stdlib.h>
 // open file dialog cross platform https://github.com/mlabbe/nativefiledialog
@@ -515,16 +516,48 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         ImGui::Begin("Models");
         ImGui::Text("-------------- Primitives Models: --------------");
 
+        ImGui::Text("Material:");
+
+        vec4 currentPolygonCol = scene->GetPolygonColor();
+        static float ambientMatColor[3] = { currentPolygonCol.x ,currentPolygonCol.y ,currentPolygonCol.z };
+        static float ambiantMatCoef = 1.f;
+        ImGui::ColorEdit3("Ambient Reflection Color", ambientMatColor);
+        ImGui::SliderFloat("Ambient Reflection Coefficient", &ambiantMatCoef, 0.f, 2.f);
+
+        ImGui::NewLine();
+        static float diffusiveMatColor[3] = { currentPolygonCol.x ,currentPolygonCol.y ,currentPolygonCol.z };
+        static float diffusiveMatCoef = 1.f;
+        ImGui::ColorEdit3("Diffusive Reflection Color", diffusiveMatColor);
+        ImGui::SliderFloat("Diffusive Reflection Coefficient", &diffusiveMatCoef, 0.f, 2.f);
+
+        ImGui::NewLine();
+        static float specularMatColor[3] = { currentPolygonCol.x ,currentPolygonCol.y ,currentPolygonCol.z };
+        static float specularMatCoef = 1.f;
+        ImGui::ColorEdit3("Specular Reflection Color", specularMatColor);
+        ImGui::SliderFloat("Specular Reflection Coefficient", &specularMatCoef, 0.f, 1.f);
+        ImGui::NewLine();
+        static int shininess = 2;
+        ImGui::SliderInt("Shininess", &shininess, 1, 64);
+
+        Surface material("Custom", 
+            {ambientMatColor[0], ambientMatColor[1], ambientMatColor[2], 1.f},
+            ambiantMatCoef, 
+            {diffusiveMatColor[0], diffusiveMatColor[1], diffusiveMatColor[2], 1.f},
+            diffusiveMatCoef, 
+            {specularMatColor[0], specularMatColor[1], specularMatColor[2], 1.f},
+            specularMatCoef, 
+            1.f / shininess*2);
+
         if (ImGui::Button("Add Cube model"))
         {
-            int idx = scene->AddPrimitiveModel(PM_CUBE);
+            int idx = scene->AddPrimitiveModel(PM_CUBE, material);
             scene->SetActiveModelIdx(idx);
             bModelControlFrame = true;
         }
 
         if (ImGui::Button("Add Sphere model"))
         {
-            int idx = scene->AddPrimitiveModel(PM_SPHERE);
+            int idx = scene->AddPrimitiveModel(PM_SPHERE, material);
             scene->SetActiveModelIdx(idx);
             bModelControlFrame = true;
         }
@@ -580,6 +613,8 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             ImGui::Checkbox("Show vertices normals", &bShowVertNorms);
             ImGui::Checkbox("Show face normals", &bShowFaceNorms);
             ImGui::Checkbox("Show Border Cube", &bShowBorderCube);
+
+
         }
 
         ImGui::End();
@@ -604,25 +639,30 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 
         scene->SetShadingType(static_cast<SHADING_TYPE>(currentShading));
 
-        ImGui::Text("-------------- Light: --------------");
-
         static int currentLight = static_cast<int>(LST_POINT);
         static const char LightTypes[] = { "Point\0Parallel\0Area\0" };
         ImGui::Combo("Light Source", &currentLight, LightTypes);
-
+       
+        ImGui::NewLine();
         vec4 currentPolygonCol = scene->GetPolygonColor();
-
-        static float ambientColor[3] = { currentPolygonCol.x ,currentPolygonCol.y ,currentPolygonCol.z };
-        static float ambiantIntensity = 1.f;
+        static float ambientColor[3] = { currentPolygonCol.x + 0.1f ,currentPolygonCol.y + 0.1f ,currentPolygonCol.z + 0.1f };
+        static float ambiantIntensity = 1.2f;
         ImGui::ColorEdit3("Ambient Color", ambientColor);
-        ImGui::SliderFloat("Ambient Intensity: ", &ambiantIntensity, 0, 10);
+        ImGui::SliderFloat("Ambient Intensity: ", &ambiantIntensity, 0, 2);
 
-
-        static float diffusiveColor[3] = { currentPolygonCol.x ,currentPolygonCol.y ,currentPolygonCol.z };
-        static float diffusiveIntensity = 1.f;
+        ImGui::NewLine();
+        static float diffusiveColor[3] = { currentPolygonCol.x + 0.2f ,currentPolygonCol.y + 0.2f ,currentPolygonCol.z + 0.2f };
+        static float diffusiveIntensity = 0.7f;
         ImGui::ColorEdit3("Diffusive Color", diffusiveColor);
-        ImGui::SliderFloat("Diffusive Intensity ", &diffusiveIntensity, 0, 10);
+        ImGui::SliderFloat("Diffusive Intensity ", &diffusiveIntensity, 0, 1);
 
+        ImGui::NewLine();
+        static float specularColor[3] = { currentPolygonCol.x + 0.3f ,currentPolygonCol.y + 0.3f ,currentPolygonCol.z + 0.3f };
+        static float specularIntensity = 0.1f;
+        ImGui::ColorEdit3("Specular Color", specularColor);
+        ImGui::SliderFloat("Specular Intensity ", &specularIntensity, 0, 0.3f);
+
+        ImGui::NewLine();
         static float lightCoord[3] = { 3.f , 3.f , 3.f };
         ImGui::SliderFloat3("Light location:", lightCoord, -10, 10);
 
@@ -631,7 +671,9 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
             int idx = scene->AddLight(
                 static_cast<LIGHT_SOURCE_TYPE>(currentLight), { lightCoord[0], lightCoord[1], lightCoord[2] },
                 { ambientColor[0], ambientColor[1], ambientColor[2], 1 }, ambiantIntensity,
-                { diffusiveColor[0], diffusiveColor[1], diffusiveColor[2], 1 }, diffusiveIntensity );
+                { diffusiveColor[0], diffusiveColor[1], diffusiveColor[2], 1 }, diffusiveIntensity,
+                { specularColor[0], specularColor[1], specularColor[2], 1 }, specularIntensity );
+
             scene->SetActiveLightIdx(idx);
             bLightControlFrame = true;
         }
@@ -662,7 +704,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
                 float ambCol[3] = { activeLight->GetAmbientColor().x, activeLight->GetAmbientColor().y, activeLight->GetAmbientColor().z };
                 float ambI = activeLight->GetAmbientIntensity();
                 ImGui::ColorEdit3("Active Ambient Color", ambCol);
-                ImGui::SliderFloat("Active Ambient Intensity: ", &ambI, 0, 10);
+                ImGui::SliderFloat("Active Ambient Intensity: ", &ambI, 0, 2);
                 activeLight->SetAmbientColor({ ambCol[0], ambCol[1], ambCol[2], 1 });
                 activeLight->SetAmbientIntensity(ambI);
 
@@ -670,10 +712,16 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
                 float diffCol[3] = { activeLight->GetDiffusiveColor().x, activeLight->GetDiffusiveColor().y, activeLight->GetDiffusiveColor().z };
                 float diffI = activeLight->GetDiffusiveIntensity();
                 ImGui::ColorEdit3("Active Diffusive Color", diffCol);
-                ImGui::SliderFloat("Active Diffusive Intensity ", &diffI, 0, 10);
+                ImGui::SliderFloat("Active Diffusive Intensity ", &diffI, 0, 1);
                 activeLight->SetDiffusiveColor({ diffCol[0], diffCol[1], diffCol[2], 1 });
                 activeLight->SetDiffusiveIntensity(diffI);
 
+                float specCol[3] = { activeLight->GetSpecularColor().x, activeLight->GetSpecularColor().y, activeLight->GetSpecularColor().z };
+                float specI = activeLight->GetSpecularIntensity();
+                ImGui::ColorEdit3("Active Specular Color", specCol);
+                ImGui::SliderFloat("Active Specular Intensity ", &specI, 0, 0.3f);
+                activeLight->SetSpecularColor({ specCol[0], specCol[1], specCol[2], 1 });
+                activeLight->SetSpecularIntensity(specI);
             }
 
             if (ImGui::Button("Next light model"))

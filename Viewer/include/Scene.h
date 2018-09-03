@@ -99,7 +99,7 @@ public:
     float  GetfnScale();
     void SetfnScale(float scale);
 
-    unsigned int  AddPrimitiveModel(PRIM_MODEL primitiveModel); //TO_DO develop good API
+    unsigned int AddPrimitiveModel(PRIM_MODEL primitiveModel, const Surface& material); //TO_DO develop good API
     void NextModel();
     void DeleteActiveModel();
 
@@ -154,7 +154,10 @@ public:
     bool shouldRenderLight();
 
 
-    int AddLight(LIGHT_SOURCE_TYPE type, const glm::vec3& lightCoord, const glm::vec4& ambiantC, float ambiantI, const glm::vec4& diffusiveC, float diffusiveI);
+    int AddLight(LIGHT_SOURCE_TYPE type, const glm::vec3& lightCoord, 
+        const glm::vec4& ambiantC, float ambiantI, 
+        const glm::vec4& diffusiveC, float diffusiveI, 
+        const glm::vec4& specularC, float specularI);
 
     Light* GetActiveLight();
 

@@ -80,7 +80,7 @@ public:
     void PolygonScanConversion(Face& polygon);
     void drawVerticesNormals(const std::vector<glm::vec3>& vertices, const std::vector<glm::vec3>& normals, float normScaleRate);
     // Draws wireframe triangles to the color buffer
-    void DrawTriangles(const std::vector<Face>& vertices, const glm::vec3* modelCentroid = nullptr);
+    void DrawTriangles(const std::vector<Face>& vertices, const glm::vec3* modelCentroid = nullptr, const glm::vec3 eye = ZERO_VEC3);
 
     void DrawPolygonLines(const Face& polygon);
 

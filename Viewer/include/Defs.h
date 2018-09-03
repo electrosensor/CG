@@ -27,6 +27,7 @@
 #define TO_RADIAN(angle)                 ((angle) * PI / 180.0f)
 #define ZERO_MATRIX                      { {0,0,0,0},{ 0,0,0,0 },{ 0,0,0,0 },{ 0,0,0,0 } }
 #define ZERO_VEC3                        {0,0,0}
+#define ZERO_VEC4                        {0,0,0,0}
 #define I_MATRIX                         { {1,0,0,0},{ 0,1,0,0 },{ 0,0,1,0 },{ 0,0,0,1 } }
 #define SCALING_MATRIX4(value)           { {(value),0,0,0},{ 0,(value),0,0 },{ 0,0,(value),0 },{ 0,0,0,1 } }
 #define TRANSLATION_MATRIX(x, y, z)      { {1,0,0,0},{ 0,1,0,0 },{ 0,0,1,0 },{ (x),(y),(z),1 } }

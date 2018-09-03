@@ -29,7 +29,7 @@ class MeshModel : public Model
         Surface m_surface;
 
 	public:
-		MeshModel(const std::string& fileName);
+		MeshModel(const std::string& fileName, const Surface& material);
 		~MeshModel();
 
         const glm::mat4x4& GetModelTransformation() override;
@@ -44,15 +44,13 @@ class MeshModel : public Model
 		void Draw(std::tuple<std::vector<Face>, std::vector<glm::vec3>, std::vector<glm::vec3> >& modelData) override;
         glm::vec3 getCentroid() override { return  m_modelCentroid; }
 
-
-
 };
 
 class PrimMeshModel : public MeshModel
 {
 public:
     PrimMeshModel() = delete;
-	PrimMeshModel(PRIM_MODEL primModel) : MeshModel(*setPrimModelFilePath(primModel))
+	PrimMeshModel(PRIM_MODEL primModel, const Surface& material) : MeshModel(*setPrimModelFilePath(primModel), material)
 	{
 		if (m_pPrimModelString)
 		{
@@ -72,7 +70,7 @@ class CamMeshModel : public MeshModel
 {
 public:
     CamMeshModel() = delete;
-    CamMeshModel(glm::vec3 camCoords) : MeshModel(CAMERA_OBJ_FILE)
+    CamMeshModel(glm::vec3 camCoords) : MeshModel(CAMERA_OBJ_FILE, Surface())
     {
         m_camCoords = camCoords;
 //         glm::mat4x4 eyeTranslation = glm::mat4x4(TRANSLATION_MATRIX(camCoords.x, camCoords.y, camCoords.x))*GetModelTransformation();
@@ -101,7 +99,7 @@ class LightMeshModel : public MeshModel
 {
 public:
 
-    LightMeshModel(LIGHT_SOURCE_TYPE type, const glm::vec3& location) : MeshModel(LIGHT_OBJ_FILE)
+    LightMeshModel(LIGHT_SOURCE_TYPE type, const glm::vec3& location) : MeshModel(LIGHT_OBJ_FILE, Surface())
     {
         SetModelTransformation(glm::mat4x4(TRANSLATION_MATRIX(location.x, location.y, location.z)) * glm::mat4x4(SCALING_MATRIX4(0.1)));
     } 
