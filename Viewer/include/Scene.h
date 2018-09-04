@@ -44,7 +44,7 @@ public:
     }
 
     // Loads an obj file into the scene.
-    void LoadOBJModel(std::string fileName);
+    void LoadOBJModel(std::string fileName, const Surface& material);
 
     // Draws the current scene.
     void Draw();

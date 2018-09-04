@@ -293,6 +293,9 @@ string* PrimMeshModel::setPrimModelFilePath(PRIM_MODEL primModel)
 	case PM_CUBE:
 		m_pPrimModelString = new string("PrimModels/PM_Cube.obj");
 		break;
+    case PM_TEAPOT:
+        m_pPrimModelString = new string("PrimModels/teapot.obj");
+        break;
 	default:
 		m_pPrimModelString = new string("NULL");
 		break;

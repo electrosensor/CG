@@ -6,9 +6,9 @@ using namespace glm;
 
 #define IS_CAMERA true
 
-void Scene::LoadOBJModel(string fileName)
+void Scene::LoadOBJModel(std::string fileName, const Surface& material)
 {
-    auto* model = new MeshModel(fileName, Surface());
+    auto* model = new MeshModel(fileName, material);
     if (fileName != CAMERA_OBJ_FILE)
     {
         m_models.push_back(model);

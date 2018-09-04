@@ -87,15 +87,14 @@ public:
 
         float diffusiveI = m_diffusiveLightIntensity * polygon.m_surface->m_diffuseReflectionRate;
         glm::vec4 diffusiveC = polygon.m_surface->m_diffuseColor + m_diffusiveLightColor;
-        diffusiveC *= diffusiveI;
 
         float speculativeI = m_specularLightIntensity * polygon.m_surface->m_specularReflectionRate;
         glm::vec4 speculativeC = polygon.m_surface->m_specularColor + m_specularLightColor;
-        speculativeC *= speculativeI;
 
         glm::vec3 centroid = GetLightModel().getCentroid();
-        polygon.m_diffusiveColorAndSource.push_back({ diffusiveC, { centroid , lightModelTransf } });
-        polygon.m_speculativeColorAndSource.push_back({ speculativeC, { centroid, lightModelTransf } });
+        polygon.m_diffusiveColorAndSource.push_back({ { diffusiveI, diffusiveC }, { centroid , lightModelTransf }
+    });
+        polygon.m_speculativeColorAndSource.push_back({ {speculativeI, speculativeC}, { centroid, lightModelTransf } });
     }
 };
 

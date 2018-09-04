@@ -97,6 +97,7 @@ enum SHADING_TYPE
 {
     ST_NO_SHADING,
     ST_SOLID,
+    ST_FLAT,
     ST_PHONG,
     ST_GOURAUD
 };
@@ -152,7 +153,8 @@ enum PRIM_MODEL
 {
     PM_SPHERE = 0,
     PM_CUBE,
-    PRV_CAMERA
+    PRV_CAMERA,
+    PM_TEAPOT
 
 };
 

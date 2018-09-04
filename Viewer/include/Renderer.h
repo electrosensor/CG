@@ -82,6 +82,8 @@ public:
     // Draws wireframe triangles to the color buffer
     void DrawTriangles(const std::vector<Face>& vertices, const glm::vec3* modelCentroid = nullptr, const glm::vec3 eye = ZERO_VEC3);
 
+    void CalculateLights(Face &polygon, Face &viewPolygon, const glm::vec3 eye);
+
     void DrawPolygonLines(const Face& polygon);
 
     void DrawFaceNormal(Face& face);

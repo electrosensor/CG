@@ -78,43 +78,7 @@ void Renderer::DrawTriangles(const std::vector<Face>& vertices, const glm::vec3*
         auto viewPolygon(toViewPlane(pipedPolygon));
      
         DrawFaceNormal(viewPolygon);
-
-        auto normAndPipedNormalP1 = normalize(processPipeline(polygon.m_p1 + polygon.m_normal, MODEL));
-        auto normAndPipedNormalP2 = normalize(processPipeline(polygon.m_p2 + polygon.m_normal, MODEL));
-        auto normAndPipedNormalP3 = normalize(processPipeline(polygon.m_p3 + polygon.m_normal, MODEL));
-
-        for (auto lightData : viewPolygon.m_diffusiveColorAndSource)
-        {
-            auto lightCoord = processPipeline(lightData.second.first, LIGHT, &lightData.second.second);
-         
-            auto diffusiveProductP1 = lightData.first * dot(normAndPipedNormalP1, lightCoord);
-            auto diffusiveProductP2 = lightData.first * dot(normAndPipedNormalP2, lightCoord);
-            auto diffusiveProductP3 = lightData.first * dot(normAndPipedNormalP3, lightCoord);
-         
-            viewPolygon.m_actualColorP1 += diffusiveProductP1;
-            viewPolygon.m_actualColorP2 += diffusiveProductP2;
-            viewPolygon.m_actualColorP3 += diffusiveProductP3;
-        }
-
-        for (auto lightData : viewPolygon.m_speculativeColorAndSource)
-        {
-            auto lightCoord = processPipeline(lightData.second.first, LIGHT, &lightData.second.second);
-
-            glm::vec3 reflection1 = ((2.f * dot(normAndPipedNormalP1,lightCoord)) * normAndPipedNormalP1) - lightCoord;
-            glm::vec3 reflection2 = ((2.f * dot(normAndPipedNormalP2,lightCoord)) * normAndPipedNormalP2) - lightCoord;
-            glm::vec3 reflection3 = ((2.f * dot(normAndPipedNormalP3,lightCoord)) * normAndPipedNormalP3) - lightCoord;
-
-            glm::vec3 curr_eye = processPipeline(eye, LIGHT, &(m_cameraTransform*m_objectTransform));
-
-            glm::vec4 specLight1 = lightData.first * glm::pow(dot(reflection1, curr_eye), viewPolygon.m_surface->m_shininess);
-            glm::vec4 specLight2 = lightData.first * glm::pow(dot(reflection2, curr_eye), viewPolygon.m_surface->m_shininess);
-            glm::vec4 specLight3 = lightData.first * glm::pow(dot(reflection3, curr_eye), viewPolygon.m_surface->m_shininess);
-
-            viewPolygon.m_actualColorP1 += specLight1;
-            viewPolygon.m_actualColorP2 += specLight2;
-            viewPolygon.m_actualColorP3 += specLight3;
-        }
-
+        CalculateLights(polygon, viewPolygon, eye);
         PolygonScanConversion(viewPolygon);
 
         if (m_bDrawWireframe)
@@ -125,6 +89,81 @@ void Renderer::DrawTriangles(const std::vector<Face>& vertices, const glm::vec3*
     }
 }
 
+
+void Renderer::CalculateLights(Face &polygon, Face &viewPolygon, const glm::vec3 eye)
+{
+    vec3 normAndPipedNormalP1;
+    vec3 normAndPipedNormalP2;
+    vec3 normAndPipedNormalP3;
+
+    if (m_shadingType == ST_FLAT)
+    {
+        normAndPipedNormalP1 = normalize(processPipeline(polygon.m_normal, MODEL));
+        normAndPipedNormalP2 = normalize(processPipeline(polygon.m_normal, MODEL));
+        normAndPipedNormalP3 = normalize(processPipeline(polygon.m_normal, MODEL));
+    }
+
+    if (m_shadingType == ST_GOURAUD)
+    {
+        normAndPipedNormalP1 = normalize(processPipeline(polygon.m_p1 + polygon.m_normal, MODEL));
+        normAndPipedNormalP2 = normalize(processPipeline(polygon.m_p2 + polygon.m_normal, MODEL));
+        normAndPipedNormalP3 = normalize(processPipeline(polygon.m_p3 + polygon.m_normal, MODEL));
+    }
+    if (m_shadingType == ST_PHONG)
+    {
+        normAndPipedNormalP1 = normalize(processPipeline(polygon.m_p1 + polygon.m_vn1, MODEL));
+        normAndPipedNormalP2 = normalize(processPipeline(polygon.m_p2 + polygon.m_vn2, MODEL));
+        normAndPipedNormalP3 = normalize(processPipeline(polygon.m_p3 + polygon.m_vn3, MODEL));
+    }
+
+    vec3 PipedFaceP1 = processPipeline(polygon.m_p1, MODEL);
+    vec3 PipedFaceP2 = processPipeline(polygon.m_p2, MODEL);
+    vec3 PipedFaceP3 = processPipeline(polygon.m_p3, MODEL);
+
+    for (auto lightData : viewPolygon.m_diffusiveColorAndSource)
+    {
+        auto PipedlightCoord = processPipeline(lightData.second.first, LIGHT, &lightData.second.second);
+
+        auto lightCoord1 = normalize(PipedFaceP1 + PipedlightCoord);
+        auto lightCoord2 = normalize(PipedFaceP2 + PipedlightCoord);
+        auto lightCoord3 = normalize(PipedFaceP3 + PipedlightCoord);
+
+        auto diffusiveProductP1 = lightData.first.first * lightData.first.second * dot(normAndPipedNormalP1, lightCoord1);
+        auto diffusiveProductP2 = lightData.first.first * lightData.first.second * dot(normAndPipedNormalP2, lightCoord2);
+        auto diffusiveProductP3 = lightData.first.first * lightData.first.second * dot(normAndPipedNormalP3, lightCoord3);
+
+        viewPolygon.m_actualColorP1 += diffusiveProductP1;
+        viewPolygon.m_actualColorP2 += diffusiveProductP2;
+        viewPolygon.m_actualColorP3 += diffusiveProductP3;
+    }
+
+    for (auto lightData : viewPolygon.m_speculativeColorAndSource)
+    {
+        auto PipedlightCoord = processPipeline(lightData.second.first, LIGHT, &lightData.second.second);
+
+        auto lightCoord1 = normalize(PipedFaceP1 + PipedlightCoord);
+        auto lightCoord2 = normalize(PipedFaceP2 + PipedlightCoord);
+        auto lightCoord3 = normalize(PipedFaceP3 + PipedlightCoord);
+
+        glm::vec3 reflection1 = normalize(PipedFaceP1 + (2.f * dot(normAndPipedNormalP1, lightCoord1)) * normAndPipedNormalP1 - lightCoord1);
+        glm::vec3 reflection2 = normalize(PipedFaceP2 + (2.f * dot(normAndPipedNormalP2, lightCoord2)) * normAndPipedNormalP2 - lightCoord2);
+        glm::vec3 reflection3 = normalize(PipedFaceP3 + (2.f * dot(normAndPipedNormalP3, lightCoord3)) * normAndPipedNormalP3 - lightCoord3);
+
+        glm::vec3 pipedEye = processPipeline(eye, LIGHT, &(inverse(m_cameraTransform)));
+
+        glm::vec3 curr_eye1 = normalize(PipedFaceP1 + pipedEye);
+        glm::vec3 curr_eye2 = normalize(PipedFaceP2 + pipedEye);
+        glm::vec3 curr_eye3 = normalize(PipedFaceP3 + pipedEye);
+
+        glm::vec4 specLight1 = lightData.first.first * lightData.first.second * glm::pow(dot(reflection1, curr_eye1), viewPolygon.m_surface->m_shininess);
+        glm::vec4 specLight2 = lightData.first.first * lightData.first.second * glm::pow(dot(reflection2, curr_eye2), viewPolygon.m_surface->m_shininess);
+        glm::vec4 specLight3 = lightData.first.first * lightData.first.second * glm::pow(dot(reflection3, curr_eye3), viewPolygon.m_surface->m_shininess);
+
+        viewPolygon.m_actualColorP1 += specLight1;
+        viewPolygon.m_actualColorP2 += specLight2;
+        viewPolygon.m_actualColorP3 += specLight3;
+    }
+}
 
 void Renderer::DrawPolygonLines(const Face& polygon)
 {
@@ -167,64 +206,26 @@ void Renderer::PolygonScanConversion(Face& polygon)
     lowerLeft.x = lowerLeft.x > m_width ? m_width : lowerLeft.x;
     lowerLeft.y = lowerLeft.y > m_height ? m_height : lowerLeft.y;
 
-
-
-    switch (m_shadingType)
+    for (int x = lowerLeft.x; x <= upperRight.x; x++)
     {
-    case ST_SOLID:
-    {
-        for (int x = lowerLeft.x; x <= upperRight.x; x++)
-        {
-            for (int y = lowerLeft.y; y <= upperRight.y; y++)
+        for (int y = lowerLeft.y; y <= upperRight.y; y++)
 
-                if (isPointInTriangle({ x,y }, { polygon.m_p1.x,polygon.m_p1.y }, { polygon.m_p2.x,polygon.m_p2.y }, { polygon.m_p3.x,polygon.m_p3.y }))
-                {
-                    putPixel(x, y, maxZ, m_polygonColor);
+            if (isPointInTriangle({ x,y }, { polygon.m_p1.x,polygon.m_p1.y }, { polygon.m_p2.x,polygon.m_p2.y }, { polygon.m_p3.x,polygon.m_p3.y }))
+            {
+                vec3 baryVec = { 1.f, 1.f, 1.f };
+                if (m_shadingType != ST_SOLID) {
+                    baryVec = Barycentric({ x,y }, polygon.m_p1, polygon.m_p2, polygon.m_p3);
                 }
-        }
-    } break;
-    case ST_PHONG:
-    {
-//         for (int x = lowerLeft.x; x <= upperRight.x; x++)
-//         {
-//             for (int y = lowerLeft.y; y <= upperRight.y; y++)
-// 
-//                 if (isPointInTriangle({ x,y }, { polygon.m_p1.x,polygon.m_p1.y }, { polygon.m_p2.x,polygon.m_p2.y }, { polygon.m_p3.x,polygon.m_p3.y }))
-//                 {
-//                     vec3 interpolatedVN = Barycentric({ x,y }, polygon.m_p1, polygon.m_p2, polygon.m_p3);
-//                     vec4 actualColor = (
-//                         ((interpolatedVN.x / 3) * polygon.m_actualColorP1) +
-//                         ((interpolatedVN.y / 3) * polygon.m_actualColorP2) +
-//                         ((interpolatedVN.z / 3) * polygon.m_actualColorP3)
-//                         );
-// 
-//                     putPixel(x, y, maxZ, actualColor);
-//                 }
-//         }
-    }break;
-    case ST_GOURAUD:
-    {
-        for (int x = lowerLeft.x; x <= upperRight.x; x++)
-        {
-            for (int y = lowerLeft.y; y <= upperRight.y; y++)
 
-                if (isPointInTriangle({ x,y }, { polygon.m_p1.x,polygon.m_p1.y }, { polygon.m_p2.x,polygon.m_p2.y }, { polygon.m_p3.x,polygon.m_p3.y }))
-                {
-                    vec3 baryVec = Barycentric({ x,y }, polygon.m_p1, polygon.m_p2, polygon.m_p3);
-                    vec4 actualColor = (
-                                         ((baryVec.x / 3) * polygon.m_actualColorP1) +
-                                         ((baryVec.y / 3) * polygon.m_actualColorP2) +
-                                         ((baryVec.z / 3) * polygon.m_actualColorP3)
-                                       );
+                vec4 actualColor = (
+                    ((baryVec.x / 3) * polygon.m_actualColorP1) +
+                    ((baryVec.y / 3) * polygon.m_actualColorP2) +
+                    ((baryVec.z / 3) * polygon.m_actualColorP3)
+                    );
 
-                    putPixel(x, y, maxZ, actualColor);
-                }
-        }
-    } break;
-    default:
-        break;
+                putPixel(x, y, maxZ, actualColor);
+            }
     }
-
 }
 
 void Renderer::drawVerticesNormals(const vector<vec3>& vertices, const vector<vec3>& normals, float normScaleRate)
