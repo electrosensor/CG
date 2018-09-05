@@ -246,7 +246,7 @@ void MeshModel::LoadFile(const string& fileName)
 
         auto normalizedFaceNormal = Util::isVecEqual(faceNormal, vec3(0)) ? faceNormal : normalize(faceNormal);
 
-        Face currentPolygon(currentFace[0].first, currentFace[1].first, currentFace[2].first, normalizedFaceNormal, &m_surface, currentFace[0].second, currentFace[1].second, currentFace[2].second);
+        Face currentPolygon(currentFace[0].first, currentFace[1].first, currentFace[2].first, faceCenter, normalizedFaceNormal, &m_surface, currentFace[0].second, currentFace[1].second, currentFace[2].second);
         m_polygons[posIdx++] = currentPolygon;
 	}
     

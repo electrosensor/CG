@@ -79,8 +79,11 @@ void Renderer::DrawTriangles(const std::vector<Face>& vertices, const glm::vec3*
      
         DrawFaceNormal(viewPolygon);
         CalculateLights(polygon, viewPolygon, eye);
-        PolygonScanConversion(viewPolygon);
 
+        if (m_shadingType != ST_NO_SHADING)
+        {
+            PolygonScanConversion(viewPolygon);
+        }
         if (m_bDrawWireframe)
         {
             DrawPolygonLines(viewPolygon);
@@ -174,8 +177,7 @@ void Renderer::DrawPolygonLines(const Face& polygon)
 
 void Renderer::DrawFaceNormal(Face& face)
 {
-    auto faceCenter = (face.m_p1 + face.m_p2 + face.m_p3) / 3.0f;
-
+    auto faceCenter = face.m_faceCenter;
     auto normalizedFaceNormal = face.m_normal;
 
     normalizedFaceNormal.x *= m_faceNormScaleFactor;
@@ -183,7 +185,7 @@ void Renderer::DrawFaceNormal(Face& face)
     normalizedFaceNormal.z *= m_faceNormScaleFactor;
 
     auto nP1 = processPipeline(faceCenter);
-    auto nP2 = nP1 - processPipeline(normalizedFaceNormal);
+    auto nP2 = processPipeline(faceCenter + normalizedFaceNormal);
 
     if (m_bDrawFaceNormals)
     {
