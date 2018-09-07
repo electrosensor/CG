@@ -116,6 +116,13 @@ enum LIGHT_SOURCE_TYPE
     LST_AREA
 };
 
+enum GENERATED_TEXTURE
+{
+    GT_NONE,
+    GT_CRYSTAL,
+    GT_RUG
+};
+
 #define SET_PROJ_PARAMS(projParams)                                           \
                                          float left      = projParams.left;   \
                                          float right     = projParams.right;  \

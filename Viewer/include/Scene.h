@@ -133,7 +133,8 @@ public:
     void SetPolygonColor(const glm::vec4& polygonColor);
     glm::vec4 GetWireframeColor();
     void SetWireframeColor(const glm::vec4& wireframeColor);
-
+    GENERATED_TEXTURE GetGeneratedTexture();
+    void SetGeneratedTexture(GENERATED_TEXTURE texture);
     //Light API:
 
     int  GetActiveLightIdx();

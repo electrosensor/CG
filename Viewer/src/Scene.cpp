@@ -453,6 +453,16 @@ void Scene::SetWireframeColor(const vec4& newWireframeColor)
 
 
 
+GENERATED_TEXTURE Scene::GetGeneratedTexture()
+{
+    return renderer->GetGeneratedTexture();
+}
+
+void Scene::SetGeneratedTexture(GENERATED_TEXTURE texture)
+{
+    renderer->SetGeneratedTexture(texture);
+}
+
 int Scene::GetActiveLightIdx()
 {
     return m_activeLight;

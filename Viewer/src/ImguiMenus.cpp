@@ -519,22 +519,32 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 
         ImGui::Text("Material:");
 
+        static int currentTexture = static_cast<int>(GT_NONE);
+        static const char TextureTypes[] = { "None\0Crystal\0Rug\0" };
+        ImGui::Text("Generated Non-Uniform Texture");
+        bool static colorsNotInited = false;
+        if (ImGui::Combo("GT", &currentTexture, TextureTypes))
+        {
+            colorsNotInited = true;
+        }
+        scene->SetGeneratedTexture(static_cast<GENERATED_TEXTURE>(currentTexture));
+
         vec4 currentPolygonCol = scene->GetPolygonColor();
-        static float ambientMatColor[3] = { currentPolygonCol.x ,currentPolygonCol.y ,currentPolygonCol.z };
+        static float ambientMatColor[3] = { currentPolygonCol.x + 0.1 ,currentPolygonCol.y + 0.1 ,currentPolygonCol.z + 0.1 };
         static float ambiantMatCoef = 1.f;
         ImGui::Text("Ambient Reflection Color");
         ImGui::ColorEdit3("ARC", ambientMatColor);
         ImGui::Text("Ambient Reflection Rate");
         ImGui::SliderFloat("ARR", &ambiantMatCoef, 0.f, 2.f);
 
-        static float diffusiveMatColor[3] = { currentPolygonCol.x ,currentPolygonCol.y ,currentPolygonCol.z };
+        static float diffusiveMatColor[3] = { currentPolygonCol.x + 0.2 ,currentPolygonCol.y + 0.2 ,currentPolygonCol.z + 0.2 };
         static float diffusiveMatCoef = 1.f;
         ImGui::Text("Diffusive Reflection Color");
         ImGui::ColorEdit3("DRC", diffusiveMatColor);
         ImGui::Text("Diffusive Reflection Rate");
         ImGui::SliderFloat("DRR", &diffusiveMatCoef, 0.f, 2.f);
 
-        static float specularMatColor[3] = { currentPolygonCol.x ,currentPolygonCol.y ,currentPolygonCol.z };
+        static float specularMatColor[3] = { currentPolygonCol.x + 0.3 ,currentPolygonCol.y + 0.3 ,currentPolygonCol.z + 0.3 };
         static float specularMatCoef = 1.f;
         ImGui::Text("Specular Reflection Color");
         ImGui::ColorEdit3("SRC", specularMatColor);
@@ -544,14 +554,69 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         static int shininess = 1;
         ImGui::SliderInt("Shininess", &shininess, 1, 128);
 
-        material = Surface("Custom", 
-            {ambientMatColor[0], ambientMatColor[1], ambientMatColor[2], 1.f},
-            ambiantMatCoef, 
-            {diffusiveMatColor[0], diffusiveMatColor[1], diffusiveMatColor[2], 1.f},
-            diffusiveMatCoef, 
-            {specularMatColor[0], specularMatColor[1], specularMatColor[2], 1.f},
-            specularMatCoef, 
-            2*shininess);
+        string sMaterial = "Custom";
+
+        if (colorsNotInited) 
+        {
+            switch (static_cast<GENERATED_TEXTURE>(currentTexture))
+            {
+            case GT_CRYSTAL:
+            {
+                sMaterial = "Crystal";
+                ambientMatColor[0] = 0;
+                ambientMatColor[1] = 1;
+                ambientMatColor[2] = 0; 
+                ambiantMatCoef = 1.45f;
+                diffusiveMatColor[0] = 1;
+                diffusiveMatColor[1] = 0;
+                diffusiveMatColor[2] = 0;
+                diffusiveMatCoef = 0.85f;
+                specularMatColor[0] = 0;
+                specularMatColor[1] = 0;
+                specularMatColor[2] = 1;
+                specularMatCoef = 2.f;
+                shininess = 32;
+
+                colorsNotInited = false;
+            } break;
+
+            case GT_RUG:
+            {
+                sMaterial = "Rug";
+                ambientMatColor[0] = 158.f / 255.f;
+                ambientMatColor[1] = 147.f / 255.f;
+                ambientMatColor[2] = 69.f / 255.f;
+                ambiantMatCoef = 0.1f;
+                diffusiveMatColor[0] = 171.f / 255.f;
+                diffusiveMatColor[1] = 157.f / 255.f;
+                diffusiveMatColor[2] = 101.f / 255.f;
+                diffusiveMatCoef = 0.5f;
+                specularMatColor[0] = 244.f / 255.f;
+                specularMatColor[1] = 250.f / 255.f;
+                specularMatColor[2] = 188.f / 255.f;
+                specularMatCoef = 0.3f;
+                shininess = 1;
+
+                colorsNotInited = false;
+            } break;
+
+            default:
+
+                break;
+
+            }
+        }
+        
+
+        material = Surface(sMaterial,
+            { ambientMatColor[0], ambientMatColor[1], ambientMatColor[2], 1.f },
+            ambiantMatCoef,
+            { diffusiveMatColor[0], diffusiveMatColor[1], diffusiveMatColor[2], 1.f },
+            diffusiveMatCoef,
+            { specularMatColor[0], specularMatColor[1], specularMatColor[2], 1.f },
+            specularMatCoef,
+            2 * shininess);
+
 
         if (ImGui::Button("Add Cube model"))
         {
@@ -638,7 +703,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         ImGui::Text("-------------- Shading: --------------");
 
         static bool bDrawWireframe = false;
-        if(ImGui::RadioButton("Show Wireframe", bDrawWireframe))
+        if (ImGui::RadioButton("Show Wireframe", bDrawWireframe))
         {
             bDrawWireframe = bDrawWireframe ? false : true;
         }
@@ -657,22 +722,22 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         ImGui::Combo("LS", &currentLight, LightTypes);
        
         vec4 currentPolygonCol = scene->GetPolygonColor();
-        static float ambientColor[3] = { currentPolygonCol.x + 0.1f ,currentPolygonCol.y + 0.1f ,currentPolygonCol.z + 0.1f };
-        static float ambiantIntensity = 1.2f;
+        static float ambientColor[3] = { 1 ,1 ,1 };
+        static float ambiantIntensity = 0.1f;
         ImGui::Text("Ambient Color");
         ImGui::ColorEdit3("AC", ambientColor);
         ImGui::Text("Ambient Intensity");
         ImGui::SliderFloat("AI: ", &ambiantIntensity, 0, 2);
 
-        static float diffusiveColor[3] = { currentPolygonCol.x + 0.2f ,currentPolygonCol.y + 0.2f ,currentPolygonCol.z + 0.2f };
-        static float diffusiveIntensity = 0.7f;
+        static float diffusiveColor[3] = { 1 ,1 ,1 };
+        static float diffusiveIntensity = 0.3f;
         ImGui::Text("Diffusive Color");
         ImGui::ColorEdit3("DC", diffusiveColor);
         ImGui::Text("Diffusive Intensity");
         ImGui::SliderFloat("DI", &diffusiveIntensity, 0, 2);
 
-        static float specularColor[3] = { currentPolygonCol.x + 0.3f ,currentPolygonCol.y + 0.3f ,currentPolygonCol.z + 0.3f };
-        static float specularIntensity = 0.1f;
+        static float specularColor[3] = { 1 ,1 ,1 };
+        static float specularIntensity = 0.35f;
         ImGui::Text("Specular Color");
         ImGui::ColorEdit3("SC", specularColor);
         ImGui::Text("Specular Intensity");

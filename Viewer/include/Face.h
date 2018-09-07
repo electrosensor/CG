@@ -29,7 +29,7 @@ public:
             const glm::vec4& ambientC, float ambientI,
             const glm::vec4& diffusiveC, float diffusiveI,
             const glm::vec4& specularC, float specularI,
-            float shininess) :
+            int shininess) :
             m_material(material),
             m_ambientColor(ambientC), m_ambientReflectionRate(ambientI),
             m_diffuseColor(diffusiveC), m_diffuseReflectionRate(diffusiveI),

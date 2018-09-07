@@ -208,9 +208,11 @@ void Renderer::PolygonScanConversion(Face& polygon)
     lowerLeft.x = lowerLeft.x > m_width ? m_width : lowerLeft.x;
     lowerLeft.y = lowerLeft.y > m_height ? m_height : lowerLeft.y;
 
+
     for (int x = lowerLeft.x; x <= upperRight.x; x++)
     {
         for (int y = lowerLeft.y; y <= upperRight.y; y++)
+        {
 
             if (isPointInTriangle({ x,y }, { polygon.m_p1.x,polygon.m_p1.y }, { polygon.m_p2.x,polygon.m_p2.y }, { polygon.m_p3.x,polygon.m_p3.y }))
             {
@@ -218,15 +220,42 @@ void Renderer::PolygonScanConversion(Face& polygon)
                 if (m_shadingType != ST_SOLID) {
                     baryVec = Barycentric({ x,y }, polygon.m_p1, polygon.m_p2, polygon.m_p3);
                 }
+                vec4 actualColor = ZERO_VEC4;
+//                 static int first = 1 + (rand() % 20) + (((int)(polygon.m_p1.x * 1000)) % 200);
+//                 static int second = 1 + (rand() % 20) + (((int)(polygon.m_p1.y * 1000)) % 200);
+//                 static int third = 1 + (rand() % 20) + (((int)(polygon.m_p1.z * 1000)) % 200); 
+                switch (m_generatedTexture)
+                {
+                    case GT_CRYSTAL:
+                    {
+                        actualColor = (
+                            ((pow(baryVec.x, sin(((int)(polygon.m_faceCenter.x * 1000) % 200) + baryVec.x)) / 3) * (polygon.m_actualColorP1)) +
+                            ((pow(baryVec.y, sin(((int)(polygon.m_faceCenter.y * 1000) % 200) + baryVec.y)) / 3) * (polygon.m_actualColorP2)) +
+                            ((pow(baryVec.z, sin(((int)(polygon.m_faceCenter.z * 1000) % 200) + baryVec.z)) / 3) * (polygon.m_actualColorP3))
+                            );
 
-                vec4 actualColor = (
-                    ((baryVec.x / 3) * polygon.m_actualColorP1) +
-                    ((baryVec.y / 3) * polygon.m_actualColorP2) +
-                    ((baryVec.z / 3) * polygon.m_actualColorP3)
-                    );
+                    } break;
+                    case GT_RUG:
+                    {
+                        actualColor = (
+                            ((pow(1.3f + (cos(((int)(polygon.m_faceCenter.x * 1000) % 16) * baryVec.x)), sin(((int)(polygon.m_faceCenter.x * 1000) % 16) * baryVec.x)) / 3) * (polygon.m_actualColorP1)) +
+                            ((pow(1.3f + (cos(((int)(polygon.m_faceCenter.y * 1000) % 16) * baryVec.y)), sin(((int)(polygon.m_faceCenter.y * 1000) % 16) * baryVec.y)) / 3) * (polygon.m_actualColorP2)) +
+                            ((pow(1.3f + (cos(((int)(polygon.m_faceCenter.z * 1000) % 16) * baryVec.z)), sin(((int)(polygon.m_faceCenter.z * 1000) % 16) * baryVec.z)) / 3) * (polygon.m_actualColorP3))
+                            );
+                    } break;
+                    default:
+                    {
+                        actualColor = (
+                            ((baryVec.x / 3) * (polygon.m_actualColorP1)) +
+                            ((baryVec.y / 3) * (polygon.m_actualColorP2)) +
+                            ((baryVec.z / 3) * (polygon.m_actualColorP3))
+                            );
+                    } break;
+                }
 
                 putPixel(x, y, maxZ, actualColor);
             }
+        }
     }
 }
 
@@ -554,7 +583,7 @@ void Renderer::DrawAxis()
 
 }
 
-void Renderer::drawModelAxis()
+void Renderer::DrawModelAxis()
 {
     vec3 axisX = { 1,0,0 };
     vec3 axisY = { 0,1,0 };
@@ -575,6 +604,16 @@ void Renderer::drawModelAxis()
     DrawLine(viewZeroPoint, viewAxisY, COLOR(Y_COL));
     DrawLine(viewZeroPoint, viewAxisZ, COLOR(Z_COL));
 
+}
+
+void Renderer::SetGeneratedTexture(GENERATED_TEXTURE texture)
+{
+    m_generatedTexture = texture;
+}
+
+GENERATED_TEXTURE Renderer::GetGeneratedTexture()
+{
+    return m_generatedTexture;
 }
 
 //##############################

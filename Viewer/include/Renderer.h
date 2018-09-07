@@ -54,6 +54,7 @@ private:
 
 //     bool m_bSolidModel;
     SHADING_TYPE m_shadingType;
+    GENERATED_TEXTURE m_generatedTexture;
 
     glm::vec3 toViewPlane(const glm::vec3& point);
     Face toViewPlane(Face polygon);
@@ -63,6 +64,8 @@ private:
     void getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, OUT float* pDx, OUT float* pDy);
     void yStepErrorUpdate(float dx, float dy, float& error, int& y, const int& ystep);
     void ProjectPolygon(Face& polygon);
+    void orderPoints(float& x1, float& x2, float& y1, float& y2, float& d1, float& d2);
+    bool isSlopeBiggerThanOne(float x1, float x2, float y1, float y2) { return (std::fabs(y2 - y1) > std::fabs(x2 - x1)); }
 
     float m_faceNormScaleFactor;
     bool m_bDrawFaceNormals;
@@ -70,8 +73,8 @@ public:
     Renderer();
     Renderer(int w, int h);
     ~Renderer();
-    glm::vec3 processPipeline(glm::vec3 point, PIPE_TYPE pipeType = FULL, glm::mat4x4* lightTransform = nullptr);
-    Face processPipeline(Face polygon, PIPE_TYPE pipeType = FULL, glm::mat4x4* lightTransform = nullptr);
+    inline glm::vec3 processPipeline(glm::vec3 point, PIPE_TYPE pipeType = FULL, glm::mat4x4* lightTransform = nullptr);
+    inline Face processPipeline(Face polygon, PIPE_TYPE pipeType = FULL, glm::mat4x4* lightTransform = nullptr);
     // Local initializations of your implementation
     void Init();
 
@@ -131,13 +134,10 @@ public:
     void SetWorldTransformation(glm::mat4x4 m_worldTransformation);
     void SetShadingType(SHADING_TYPE shading);
     void DrawWireframe(bool bDrawn);
-
     void DrawFaceNormal(bool bDrawn);
     void SetFaceNormScaleFactor(float scaleFactor);
-private:
-    void orderPoints(float& x1, float& x2, float& y1, float& y2, float& d1, float& d2);
-    bool isSlopeBiggerThanOne(float x1, float x2, float y1, float y2) { return (std::fabs(y2 - y1) > std::fabs(x2 - x1)); }
-public:
     void DrawAxis();
-    void drawModelAxis();
+    void DrawModelAxis();
+    void SetGeneratedTexture(GENERATED_TEXTURE texture);
+    GENERATED_TEXTURE GetGeneratedTexture();
 };
