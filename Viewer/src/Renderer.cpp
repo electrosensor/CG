@@ -5,12 +5,13 @@
 #include "Util.h"
 #include "Defs.h"
 #include "glm/common.hpp"
-
+#include <glm/gtc/matrix_transform.hpp>
 using namespace std;
 using namespace glm;
 
 Renderer::Renderer() : m_width(DEFAULT_WIDTH), m_height(DEFAULT_HEIGHT)
 {
+
     initOpenGLRendering();
     createBuffers(DEFAULT_WIDTH, DEFAULT_HEIGHT);
 }
@@ -463,7 +464,6 @@ void Renderer::putPixel(int x, int y, bool steep, float d, const vec4& color)
 
 void Renderer::createBuffers(int w, int h)
 {
-    createOpenGLBuffer(); //Do not remove this line.
     colorBuffer   = new float[3 * w * h];
     blurredBuffer = new float[3 * w * h];
     bloomBuffer   = new float[3 * w * h];
@@ -602,56 +602,19 @@ void Renderer::initOpenGLRendering()
     glGenTextures(1, &glScreenTex);
     // Same for vertex array object (VAO). VAO is a set of buffers that describe a renderable object.
     glGenVertexArrays(1, &glScreenVtc);
-    GLuint buffer;
     // Makes this VAO the current one.
     glBindVertexArray(glScreenVtc);
-    // Creates a unique identifier for a buffer.
-    glGenBuffers(1, &buffer);
-    // (-1, 1)____(1, 1)
-    //	     |\  |
-    //	     | \ | <--- The exture is drawn over two triangles that stretch over the screen.
-    //	     |__\|
-    // (-1,-1)    (1,-1)
-    const GLfloat vtc[]={
-        -1, -1,
-         1, -1,
-        -1,  1,
-        -1,  1,
-         1, -1,
-         1,  1
-    };
-    const GLfloat tex[]={
-        0,0,
-        1,0,
-        0,1,
-        0,1,
-        1,0,
-        1,1};
-    // Makes this buffer the current one.
-    glBindBuffer(GL_ARRAY_BUFFER, buffer);
-    // This is the opengl way for doing malloc on the gpu. 
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vtc)+sizeof(tex), nullptr, GL_STATIC_DRAW);
-    // memcopy vtc to buffer[0,sizeof(vtc)-1]
-    glBufferSubData( GL_ARRAY_BUFFER, 0, sizeof(vtc), vtc);
-    // memcopy tex to buffer[sizeof(vtc),sizeof(vtc)+sizeof(tex)]
-    glBufferSubData( GL_ARRAY_BUFFER, sizeof(vtc), sizeof(tex), tex);
-    // Loads and compiles a sheder.
-    GLuint program = InitShader( "vshader.glsl", "fshader.glsl" );
-    // Make this program the current one.
-    glUseProgram( program );
-    // Tells the shader where to look for the vertex position data, and the data dimensions.
-    GLint  vPosition = glGetAttribLocation( program, "vPosition" );
-    glEnableVertexAttribArray( vPosition );
-    glVertexAttribPointer( vPosition,2,GL_FLOAT,GL_FALSE,0,nullptr );
-    // Same for texture coordinates data.
-    GLint  vTexCoord = glGetAttribLocation( program, "vTexCoord" );
-    glEnableVertexAttribArray( vTexCoord );
-    glVertexAttribPointer( vTexCoord,2,GL_FLOAT,GL_FALSE,0,(GLvoid *)sizeof(vtc) );
+    // Makes GL_TEXTURE0 the current active texture unit
+    glActiveTexture(GL_TEXTURE0);
+    // Makes glScreenTex (which was allocated earlier) the current texture.
+    glBindTexture(GL_TEXTURE_2D, glScreenTex);
+    // malloc for a texture on the gpu.
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, m_width, m_height, 0, GL_RGB, GL_FLOAT, nullptr);
 
-    //glProgramUniform1i( program, glGetUniformLocation(program, "texture"), 0 );
-
-    // Tells the shader to use GL_TEXTURE0 as the texture id.
-    glUniform1i(glGetUniformLocation(program, "texture"),0);
+//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    
+    glViewport(0, 0, m_width, m_height);
 }
 
 void Renderer::getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, IN float d1, IN float d2, OUT float* pDx, OUT float* pDy, OUT float* pDd)
@@ -687,51 +650,102 @@ void Renderer::ProjectPolygon(Face& polygon)
 
 void Renderer::createOpenGLBuffer()
 {
-    // Makes GL_TEXTURE0 the current active texture unit
-    glActiveTexture(GL_TEXTURE0);
-    // Makes glScreenTex (which was allocated earlier) the current texture.
-    glBindTexture(GL_TEXTURE_2D, glScreenTex);
-    // malloc for a texture on the gpu.
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, m_width, m_height, 0, GL_RGB, GL_FLOAT, nullptr);
-    glViewport(0, 0, m_width, m_height);
+
+
+
 }
 
 void Renderer::SwapBuffers()
 {    
-    pDispBuffer = colorBuffer;
-    
-    if (m_blurX > 1 || m_blurY > 1)
-    {
-        switch (m_ePostEffect)
-        {
-        case BLUR_SCENE:
-            pDispBuffer = blurredBuffer;
-            break;
-        case BLOOM:
-            pDispBuffer = blurredBuffer;
-            break;
-        default:
-            pDispBuffer = colorBuffer;
-            break;
-        }
-    }
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Makes GL_TEXTURE0 the current active texture unit
+    glBindBuffer(GL_ARRAY_BUFFER, glScreenVtc);
+
+    // This is the opengl way for doing malloc on the gpu. 
+    glBufferData(GL_ARRAY_BUFFER, mVerticesPositionsSize*sizeof(GLfloat), mVerticesPositions, GL_STATIC_DRAW);
+
+    // memcopy vtc to buffer[0,sizeof(vtc)-1]
+//     glBufferSubData(GL_ARRAY_BUFFER, 0, mVerticesPositionsSize * sizeof(GLfloat), mVerticesPositions);
+// //     // memcopy tex to buffer[sizeof(vtc),sizeof(vtc)+sizeof(tex)]
+//     glBufferSubData(GL_ARRAY_BUFFER, mVerticesPositionsSize * sizeof(GLfloat), mVerticesColorsSize * sizeof(GLfloat), mVerticesColors);
+    // Loads and compiles a sheder.
+
+    GLuint program = InitShader("vshader.glsl", "fshader.glsl");
+    // Make this program the current one.
+    glUseProgram(program);
+    // Tells the shader where to look for the vertex position data, and the data dimensions.
+    GLint  vPosition = glGetAttribLocation(program, "vPosition");
+    glEnableVertexAttribArray(vPosition);
+    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+
+    //     // Makes GL_TEXTURE0 the current active texture unit
     glActiveTexture(GL_TEXTURE0);
-    // Makes glScreenTex (which was allocated earlier) the current texture.
+    //     // Makes glScreenTex (which was allocated earlier) the current texture.
     glBindTexture(GL_TEXTURE_2D, glScreenTex);
-    // memcopy's colorBuffer into the gpu.
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_width, m_height, GL_RGB, GL_FLOAT, pDispBuffer);
-    // Tells opengl to use mipmapping
+    //     // memcopy's colorBuffer into the gpu.
+    //glfwLoadTexture2D(imagepath, 0);
+    glBufferData(GL_TEXTURE_2D, mVerticesColorsSize * sizeof(GLfloat), mVerticesColors, GL_STATIC_DRAW);
+
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_width, m_height, GL_RGB, GL_FLOAT, mVerticesColors/*mvTexturesBuffer*/);
+    //     // Tells opengl to use mipmapping
     glGenerateMipmap(GL_TEXTURE_2D);
-    // Make glScreenVtc current VAO
-    glBindVertexArray(glScreenVtc);
-    // Finally renders the data.
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    // Same for texture coordinates data.
+    GLint  vTexCoord = glGetAttribLocation(program, "vTexCoord");
+    glEnableVertexAttribArray(vTexCoord);
+    glVertexAttribPointer(vTexCoord, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+    //glProgramUniform1i( program, glGetUniformLocation(program, "texture"), 0 );
+
+    // Tells the shader to use GL_TEXTURE0 as the texture id.
+
+    glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)m_width / (float)m_height, 0.1f, 100.0f);
+
+    //glm::mat4 Projection = glm::ortho(-10.0f,10.0f,-10.0f,10.0f,0.0f,100.0f); // In world coordinates
+
+    glm::mat4 View = glm::lookAt(
+        glm::vec3(4, 3, 3), // Camera is at (4,3,3), in World Space
+        glm::vec3(0, 0, 0), // and looks at the origin
+        glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
+    );
+    GLuint MatrixID = glGetUniformLocation(program, "MVP");
+    glm::mat4 mvp = Projection * View/* * m_objectTransform*/;
+
+    glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
+
+
+//     pDispBuffer = colorBuffer;
+//     
+//     if (m_blurX > 1 || m_blurY > 1)
+//     {
+//         switch (m_ePostEffect)
+//         {
+//         case BLUR_SCENE:
+//             pDispBuffer = blurredBuffer;
+//             break;
+//         case BLOOM:
+//             pDispBuffer = blurredBuffer;
+//             break;
+//         default:
+//             pDispBuffer = colorBuffer;
+//             break;
+//         }
+//     }
+
+
+// 
+//     // Finally renders the data.
+    // Enable depth test
+    glEnable(GL_DEPTH_TEST);
+    // Accept fragment if it closer to the camera than the former one
+    glDepthFunc(GL_LESS);
+    glDrawArrays(GL_TRIANGLES, 0, mVerticesPositionsSize);
 }
 
 void Renderer::ClearColorBuffer()
 {
+  //  glClear(GL_COLOR_BUFFER_BIT);
     for (int i = 0; i < m_width; i++)
     {
         for (int j = 0; j < m_height; j++)
@@ -808,6 +822,8 @@ void Renderer::SetWireframeColor(const glm::vec4& newWireframeColor)
 
 void Renderer::ClearDepthBuffer()
 {
+   // glClear(GL_DEPTH_BUFFER_BIT);
+
     for (int i = 0; i < m_width; i++)
     {
         for (int j = 0; j < m_height; j++)

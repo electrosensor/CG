@@ -17,7 +17,7 @@
 #define MAX_WIDTH_4K                     3840
 
 #define CAMERA_OBJ_FILE                  "PrimModels/camera.obj"
-#define LIGHT_OBJ_FILE                   "PrimModels/sphere_BLENDER.obj"
+#define LIGHT_OBJ_FILE                   "PrimModels/sphere_test.obj"
 
 #define DISABLED                         -1
 #define PI                               3.141592653589793238462643383279502884L
@@ -46,9 +46,11 @@
 #define NORM_ZERO_TO_ONE(value,min,max)  ((value) - (min)) / ((max) - (min))
 #define NORMALIZE_COORDS(value,min,max)  (((NORM_ZERO_TO_ONE(value,min,max)*2) - 1))
 
-#define TUPLE_POLYGONS                  (0)
+#define TUPLE_POLYGONS                   (0)
 #define TUPLE_VERTICES                   (1)
 #define TUPLE_VNORMALS                   (2)
+#define TUPLE_VPOSITIONS                 (3)
+#define TUPLE_TEXTURES                   (4)
 
  enum R_COLOR
 {

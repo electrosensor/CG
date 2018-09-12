@@ -12,20 +12,19 @@ class Renderer
 {
 private:
     // 3*width*height
-    float *colorBuffer;
+    GLfloat *colorBuffer;
     // 3*width*height
-    float *blurredBuffer;
+    GLfloat *blurredBuffer;
     // 3*width*height
-    float *bloomBuffer;
+    GLfloat *bloomBuffer;
     // 3*width*height
-    float *bloomDestBuff;
+    GLfloat *bloomDestBuff;
     // width*height
-    float *zBuffer;
+    GLfloat *zBuffer;
 
     
     // Screen dimensions
     int m_width, m_height;
-
 
     // Draws a pixel in location p with color color
     void putPixel(int i, int j, float d, const glm::vec4& color, Face* face = nullptr );
@@ -84,7 +83,13 @@ private:
     int         m_blurY;
     glm::vec4       m_bloomThreshold;
     float m_bloomThresh;
+
+
 public:
+    GLfloat* mVerticesPositions;
+    unsigned mVerticesPositionsSize;
+    GLfloat* mVerticesColors;
+    unsigned mVerticesColorsSize;
     Renderer();
     Renderer(int w, int h);
     ~Renderer();

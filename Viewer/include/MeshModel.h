@@ -20,6 +20,8 @@ class MeshModel : public Model
         Face *m_polygons;
 		size_t m_polygonsSize;
         glm::vec3 *m_vertexNormals;
+        size_t m_vPositionsSize;
+        glm::vec3* m_vertexPositions;
 
 		// Add more attributes.
         glm::mat4x4 m_modelTransformation;
@@ -41,8 +43,9 @@ class MeshModel : public Model
 		void SetNormalTransformation(glm::mat4x4& transformation) override;
 
 		void LoadFile(const std::string& fileName);
-		void Draw(std::tuple<std::vector<Face>, std::vector<glm::vec3>, std::vector<glm::vec3> >& modelData) override;
+		void Draw(std::tuple<std::vector<Face>, std::vector<glm::vec3>, std::vector<glm::vec3>, std::vector<glm::vec3> >& modelData) override;
         glm::vec3 getCentroid() override { return  m_modelCentroid; }
+
 
 };
 
@@ -90,7 +93,7 @@ public:
         return m_camCoords;
     }
 
-    void Draw(std::tuple<std::vector<Face>, std::vector<glm::vec3>, std::vector<glm::vec3> >& modelData) override;
+    void Draw(std::tuple<std::vector<Face>, std::vector<glm::vec3>, std::vector<glm::vec3>, std::vector<glm::vec3> >& modelData) override;
 
     ~CamMeshModel() = default;
 };

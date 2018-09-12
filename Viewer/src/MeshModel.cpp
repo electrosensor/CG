@@ -200,6 +200,8 @@ void MeshModel::LoadFile(const string& fileName)
     m_polygons        = new Face[m_polygonsSize];
     m_verticesNormSize  = normals.size();
     m_vertexNormals   = new vec3[m_verticesNormSize];
+    m_vPositionsSize = m_polygonsSize*FACE_ELEMENTS;
+    m_vertexPositions = new vec3[m_vPositionsSize];
 
     for (unsigned int i = 0; i < m_verticesSize; i++)
 
@@ -208,7 +210,7 @@ void MeshModel::LoadFile(const string& fileName)
         normalizedVec.y = NORMALIZE_COORDS((vertices[i].y - m_modelCentroid.y), totalMin, totalMax);
         normalizedVec.z = NORMALIZE_COORDS((vertices[i].z - m_modelCentroid.z), totalMin, totalMax);
                                            
-       // fprintf(stderr, "x = %f, y = %f, z = %f\n", normalizedVec.x, normalizedVec.y, normalizedVec.z);
+//         fprintf(stderr, "x = %f, y = %f, z = %f\n", normalizedVec.x, normalizedVec.y, normalizedVec.z);
         m_vertices[i] = normalizedVec;
     }
     
@@ -219,6 +221,7 @@ void MeshModel::LoadFile(const string& fileName)
 
 	// iterate through all stored faces and create triangles
 	size_t posIdx = 0;
+    int j = 0;
 	for each (FaceIdx face in faces)
 	{
         pair<vec3, vec3> currentFace[FACE_ELEMENTS];
@@ -232,7 +235,10 @@ void MeshModel::LoadFile(const string& fileName)
             float vn_y = (currentVertexIdx < m_verticesNormSize) ? m_vertexNormals[currentVertexIdx - 1].y : 0.f;
             float vn_z = (currentVertexIdx < m_verticesNormSize) ? m_vertexNormals[currentVertexIdx - 1].z : 0.f;
             currentFace[i] = { vec3(x, y, z), vec3(vn_x, vn_y, vn_z) };
+            m_vertexPositions[j + i] = vec3(x, y, z);
 		}
+        j+=3;
+
         auto nrm1_3 = currentFace[0].first;
         auto nrm2_3 = currentFace[1].first;
         auto nrm3_3 = currentFace[2].first;
@@ -264,7 +270,7 @@ void MeshModel::LoadFile(const string& fileName)
 
 }
 
-void MeshModel::Draw(tuple<vector<Face>, vector<vec3>, vector<vec3> >& modelData)
+void MeshModel::Draw(std::tuple<std::vector<Face>, std::vector<glm::vec3>, std::vector<glm::vec3>, std::vector<glm::vec3> >& modelData)
 {
 	for (size_t i = 0; i < m_polygonsSize; i++)
 	{
@@ -281,6 +287,16 @@ void MeshModel::Draw(tuple<vector<Face>, vector<vec3>, vector<vec3> >& modelData
     {
         get<TUPLE_VNORMALS>(modelData).push_back(m_vertexNormals[i]);
     }
+
+    for (size_t i = 0; i < m_vPositionsSize; i++)
+    {
+        get<TUPLE_VPOSITIONS>(modelData).push_back(m_vertexPositions[i]);
+    }
+
+//     for (size_t i = 0; i < m_vPositionsSize; i++)
+//     {
+//         get<TUPLE_TEXTURES>(modelData).push_back(m_vertexPositions[i]);
+//     }
 };
 
 string* PrimMeshModel::setPrimModelFilePath(PRIM_MODEL primModel)
@@ -303,7 +319,7 @@ string* PrimMeshModel::setPrimModelFilePath(PRIM_MODEL primModel)
 	return m_pPrimModelString;
 }
 
-void CamMeshModel::Draw(tuple<vector<Face>, vector<vec3>, vector<vec3> >& modelData)
+void CamMeshModel::Draw(std::tuple<std::vector<Face>, std::vector<glm::vec3>, std::vector<glm::vec3>, std::vector<glm::vec3> >& modelData)
 {
     vector<Face> camModelPolygons;
 

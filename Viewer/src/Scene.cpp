@@ -1,6 +1,7 @@
 #include "Scene.h"
 #include "MeshModel.h"
-
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 using namespace std;
 using namespace glm;
 
@@ -26,6 +27,8 @@ void Scene::Draw()
     vector<Face> vPolygons;//TODO: RESERVE
     vector<vec3> vVertices;
     vector<vec3> vVerticesNormals;
+    vector<vec3> vVerticesPositions;
+
 
     if (m_activeCamera != DISABLED)
     {
@@ -50,72 +53,92 @@ void Scene::Draw()
     renderer->DrawWireframe(m_bDrawWireframe);
     renderer->DrawFaceNormal(m_bDrawFaceNormal);
     renderer->SetFaceNormScaleFactor(m_fnScaleFactor);
-    renderer->DrawAxis();
+//    renderer->DrawAxis();
 
 
-    for each(Light* light in m_lights)
-    {
-        LightMeshModel& lightModel = light->GetLightModel();
-        if (lightModel.isModelRenderingActive())
-        {
-            tuple lightModelData(vPolygons, vVertices, vVerticesNormals);
-            mat4x4 lightModelTransformation = lightModel.GetModelTransformation();
-            renderer->SetObjectMatrices(lightModelTransformation, mat4x4(I_MATRIX));
-            lightModel.Draw(lightModelData);
-            renderer->DrawTriangles(get<TUPLE_POLYGONS>(lightModelData));
-        }
-    }
+//     for each(Light* light in m_lights)
+//     {
+//         LightMeshModel& lightModel = light->GetLightModel();
+//         if (lightModel.isModelRenderingActive())
+//         {
+//             tuple lightModelData(vPolygons, vVertices, vVerticesNormals, vVerticesPositions);
+//             mat4x4 lightModelTransformation = lightModel.GetModelTransformation();
+//             renderer->SetObjectMatrices(lightModelTransformation, mat4x4(I_MATRIX));
+//             lightModel.Draw(lightModelData);
+//             renderer->DrawTriangles(get<TUPLE_POLYGONS>(lightModelData));
+//         }
+//     }
 
     for each (Model* model in m_models)
     {
-        tuple modelData(vPolygons, vVertices, vVerticesNormals);
+        tuple modelData(vPolygons, vVertices, vVerticesNormals, vVerticesPositions);
         model->Draw(modelData);
+// 
+//         vector<Face>& polygonsToLight = get<TUPLE_POLYGONS>(modelData);
+//         for each(Light* light in m_lights)
+//         {
+//             if (/*light->isOn()*/ true)
+//             {
+//                 for(Face& faceIt : polygonsToLight)
+//                 {
+//                     light->Illuminate(faceIt, light->GetLightModel().GetModelTransformation());
+//                 }
+//             }
+//         }
+        tie(vPolygons, vVertices, vVerticesNormals, vVerticesPositions) = modelData;
+// 
+//         renderer->SetObjectMatrices(model->GetModelTransformation(), model->GetNormalTransformation());
+// 
 
-        vector<Face>& polygonsToLight = get<TUPLE_POLYGONS>(modelData);
-        for each(Light* light in m_lights)
+        //renderer->DrawTriangles(vPolygons, &model->getCentroid(), activeCamera->getCameraModel()->getCentroid());
+
+        renderer->mVerticesPositionsSize = vVerticesPositions.size()*FACE_ELEMENTS;
+        renderer->mVerticesPositions = new GLfloat[renderer->mVerticesPositionsSize];
+        for (size_t i = 0,  j = 0; j < vVerticesPositions.size(); i+=3, j++)
         {
-            if (/*light->isOn()*/ true)
-            {
-                for(Face& faceIt : polygonsToLight)
-                {
-                    light->Illuminate(faceIt, light->GetLightModel().GetModelTransformation());
-                }
-            }
+            renderer->mVerticesPositions[i]     = (GLfloat)vVerticesPositions[j].x;
+            renderer->mVerticesPositions[i + 1] = (GLfloat)vVerticesPositions[j].y;
+            renderer->mVerticesPositions[i + 2] = (GLfloat)vVerticesPositions[j].z;
+
         }
-        tie(vPolygons, vVertices, vVerticesNormals) = modelData;
-
-        renderer->SetObjectMatrices(model->GetModelTransformation(), model->GetNormalTransformation());
-        renderer->DrawTriangles(vPolygons, &model->getCentroid(), activeCamera->getCameraModel()->getCentroid());
-
-        if (m_bDrawVecNormal && !vVerticesNormals.empty())
+        renderer->mVerticesColorsSize = renderer->mVerticesPositionsSize;
+        renderer->mVerticesColors = new GLfloat[renderer->mVerticesPositionsSize];
+        for (size_t i = 0, j = 0; j < renderer->mVerticesPositionsSize && i < renderer->mVerticesPositionsSize; i += 3, j++)
         {
-            renderer->drawVerticesNormals(vVertices , vVerticesNormals, m_vnScaleFactor);
+            renderer->mVerticesColors[i] =     (GLfloat)(abs(vVerticesPositions[j].x * m_polygonColor.x) + 0.4f);
+            renderer->mVerticesColors[i + 1] = (GLfloat)(abs(vVerticesPositions[j].y * m_polygonColor.y) + 0.3f);
+            renderer->mVerticesColors[i + 2] = (GLfloat)(abs(vVerticesPositions[j].z * m_polygonColor.z) + 0.2f);
+
         }
 
-        if (m_bShowBorderCube)
-        {
-            renderer->drawBordersCube(model->getBordersCube());
-        }
-    }
+//         if (m_bDrawVecNormal && !vVerticesNormals.empty())
+//         {
+//             renderer->drawVerticesNormals(vVertices , vVerticesNormals, m_vnScaleFactor);
+//         }
+// 
+//         if (m_bShowBorderCube)
+//         {
+//             renderer->drawBordersCube(model->getBordersCube());
+//         }
+     }
 
-    for each(Camera* camera in m_cameras)
-    {
-        auto camModel = (CamMeshModel*) camera->getCameraModel();
-        if (camModel->isModelRenderingActive() && camera != activeCamera)
-        {
-            vVerticesNormals.reserve(0);
-            tuple camModelData(vPolygons, vVertices, vVerticesNormals);
-            mat4x4 cameraModelTransformation = camModel->GetModelTransformation();
-            renderer->SetObjectMatrices(cameraModelTransformation, mat4x4(I_MATRIX));
-            camModel->Draw(camModelData);
-            renderer->DrawTriangles(get<TUPLE_POLYGONS>(camModelData));
-        }
-    }
+//     for each(Camera* camera in m_cameras)
+//     {
+//         auto camModel = (CamMeshModel*) camera->getCameraModel();
+//         if (camModel->isModelRenderingActive() && camera != activeCamera)
+//         {
+//             vVerticesNormals.reserve(0);
+//             tuple camModelData(vPolygons, vVertices, vVerticesNormals, vVerticesPositions);
+//             mat4x4 cameraModelTransformation = camModel->GetModelTransformation();
+//             renderer->SetObjectMatrices(cameraModelTransformation, mat4x4(I_MATRIX));
+//             camModel->Draw(camModelData);
+//             renderer->DrawTriangles(get<TUPLE_POLYGONS>(camModelData));
+//         }
+//     }
 
-    renderer->applyPostEffect(m_bBlurX, m_bBlurY, m_sigma, m_ePostEffect);
+//     renderer->applyPostEffect(m_bBlurX, m_bBlurY, m_sigma, m_ePostEffect);
 
-
-    renderer->SwapBuffers();
+    if(!m_models.empty()) renderer->SwapBuffers();
 
 }
 
@@ -137,6 +160,7 @@ void Scene::SetWorldTransformation(const mat4x4 world)
 
 void Scene::TranslateModel(Model* activeModel, AXES axis, float value)
 {
+
     mat4x4 currTransf = activeModel->GetModelTransformation();
     mat4x4 translateTransform(TRANSLATION_MATRIX(axis == AXIS_X ? value : 0, axis == AXIS_Y ? value : 0, axis == AXIS_Z ? value : 0));
     activeModel->SetModelTransformation(translateTransform * currTransf);
