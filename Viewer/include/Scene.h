@@ -14,7 +14,7 @@ private:
     std::vector<Model*>  m_models;
     std::vector<Light*>  m_lights;
     std::vector<Camera*> m_cameras;
-    GLuint program;
+    GLuint m_program;
     int                  m_activeModel;
     int                  m_activeLight;
     int                  m_activeCamera;
@@ -169,6 +169,7 @@ public:
     void SetShadingType(SHADING_TYPE shading);
     void DrawWireframe(bool bDrawn);
     void configPostEffect(POST_EFFECT postEffect, int blurX, int blurY, float sigma, float bloomIntensity, glm::vec4 bloomThreshold, float bloomThresh);
+    void ApplyTextureToActiveModel(std::string texPath);
 private:
     bool m_bBloomActive;
     POST_EFFECT m_ePostEffect;

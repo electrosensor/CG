@@ -11,9 +11,9 @@ using namespace glm;
 
 Scene::Scene() : m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamera(DISABLED), m_bDrawVecNormal(false), m_vnScaleFactor(2.f), m_fnScaleFactor(2.f), m_bgColor(COLOR(YURI_BG)), m_polygonColor(COLOR(YURI_POLYGON)), m_wireframeColor(COLOR(YURI_WIRE)), m_bDrawWireframe(true), m_bBlurX(1), m_bBlurY(1), m_sigma(1.f), m_ePostEffect(NONE)
 {
-    program = InitShader("vshader.glsl", "fshader.glsl");
+    m_program = InitShader("vshader.glsl", "fshader.glsl");
     // Make this program the current one.
-    glUseProgram(program);
+    glUseProgram(m_program);
 
     m_worldTransformation = I_MATRIX;
     m_worldTransformation[3].w = 1;
@@ -21,7 +21,7 @@ Scene::Scene() : m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamer
 
 void Scene::LoadOBJModel(std::string fileName, const Surface& material)
 {
-    auto* model = new MeshModel(fileName, material);
+    auto* model = new MeshModel(fileName, material, m_program);
     if (fileName != CAMERA_OBJ_FILE)
     {
         m_models.push_back(model);
@@ -50,7 +50,7 @@ void Scene::Draw()
     }
     else
     {
-        m_cameras.push_back(new Camera());
+        m_cameras.push_back(new Camera(m_program));
         activeCamera = m_cameras.front();
         m_activeCamera++;
     }
@@ -92,34 +92,144 @@ void Scene::Draw()
         mat4x4 objTransformation = model->GetTranslateTransformation() * model->GetRotateTransformation() * model->GetScaleTransformation();
 
 
-        GLuint ModelMatrixID = glGetUniformLocation(program, "Model");
+        GLuint ModelMatrixID = glGetUniformLocation(m_program, "Model");
         glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &objTransformation[0][0]);
 
-        GLuint ViewMatrixID = glGetUniformLocation(program, "View");
+        GLuint ViewMatrixID = glGetUniformLocation(m_program, "View");
         glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &View[0][0]);
 
-        GLuint ProjectionMatrixID = glGetUniformLocation(program, "Projection");
+        GLuint ProjectionMatrixID = glGetUniformLocation(m_program, "Projection");
         glUniformMatrix4fv(ProjectionMatrixID, 1, GL_FALSE, &Projection[0][0]);
 
         model->Draw(modelData);
 
      }
 
-//     for each(Camera* camera in m_cameras)
-//     {
-//         auto camModel = (CamMeshModel*) camera->getCameraModel();
-//         if (camModel->isModelRenderingActive() && camera != activeCamera)
-//         {
-//             vVerticesNormals.reserve(0);
-//             tuple camModelData(vPolygons, vVertices, vVerticesNormals, vVerticesPositions);
-//             mat4x4 cameraModelTransformation = camModel->GetModelTransformation();
-//             renderer->SetObjectMatrices(cameraModelTransformation, mat4x4(I_MATRIX));
-//             camModel->Draw(camModelData);
-//             renderer->DrawTriangles(get<TUPLE_POLYGONS>(camModelData));
-//         }
-//     }
+    for each(Camera* camera in m_cameras)
+    {
+        auto camModel = (CamMeshModel*) camera->getCameraModel();
+        if (camModel->isModelRenderingActive() && camera != activeCamera)
+        {
+            vVerticesNormals.reserve(0);
+            tuple camModelData(vPolygons, vVertices, vVerticesNormals, vVerticesPositions);
+            mat4x4 cameraModelTransformation = camModel->GetModelTransformation();
+            GLuint ModelMatrixID = glGetUniformLocation(m_program, "Model");
+
+            glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &cameraModelTransformation[0][0]);
+
+            GLuint ViewMatrixID = glGetUniformLocation(m_program, "View");
+            glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &View[0][0]);
+
+            GLuint ProjectionMatrixID = glGetUniformLocation(m_program, "Projection");
+            glUniformMatrix4fv(ProjectionMatrixID, 1, GL_FALSE, &Projection[0][0]);
+
+
+            camModel->Draw(camModelData);
+
+        }
+    }
 
 //     renderer->applyPostEffect(m_bBlurX, m_bBlurY, m_sigma, m_ePostEffect);
+
+//     void Renderer::applyPostEffect(int kernelSizeX, int kernelSizeY, float sigma, POST_EFFECT postEffect /*= NONE*/)
+//     {
+//         static int kerSizeX = -1;
+//         static int kerSizeY = -1;
+// 
+//         float* source;
+//         float* destination;
+// 
+//         static float kernel[29][29] = { 0 };
+// 
+//         if (kernelSizeX <= 2 && kernelSizeY <= 2 || postEffect == NONE)
+//         {
+//             pDispBuffer = colorBuffer;
+//             return;
+//         }
+// 
+// 
+//         if (kerSizeX != kernelSizeX || kerSizeY != kernelSizeY || sigma != m_sigma)
+//         {
+//             kerSizeX = kernelSizeX;
+//             kerSizeY = kernelSizeY;
+//             m_sigma = sigma;
+// 
+//             Renderer::makeKernel(kernel, kernelSizeX, kernelSizeY, sigma);
+// 
+//             static int counter = 0;
+//             printf("%d: kernel size is x,y:%d,%d with sigma %f\n", ++counter, kernelSizeX, kernelSizeY, sigma);
+//             for (int kX = 0; kX < kernelSizeX; ++kX)
+//             {
+//                 for (int kY = 0; kY < kernelSizeY; ++kY)
+//                 {
+//                     printf("%f\t\t", kernel[kX][kY]);
+//                 }
+//                 printf("\n\n");
+//             }
+//         }
+// 
+//         switch (postEffect)
+//         {
+//         case NONE:
+//             return;
+//             break;
+//         case BLUR_SCENE:
+//             source = colorBuffer;
+//             destination = blurredBuffer;
+//             break;
+//         case BLOOM:
+//             source = bloomBuffer;
+//             destination = bloomDestBuff;
+//             break;
+//         default:
+//             return;
+//             break;
+//         }
+// 
+//         int halfX = kernelSizeX / 2;
+//         int halfY = kernelSizeY / 2;
+// 
+//         for (int x = halfX; x < m_width - halfX; x++)
+//         {
+//             for (int y = halfY; y < m_height - halfY; y++)
+//             {
+//                 for (int color = 0; color < 3; color++)
+//                 {
+//                     float sum = 0.0f;
+//                     float sumBloom = 0.0f;
+//                     for (int kX = -halfX; kX <= halfX; kX++)
+//                     {
+//                         for (int kY = -halfY; kY <= halfY; kY++)
+//                         {
+//                             sum += kernel[kX + halfX][kY + halfY] * colorTruncate(source[COLOR_BUF_INDEX(m_width, x + kX, y + kY, color)]);
+//                             if (postEffect == BLOOM)
+//                             {
+//                                 sumBloom += kernel[kX + halfX][kY + halfY] * colorTruncate(colorBuffer[COLOR_BUF_INDEX(m_width, x + kX, y + kY, color)]);
+//                             }
+//                         }
+//                     }
+//                     destination[COLOR_BUF_INDEX(m_width, x, y, color)] = sum;
+//                     if (postEffect == BLOOM)
+//                     {
+//                         blurredBuffer[COLOR_BUF_INDEX(m_width, x, y, color)] = sumBloom;
+//                     }
+//                 }
+//             }
+//         }
+// 
+// 
+//         if (postEffect == BLOOM)
+//         {
+//             for (int x = 0; x < m_width; x++)
+//             {
+//                 for (int y = 0; y < m_height; y++)
+//                 {
+//                     for (int color = 0; color < 3; color++)
+//                         blurredBuffer[COLOR_BUF_INDEX(m_width, x, y, color)] += m_bloomIntensity * bloomDestBuff[COLOR_BUF_INDEX(m_width, x, y, color)];
+//                 }
+//             }
+//         }
+//     }
 
 }
 
@@ -210,7 +320,7 @@ void Scene::RotateModelRelativeToWorld(Model* activeModel, AXES axis, float angl
 */
 unsigned int Scene::AddCamera(const vec3& eye, const vec3& at, const vec3& up)
 {
-    auto* newCamera = new Camera(eye, at, up);
+    auto* newCamera = new Camera(eye, at, up, m_program);
     m_cameras.push_back(newCamera);
     return (unsigned)m_cameras.size() - 1;
 }
@@ -557,13 +667,13 @@ int Scene::AddLight(LIGHT_SOURCE_TYPE type, const glm::vec3& lightCoord, const g
     switch (type)
     {
     case LST_POINT:
-        p_newLight = new PointSourceLight(lightCoord, ambiantC, ambiantI, diffusiveC, diffusiveI, specularC, specularI);
+        p_newLight = new PointSourceLight(lightCoord, ambiantC, ambiantI, diffusiveC, diffusiveI, specularC, specularI, m_program);
         break;
     case LST_PARALLEL:
-        p_newLight = new ParallelSourceLight(lightCoord, ambiantC, ambiantI, diffusiveC, diffusiveI, specularC, specularI);
+        p_newLight = new ParallelSourceLight(lightCoord, ambiantC, ambiantI, diffusiveC, diffusiveI, specularC, specularI, m_program);
         break;
     case LST_AREA:
-        p_newLight = new DistributedSourceLight(lightCoord, ambiantC, ambiantI, diffusiveC, diffusiveI, specularC, specularI);
+        p_newLight = new DistributedSourceLight(lightCoord, ambiantC, ambiantI, diffusiveC, diffusiveI, specularC, specularI, m_program);
         break;
 
     default:
@@ -587,7 +697,7 @@ int Scene::AddLight(LIGHTS_INFO lightsInfo)
                                              lightsInfo.diffusive.color,
                                              lightsInfo.diffusive.intensity,
                                              lightsInfo.specular.color,
-                                             lightsInfo.specular.intensity);
+                                             lightsInfo.specular.intensity, m_program);
         break;
     case LST_PARALLEL:
         p_newLight = new ParallelSourceLight(lightsInfo.location,
@@ -596,7 +706,7 @@ int Scene::AddLight(LIGHTS_INFO lightsInfo)
                                              lightsInfo.diffusive.color,
                                              lightsInfo.diffusive.intensity,
                                              lightsInfo.specular.color,
-                                             lightsInfo.specular.intensity);
+                                             lightsInfo.specular.intensity, m_program);
         break;
     case LST_AREA:
         p_newLight = new DistributedSourceLight(lightsInfo.location,
@@ -605,7 +715,7 @@ int Scene::AddLight(LIGHTS_INFO lightsInfo)
                                                 lightsInfo.diffusive.color,
                                                 lightsInfo.diffusive.intensity,
                                                 lightsInfo.specular.color,
-                                                lightsInfo.specular.intensity);
+                                                lightsInfo.specular.intensity, m_program);
         break;
 
     default:
@@ -651,6 +761,15 @@ void Scene::configPostEffect(POST_EFFECT postEffect, int blurX, int blurY, float
     
 }
 
+void Scene::ApplyTextureToActiveModel(std::string texPath)
+{
+    if (m_activeModel != DISABLED)
+    {
+        Model* activeModel = m_models[m_activeModel];
+        return  activeModel->ApplyTexture(texPath);
+    }
+}
+
 float Scene::GetvnScale()
 {
     return m_vnScaleFactor;
@@ -673,7 +792,7 @@ void Scene::SetfnScale(float scale)
 
 unsigned int Scene::AddPrimitiveModel(PRIM_MODEL primitiveModel, const Surface& material)
 {
-    Model* newModel = new PrimMeshModel(primitiveModel, material);
+    Model* newModel = new PrimMeshModel(primitiveModel, material, m_program);
     m_models.push_back(newModel);
     return (unsigned)m_models.size() - 1;
 }

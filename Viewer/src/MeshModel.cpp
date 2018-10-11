@@ -1,4 +1,6 @@
 #include "MeshModel.h"
+#include "lodepng.h"
+#include "lodepng_util.h"
 
 using namespace std;
 using namespace glm;
@@ -68,7 +70,7 @@ vec2 vec2fFromStream(std::istream& issLine)
 	return vec2(x, y);
 }
 
-MeshModel::MeshModel(const string& fileName, const Surface& material) : m_modelTransformation(SCALING_MATRIX4(0.5f)),
+MeshModel::MeshModel(const std::string& fileName, const Surface& material, GLuint program) : m_modelTransformation(SCALING_MATRIX4(0.5f)),
                                                m_scaleTransformation(I_MATRIX),
                                                m_translateTransformation(I_MATRIX),
                                                m_rotateTransformation(I_MATRIX),
@@ -76,14 +78,38 @@ MeshModel::MeshModel(const string& fileName, const Surface& material) : m_modelT
                                                m_worldTransformation(I_MATRIX),
                                                m_modelCentroid(ZERO_VEC3),
                                                m_surface(material)
+
 {
-	LoadFile(fileName);
+    m_cur_prog = program;
+    m_tex_height = 0;
+    m_tex_width = 0;
+    m_tex_data = nullptr;
+	LoadFile(fileName, program);
     setModelRenderingState(true);
     buildBorderCube(m_cubeLines);
 }
 
 MeshModel::~MeshModel()
 {
+
+    if (VBO != 0)
+    {
+        glDeleteBuffers(1, &VBO);
+        VBO = 0;
+    }
+
+    if (VAO != 0)
+    {
+        glDeleteVertexArrays(1, &VAO);
+        VAO = 0;
+    }
+
+    if (TEX != 0)
+    {
+        glDeleteTextures(1, &TEX);
+        TEX = 0;
+    }
+
     delete[] m_vertices;
 	delete[] m_polygons;
     delete[] m_vertexNormals;
@@ -149,7 +175,7 @@ const glm::mat4x4& MeshModel::GetRotateTransformation()
     return m_rotateTransformation;
 }
 
-void MeshModel::LoadFile(const string& fileName)
+void MeshModel::LoadFile(const std::string& fileName, GLuint program)
 {
 	ifstream ifile(fileName.c_str());
 
@@ -319,26 +345,25 @@ void MeshModel::LoadFile(const string& fileName)
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(VerticesPositions[0]) * VerticesPositionsSize, VerticesPositions, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VerticesPositions[0]) * 3, nullptr);
     glEnableVertexAttribArray(0);
 
+// 
+//     unsigned VerticesColorsSize = VerticesPositionsSize;
+//     GLfloat* VerticesColors = new GLfloat[VerticesPositionsSize];
+//     for (size_t i = 0, j = 0; j < VerticesPositionsSize && i < VerticesPositionsSize; i += 3, j++)
+//     {
+//         VerticesColors[i] =     (GLfloat)(m_surface.m_ambientColor.x);
+//         VerticesColors[i + 1] = (GLfloat)(m_surface.m_ambientColor.y);
+//         VerticesColors[i + 2] = (GLfloat)(m_surface.m_ambientColor.z);
+//     }
+// 
 
-    unsigned VerticesColorsSize = VerticesPositionsSize;
-    GLfloat* VerticesColors = new GLfloat[VerticesPositionsSize];
-    for (size_t i = 0, j = 0; j < VerticesPositionsSize && i < VerticesPositionsSize; i += 3, j++)
-    {
-        VerticesColors[i] = (GLfloat)(m_surface.m_ambientColor.x);
-        VerticesColors[i + 1] = (GLfloat)(m_surface.m_ambientColor.y);
-        VerticesColors[i + 2] = (GLfloat)(m_surface.m_ambientColor.z);
-    }
-    glBindTexture(GL_COLOR_BUFFER_BIT, TEX);
-    glBufferData(GL_COLOR_BUFFER_BIT, VerticesColorsSize * sizeof(GLfloat), VerticesColors, GL_STATIC_DRAW);
+//     glBindTexture(GL_COLOR_BUFFER_BIT, TEX);
 
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VerticesPositions[0]) * 3, (void*)(sizeof(VerticesPositions[0])*1));
     glEnableVertexAttribArray(1);
-
-
 
     glBindVertexArray(0);
 
@@ -349,13 +374,21 @@ void MeshModel::LoadFile(const string& fileName)
 void MeshModel::Draw(std::tuple<std::vector<Face>, std::vector<glm::vec3>, std::vector<glm::vec3>, std::vector<glm::vec3> >& modelData)
 {
 
+
+    if (m_tex_data) {
+        glActiveTexture(GL_TEXTURE0);
+//         glProgramUniform1i( m_cur_prog, glGetUniformLocation(m_cur_prog, "textureSampler"), TEX);
+        glBindTexture(GL_TEXTURE_2D, TEX);
+    }
+
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
+    
     glDrawArrays(GL_TRIANGLES, 0, m_vPositionsSize * 3);
 
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 
 
 	for (size_t i = 0; i < m_polygonsSize; i++)
@@ -385,6 +418,36 @@ void MeshModel::Draw(std::tuple<std::vector<Face>, std::vector<glm::vec3>, std::
 //     }
 };
 
+void MeshModel::ApplyTexture(std::string path)
+{
+   lodepng_decode_file(&m_tex_data, &m_tex_width, &m_tex_height, path.c_str(), LCT_RGBA, 8);
+   if (m_tex_data)
+   {
+       glGenTextures(1, &TEX);
+
+       glBindTexture(GL_TEXTURE_2D, TEX);
+       glActiveTexture(GL_TEXTURE0);
+
+
+       glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_tex_width, m_tex_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_tex_data);
+
+       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+       glGenerateMipmap(GL_TEXTURE_2D);
+
+
+       //glBindTexture(GL_TEXTURE_2D, 0);
+
+
+// 
+//        free(m_tex_data);
+//        m_tex_data = nullptr;
+   }
+}
+
 string* PrimMeshModel::setPrimModelFilePath(PRIM_MODEL primModel)
 {
 	switch (primModel)
@@ -407,12 +470,15 @@ string* PrimMeshModel::setPrimModelFilePath(PRIM_MODEL primModel)
 
 void CamMeshModel::Draw(std::tuple<std::vector<Face>, std::vector<glm::vec3>, std::vector<glm::vec3>, std::vector<glm::vec3> >& modelData)
 {
-    vector<Face> camModelPolygons;
 
-    for (size_t i = 0; i < m_polygonsSize; i++)
-    {
-        camModelPolygons.push_back(m_polygons[i]);
-    }
 
-    get<TUPLE_POLYGONS>(modelData) = camModelPolygons;
+
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+
+    glDrawArrays(GL_TRIANGLES, 0, m_vPositionsSize * 3);
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

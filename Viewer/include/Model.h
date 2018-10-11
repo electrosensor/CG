@@ -1,6 +1,7 @@
 #pragma once
 #include "Face.h"
 
+
 /*
  * Model class. An abstract class for all types of geometric data.
  */
@@ -21,6 +22,7 @@ public:
     virtual void      SetRotateTransformation(glm::mat4x4& transformation)                                                     = 0;
     virtual void      SetWorldTransformation(glm::mat4x4& transformation)                                                = 0;
 	virtual void      SetNormalTransformation(glm::mat4x4& transformation)                                               = 0;
+    virtual void      ApplyTexture(std::string texPath)                                                                       = 0;
 	
     
     virtual void Draw(std::tuple<std::vector<Face>, std::vector<glm::vec3>, std::vector<glm::vec3>, std::vector<glm::vec3> >& modelData) = 0;
@@ -36,9 +38,12 @@ public:
 
 
 
-
-
 protected:
+
+    GLuint m_tex_width;
+    GLuint m_tex_height;
+    unsigned char* m_tex_data;
+
     bool m_bShouldRender;
     CUBE m_cubeLines;
 

@@ -1,12 +1,12 @@
 #version 330
 
-in  vec3 texCoord;
-out vec4 fColor;
+in  vec2 texCoord;
+out vec3 fColor;
 
-uniform sampler2D texture;
+uniform sampler2D textureSampler;
 
 void main() 
 { 
-   fColor = vec4(texCoord,1);
+   fColor = texture(textureSampler, texCoord).rgb;
 } 
 

@@ -5,9 +5,9 @@ using namespace glm;
 
 
 
-Camera::Camera(const vec3& eye, const vec3& at, const vec3& up) : m_cameraTransform(I_MATRIX), m_cameraProjection(I_MATRIX)
+Camera::Camera(const vec3& eye, const vec3& at, const vec3& up, GLuint prog) : m_cameraTransform(I_MATRIX), m_cameraProjection(I_MATRIX)
 {
-    m_cameraModel = (PModel) new CamMeshModel(eye);
+    m_cameraModel = (PModel) new CamMeshModel(eye, prog);
 
     LookAt(eye, at, up);
     try 
@@ -18,7 +18,7 @@ Camera::Camera(const vec3& eye, const vec3& at, const vec3& up) : m_cameraTransf
 
 }
 
-Camera::Camera() : Camera(DEFAULT_CAMERA_POSITION) {}
+Camera::Camera(GLuint prog) : Camera(DEFAULT_CAMERA_POSITION, prog) {}
 
 Camera::~Camera()
 {

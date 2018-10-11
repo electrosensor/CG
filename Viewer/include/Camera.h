@@ -19,8 +19,8 @@ private:
     
 
 public:
-    Camera();
-    Camera(const glm::vec3& eye, const glm::vec3& at, const glm::vec3& up);
+    Camera(GLuint prog);
+    Camera(const glm::vec3& eye, const glm::vec3& at, const glm::vec3& up, GLuint prog);
     ~Camera();
 
     const glm::mat4x4 & GetTransformation();

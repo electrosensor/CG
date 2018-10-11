@@ -926,7 +926,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
                 if (ImGui::MenuItem("Open", "CTRL+O"))
                 {
                     nfdchar_t *outPath = nullptr;
-                    nfdresult_t result = NFD_OpenDialog("obj;png,jpg", nullptr, &outPath);
+                    nfdresult_t result = NFD_OpenDialog("obj", nullptr, &outPath);
                     if (result == NFD_OKAY) {
                         ImGui::Text("Hello from another window!");
                         scene->LoadOBJModel(outPath, material);
@@ -951,6 +951,21 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
                 if (ImGui::MenuItem("Copy", "CTRL+C")) {}
                 if (ImGui::MenuItem("Paste", "CTRL+V")) {}
                 ImGui::EndMenu();
+            }
+            if (ImGui::MenuItem("Open and apply texture", "CTRL+O"))
+            {
+                nfdchar_t *outPath = nullptr;
+                nfdresult_t result = NFD_OpenDialog("png", nullptr, &outPath);
+                if (result == NFD_OKAY) {
+                    scene->ApplyTextureToActiveModel(outPath);
+                    free(outPath);
+
+                }
+                else if (result == NFD_CANCEL) {
+                }
+                else {
+                }
+
             }
             if (ImGui::BeginMenu("Settings"))
             {
