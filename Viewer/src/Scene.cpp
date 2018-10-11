@@ -75,18 +75,26 @@ void Scene::Draw()
     {
 
         tuple modelData(vPolygons, vVertices, vVerticesNormals, vVerticesPositions);
-// 
-//         vector<Face>& polygonsToLight = get<TUPLE_POLYGONS>(modelData);
-//         for each(Light* light in m_lights)
-//         {
-//             if (/*light->isOn()*/ true)
-//             {
+
+        vector<Face>& polygonsToLight = get<TUPLE_POLYGONS>(modelData);
+        for each(Light* light in m_lights)
+        {
+            if (/*light->isOn()*/ true)
+            {
+
+                GLuint uniformAmbientColour = glGetUniformLocation(m_program, "directionalLight.colour");
+                GLuint uniformAmbientIntensity = glGetUniformLocation(m_program, "directionalLight.ambientIntensity");
+
+                glUniform3f(uniformAmbientColour, light->GetAmbientColor().x, light->GetAmbientColor().y, light->GetAmbientColor().z);
+                glUniform1f(uniformAmbientIntensity, light->GetAmbientIntensity());
+
+
 //                 for(Face& faceIt : polygonsToLight)
 //                 {
 //                     light->Illuminate(faceIt, light->GetLightModel().GetModelTransformation());
 //                 }
-//             }
-//         }
+            }
+        }
         tie(vPolygons, vVertices, vVerticesNormals, vVerticesPositions) = modelData;
 
         mat4x4 objTransformation = model->GetTranslateTransformation() * model->GetRotateTransformation() * model->GetScaleTransformation();

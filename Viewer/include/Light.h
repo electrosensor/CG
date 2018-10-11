@@ -104,6 +104,8 @@ public:
         polygon.m_actualColorP2 += ambientC;
         polygon.m_actualColorP3 += ambientC;
 
+
+
         float diffusiveI = m_diffusiveLightIntensity * polygon.m_surface->m_diffuseReflectionRate;
         glm::vec4 diffusiveC = polygon.m_surface->m_diffuseColor + m_diffusiveLightColor;
 

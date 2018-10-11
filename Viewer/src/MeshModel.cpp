@@ -362,7 +362,7 @@ void MeshModel::LoadFile(const std::string& fileName, GLuint program)
 //     glBindTexture(GL_COLOR_BUFFER_BIT, TEX);
 
 
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VerticesPositions[0]) * 3, (void*)(sizeof(VerticesPositions[0])*1));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VerticesPositions[0]) * 3, nullptr);
     glEnableVertexAttribArray(1);
 
     glBindVertexArray(0);
@@ -439,12 +439,8 @@ void MeshModel::ApplyTexture(std::string path)
        glGenerateMipmap(GL_TEXTURE_2D);
 
 
-       //glBindTexture(GL_TEXTURE_2D, 0);
+       glBindTexture(GL_TEXTURE_2D, 0);
 
-
-// 
-//        free(m_tex_data);
-//        m_tex_data = nullptr;
    }
 }
 
