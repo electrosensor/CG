@@ -61,7 +61,7 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 
         ImGui::Text("------------------- Cameras: -------------------");
 
-        static float eye[3] = { 2,2,2 };
+        static float eye[3] = { 10,10,10 };
         static float at[3] = { 0,0,0 };
         ImGui::SliderFloat3("Look from: (x,y,z)", eye, -10, 10);
         ImGui::SliderFloat3("Look at: (x,y,z)", at, -10, 10);
@@ -426,19 +426,19 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 
         static PROJ_PARAMS projParams =
         {
-            projParams.left = -1,
-            projParams.right = 1,
-            projParams.bottom = -1,
-            projParams.top = 1,
-            projParams.zNear = 0.1f,
-            projParams.zFar = 2,
+            projParams.left = -10,
+            projParams.right = 10,
+            projParams.bottom = -10,
+            projParams.top = 10,
+            projParams.zNear = 0.0f,
+            projParams.zFar = 10
         };
-        ImGui::SliderFloat("Left", &projParams.left, -5.0, 5.0);
-        ImGui::SliderFloat("Right", &projParams.right, -5.0, 5.0);
-        ImGui::SliderFloat("Bottom", &projParams.bottom, -5.0, 5.0);
-        ImGui::SliderFloat("Top", &projParams.top, -5.0, 5.0);
-        ImGui::SliderFloat("zNear", &projParams.zNear, -5.0, 5.0);
-        ImGui::SliderFloat("zFar", &projParams.zFar, -5.0, 5.0);
+        ImGui::SliderFloat("Left", &projParams.left, -10.0, 10.0);
+        ImGui::SliderFloat("Right", &projParams.right, -10.0, 10.0);
+        ImGui::SliderFloat("Bottom", &projParams.bottom, -10.0, 10.0);
+        ImGui::SliderFloat("Top", &projParams.top, -10.0, 10.0);
+        ImGui::SliderFloat("zNear", &projParams.zNear, -10.0, 10.0);
+        ImGui::SliderFloat("zFar", &projParams.zFar, -10.0, 100.0);
 
         static bool bIsProjError = false;
         static bool bIsPersError = false;
@@ -466,14 +466,14 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
 
         static PERSPECTIVE_PARAMS perspParam =
         {
-            perspParam.fovy = static_cast<float>(TO_RADIAN(325)),
-            perspParam.aspect = 1/*ImGui::GetWindowWidth() / ImGui::GetWindowHeight()*/,
-            perspParam.zNear = 0.5f,
-            perspParam.zFar = 2.f
+            perspParam.fovy = static_cast<GLfloat>(TO_RADIAN(140)),
+            perspParam.aspect = (GLfloat)ImGui::GetWindowWidth() / (GLfloat)ImGui::GetWindowHeight() ,
+            perspParam.zNear = 0.1f,
+            perspParam.zFar = 10.f
         };
         ImGui::SliderAngle("FOV",  &perspParam.fovy, 1, 350);
-        ImGui::SliderFloat("Near", &perspParam.zNear, 0.1f, 10.f);
-        ImGui::SliderFloat("Far",  &perspParam.zFar, 0.2f, 20.f);
+        ImGui::SliderFloat("Near", &perspParam.zNear, 0.0f, 10.f);
+        ImGui::SliderFloat("Far",  &perspParam.zFar, 0.1f, 40.f);
 
         try
         {
@@ -527,7 +527,6 @@ void DrawImguiMenus(ImGuiIO& io, Scene* scene)
         {
             colorsNotInited = true;
         }
-        scene->SetGeneratedTexture(static_cast<GENERATED_TEXTURE>(currentTexture));
 
         vec4 currentPolygonCol = scene->GetPolygonColor();
         static float ambientMatColor[3] = { currentPolygonCol.x + 0.1 ,currentPolygonCol.y + 0.1 ,currentPolygonCol.z + 0.1 };

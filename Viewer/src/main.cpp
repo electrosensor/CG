@@ -3,6 +3,7 @@
 // (GLFW is a cross-platform general purpose library for handling windows, inputs, OpenGL/Vulkan graphics context creation, etc.)
 // (Glad is a helper library to access OpenGL functions since there is no standard header to access modern OpenGL functions easily. Alternatives are GLEW, GL3W, etc.)
 
+
 #include <imgui/imgui.h>
 #include <stdio.h>
 #include <glad/glad.h>    // This example is using glad to access OpenGL functions. You may freely use any other OpenGL loader such as: glew, gl3w, glLoadGen, etc.
@@ -11,7 +12,6 @@
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 // Scene, rendering and mesh loading
-#include "Renderer.h"
 #include "Scene.h"
 #include "ImguiMenus.h"
 #include "Defs.h"
@@ -30,7 +30,7 @@ ImGuiIO& SetupDearImgui(GLFWwindow* window);
 // Takes care of all the opengl and glfw backend for rendering a new frame.
 void StartFrame();
 // Renders imgui. Takes care of screen resize, and finally renders the scene
-void RenderFrame(GLFWwindow* window, Renderer* renderer);
+void RenderFrame(GLFWwindow* window);
 // Cleanup routines of all the systems used here.
 void Cleanup(GLFWwindow* window);
 
@@ -49,10 +49,10 @@ int main(int argc, char **argv)
 	if (!window)
 		return 1;
 	// Setup renderer and scene
-	Renderer renderer = Renderer(w,h);
-	Scene scene = Scene(&renderer);
+	Scene scene = Scene();
     // Setup Dear ImGui binding
 	ImGuiIO& io = SetupDearImgui(window);
+
     // Main loop - the famous "Game Loop" in video games :)
     while (!glfwWindowShouldClose(window))
     {
@@ -72,8 +72,9 @@ int main(int argc, char **argv)
 		DrawImguiMenus(io,&scene);
         // Rendering + user rendering - finishing the ImGui frame
 		// go to function implementation to add your rendering calls.
-		RenderFrame(window, &renderer);// --> go to line 137
+		RenderFrame(window);// --> go to line 137
     }
+    glUseProgram(0);
     // Cleanup
 	Cleanup(window);
     return RC_SUCCESS;
@@ -198,7 +199,7 @@ void StartFrame()
 }
 
 // Renders imgui. Takes care of screen resize, and finally renders the scene
-void RenderFrame(GLFWwindow* window, Renderer* renderer)
+void RenderFrame(GLFWwindow* window)
 {
 	// creates ImGui's vertex buffers and textures
 	ImGui::Render();
@@ -209,14 +210,10 @@ void RenderFrame(GLFWwindow* window, Renderer* renderer)
 	glfwGetFramebufferSize(window, &displayW, &displayH);
 	// Telling opengl to resize the framebuffer
 	glViewport(0, 0, displayW, displayH);
-	
-	// put renderer code here
-	// #######################################
-	renderer->Viewport(displayW, displayH);
-	renderer->ClearColorBuffer();
-    renderer->ClearDepthBuffer();
-	// #######################################
-	
+    // Enable depth test
+    glEnable(GL_DEPTH_TEST);
+    // Accept fragment if it closer to the camera than the former one
+    glDepthFunc(GL_LESS);
 	// Actual rendering of ImGui. ImGui only creates buffers and textures, 
 	// which are sent to opengl for the actual rendering.
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

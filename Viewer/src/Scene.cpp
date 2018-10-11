@@ -2,11 +2,22 @@
 #include "MeshModel.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include "InitShader.h"
 using namespace std;
 using namespace glm;
 
 #define IS_CAMERA true
 
+
+Scene::Scene() : m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamera(DISABLED), m_bDrawVecNormal(false), m_vnScaleFactor(2.f), m_fnScaleFactor(2.f), m_bgColor(COLOR(YURI_BG)), m_polygonColor(COLOR(YURI_POLYGON)), m_wireframeColor(COLOR(YURI_WIRE)), m_bDrawWireframe(true), m_bBlurX(1), m_bBlurY(1), m_sigma(1.f), m_ePostEffect(NONE)
+{
+    program = InitShader("vshader.glsl", "fshader.glsl");
+    // Make this program the current one.
+    glUseProgram(program);
+
+    m_worldTransformation = I_MATRIX;
+    m_worldTransformation[3].w = 1;
+}
 
 void Scene::LoadOBJModel(std::string fileName, const Surface& material)
 {
@@ -30,6 +41,9 @@ void Scene::Draw()
     vector<vec3> vVerticesPositions;
 
 
+    glClearColor(m_bgColor.x, m_bgColor.y, m_bgColor.z, 1.f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     if (m_activeCamera != DISABLED)
     {
         activeCamera = m_cameras[m_activeCamera];
@@ -40,21 +54,9 @@ void Scene::Draw()
         activeCamera = m_cameras.front();
         m_activeCamera++;
     }
-    renderer->SetWorldTransformation(m_worldTransformation);
 
-    renderer->SetCameraTransform(activeCamera->GetTransformation());
-    renderer->setProjectionParams(activeCamera->getProjectionParams());
-    renderer->SetProjection(activeCamera->GetProjection());
-
-    renderer->SetBgColor(m_bgColor);
-    renderer->SetPolygonColor(m_polygonColor);
-    renderer->SetWireframeColor(m_wireframeColor);
-    renderer->SetShadingType(m_shading);
-    renderer->DrawWireframe(m_bDrawWireframe);
-    renderer->DrawFaceNormal(m_bDrawFaceNormal);
-    renderer->SetFaceNormScaleFactor(m_fnScaleFactor);
-//    renderer->DrawAxis();
-
+    mat4x4 View = activeCamera->GetTransformation();
+    mat4x4 Projection = activeCamera->GetProjection();
 
 //     for each(Light* light in m_lights)
 //     {
@@ -71,8 +73,8 @@ void Scene::Draw()
 
     for each (Model* model in m_models)
     {
+
         tuple modelData(vPolygons, vVertices, vVerticesNormals, vVerticesPositions);
-        model->Draw(modelData);
 // 
 //         vector<Face>& polygonsToLight = get<TUPLE_POLYGONS>(modelData);
 //         for each(Light* light in m_lights)
@@ -86,40 +88,21 @@ void Scene::Draw()
 //             }
 //         }
         tie(vPolygons, vVertices, vVerticesNormals, vVerticesPositions) = modelData;
-// 
-//         renderer->SetObjectMatrices(model->GetModelTransformation(), model->GetNormalTransformation());
-// 
 
-        //renderer->DrawTriangles(vPolygons, &model->getCentroid(), activeCamera->getCameraModel()->getCentroid());
+        mat4x4 objTransformation = model->GetTranslateTransformation() * model->GetRotateTransformation() * model->GetScaleTransformation();
 
-        renderer->mVerticesPositionsSize = vVerticesPositions.size()*FACE_ELEMENTS;
-        renderer->mVerticesPositions = new GLfloat[renderer->mVerticesPositionsSize];
-        for (size_t i = 0,  j = 0; j < vVerticesPositions.size(); i+=3, j++)
-        {
-            renderer->mVerticesPositions[i]     = (GLfloat)vVerticesPositions[j].x;
-            renderer->mVerticesPositions[i + 1] = (GLfloat)vVerticesPositions[j].y;
-            renderer->mVerticesPositions[i + 2] = (GLfloat)vVerticesPositions[j].z;
 
-        }
-        renderer->mVerticesColorsSize = renderer->mVerticesPositionsSize;
-        renderer->mVerticesColors = new GLfloat[renderer->mVerticesPositionsSize];
-        for (size_t i = 0, j = 0; j < renderer->mVerticesPositionsSize && i < renderer->mVerticesPositionsSize; i += 3, j++)
-        {
-            renderer->mVerticesColors[i] =     (GLfloat)(abs(vVerticesPositions[j].x * m_polygonColor.x) + 0.4f);
-            renderer->mVerticesColors[i + 1] = (GLfloat)(abs(vVerticesPositions[j].y * m_polygonColor.y) + 0.3f);
-            renderer->mVerticesColors[i + 2] = (GLfloat)(abs(vVerticesPositions[j].z * m_polygonColor.z) + 0.2f);
+        GLuint ModelMatrixID = glGetUniformLocation(program, "Model");
+        glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &objTransformation[0][0]);
 
-        }
+        GLuint ViewMatrixID = glGetUniformLocation(program, "View");
+        glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &View[0][0]);
 
-//         if (m_bDrawVecNormal && !vVerticesNormals.empty())
-//         {
-//             renderer->drawVerticesNormals(vVertices , vVerticesNormals, m_vnScaleFactor);
-//         }
-// 
-//         if (m_bShowBorderCube)
-//         {
-//             renderer->drawBordersCube(model->getBordersCube());
-//         }
+        GLuint ProjectionMatrixID = glGetUniformLocation(program, "Projection");
+        glUniformMatrix4fv(ProjectionMatrixID, 1, GL_FALSE, &Projection[0][0]);
+
+        model->Draw(modelData);
+
      }
 
 //     for each(Camera* camera in m_cameras)
@@ -137,8 +120,6 @@ void Scene::Draw()
 //     }
 
 //     renderer->applyPostEffect(m_bBlurX, m_bBlurY, m_sigma, m_ePostEffect);
-
-    if(!m_models.empty()) renderer->SwapBuffers();
 
 }
 
@@ -161,53 +142,54 @@ void Scene::SetWorldTransformation(const mat4x4 world)
 void Scene::TranslateModel(Model* activeModel, AXES axis, float value)
 {
 
-    mat4x4 currTransf = activeModel->GetModelTransformation();
-    mat4x4 translateTransform(TRANSLATION_MATRIX(axis == AXIS_X ? value : 0, axis == AXIS_Y ? value : 0, axis == AXIS_Z ? value : 0));
-    activeModel->SetModelTransformation(translateTransform * currTransf);
+    mat4x4 currTransf = activeModel->GetTranslateTransformation();
+    mat4x4 translateTransform(translate(currTransf, vec3(axis == AXIS_X ? value : 0, axis == AXIS_Y ? value : 0, axis == AXIS_Z ? value : 0)));
+    activeModel->SetTranslateTransformation(translateTransform);
 }
 
 void Scene::ScaleModel(Model* activeModel, float value)
 {
-    mat4x4 currTransf = activeModel->GetModelTransformation();
-    mat4x4 scaleTransform(SCALING_MATRIX4(value));
-    activeModel->SetModelTransformation(scaleTransform * currTransf);
+    mat4x4 currTransf = activeModel->GetScaleTransformation();
+    mat4x4 scaleTransform(scale(currTransf, vec3(value, value, value)));
+    activeModel->SetScaleTransformation(scaleTransform);
 }
 
 
 void Scene::RotateModel(Model* activeModel, AXES axis, float angle)
 {
-    mat4x4 currTransf = activeModel->GetModelTransformation(); /* activeModel->GetWorldTransformation();*/
-    mat4x4 toOrigin(TRANSLATION_MATRIX(-currTransf[3][0], -currTransf[3][1], -currTransf[3][2]));
-    mat4x4 toPlace(TRANSLATION_MATRIX(currTransf[3][0], currTransf[3][1], currTransf[3][2]));
+    mat4x4 currTransl = activeModel->GetTranslateTransformation(); 
+    mat4x4 currRot = activeModel->GetRotateTransformation();
+    vec3 toOrigin(-currTransl[3][0], -currTransl[3][1], -currTransl[3][2]);
+    vec3 toPlace = -toOrigin;
 
-    mat4x4 rotateTransform;
+    mat4x4 rotateTransform = translate(currRot, toOrigin);
 
     switch (axis)
     {
-    case AXIS_X: rotateTransform = ROTATING_MATRIX_X_AXIS(angle); break;
-    case AXIS_Y: rotateTransform = ROTATING_MATRIX_Y_AXIS(angle); break;
-    case AXIS_Z: rotateTransform = ROTATING_MATRIX_Z_AXIS(angle); break;
+    case AXIS_X: rotateTransform = rotate(rotateTransform, angle, vec3(1, 0, 0)); break;
+    case AXIS_Y: rotateTransform = rotate(rotateTransform, angle, vec3(0, 1, 0)); break;
+    case AXIS_Z: rotateTransform = rotate(rotateTransform, angle, vec3(0, 0, 1)); break;
     default:; break;
     }
 
-    activeModel->SetModelTransformation(toPlace * rotateTransform * toOrigin * currTransf);
+    rotateTransform = translate(rotateTransform, toPlace);
+
+    activeModel->SetRotateTransformation(rotateTransform);
 }
 
 void Scene::RotateModelRelativeToWorld(Model* activeModel, AXES axis, float angle)
 {
-    mat4x4 currTransf = activeModel->GetModelTransformation();
-
-    mat4x4 rotateTransform;
+    mat4x4 currTransf = activeModel->GetRotateTransformation();
 
     switch (axis)
     {
-    case AXIS_X: rotateTransform = ROTATING_MATRIX_X_AXIS(angle); break;
-    case AXIS_Y: rotateTransform = ROTATING_MATRIX_Y_AXIS(angle); break;
-    case AXIS_Z: rotateTransform = ROTATING_MATRIX_Z_AXIS(angle); break;
+    case AXIS_X: currTransf = rotate(currTransf, angle, vec3(1, 0, 0)); break;
+    case AXIS_Y: currTransf = rotate(currTransf, angle, vec3(0, 1, 0)); break;
+    case AXIS_Z: currTransf = rotate(currTransf, angle, vec3(0, 0, 1)); break;
     default:; break;
     }
 
-    activeModel->SetModelTransformation(rotateTransform * currTransf);
+    activeModel->SetRotateTransformation(currTransf);
 }
 
 
@@ -238,6 +220,7 @@ void Scene::SetPerspectiveProjection(PERSPECTIVE_PARAMS projParams)
     if (m_activeCamera != DISABLED)
     {
         Camera* activeCamera = m_cameras[m_activeCamera];
+
         activeCamera->Perspective(projParams);
     }
 }
@@ -247,7 +230,8 @@ void Scene::SetOrthoProjection(PROJ_PARAMS projParams)
     if (m_activeCamera != DISABLED)
     {
         Camera* activeCamera = m_cameras[m_activeCamera];
-/*        projParams.right *= ((float)renderer->getWidth()/(float)renderer->getHeight());*/
+        //projParams.right *= ((float)renderer->getWidth()/(float)renderer->getHeight());
+
         activeCamera->Ortho(projParams);
     }
 }
@@ -478,19 +462,6 @@ void Scene::SetWireframeColor(const vec4& newWireframeColor)
 }
 
 
-
-
-
-GENERATED_TEXTURE Scene::GetGeneratedTexture()
-{
-    return renderer->GetGeneratedTexture();
-}
-
-void Scene::SetGeneratedTexture(GENERATED_TEXTURE texture)
-{
-    renderer->SetGeneratedTexture(texture);
-}
-
 int Scene::GetActiveLightIdx()
 {
     return m_activeLight;
@@ -675,7 +646,7 @@ void Scene::configPostEffect(POST_EFFECT postEffect, int blurX, int blurY, float
         m_bloomIntensity = bloomIntensity;
         m_bloomThreshold = bloomThreshold;
         m_bloomThresh    = bloomThresh;
-        renderer->configPostEffect(m_ePostEffect, m_bBlurX, m_bBlurY, m_sigma, m_bloomIntensity, m_bloomThreshold, m_bloomThresh);
+//         renderer->configPostEffect(m_ePostEffect, m_bBlurX, m_bBlurY, m_sigma, m_bloomIntensity, m_bloomThreshold, m_bloomThresh);
     }
     
 }

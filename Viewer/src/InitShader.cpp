@@ -121,6 +121,19 @@ InitShader(const string& vShaderFile, const string& fShaderFile)
 		exit( EXIT_FAILURE );
     }
 
+    glValidateProgram(program);
+    glGetProgramiv(program, GL_VALIDATE_STATUS, &linked);
+    if (!linked) {
+        std::cerr << "Validation of shader program was failed" << std::endl;
+        GLint  logSize;
+        glGetProgramiv(program, GL_INFO_LOG_LENGTH, &logSize);
+        auto* logMsg = new char[logSize];
+        glGetProgramInfoLog(program, logSize, nullptr, logMsg);
+        std::cerr << logMsg << std::endl;
+        delete[] logMsg;
+
+        exit(EXIT_FAILURE);
+    }
     /* use program object */
     glUseProgram(program);
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 #include <string>
 #include <stdlib.h>
 #include <vector>
@@ -7,6 +9,8 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include "glm/common.hpp"
+#include <glm/gtc/matrix_transform.hpp>
 
 
 #define VIEW_SCALING                     300.f
@@ -180,10 +184,10 @@ typedef struct _PROJ_PARAMS
 
 typedef struct _PERSPECTIVE_PARAMS
 {
-    float fovy;
-    float aspect;
-    float zNear;
-    float zFar;
+    GLfloat fovy;
+    GLfloat aspect;
+    GLfloat zNear;
+    GLfloat zFar;
 }PERSPECTIVE_PARAMS, *PPERSPECTIVE_PARAMS;
 
 typedef struct _CUBE

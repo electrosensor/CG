@@ -4,7 +4,6 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include <string>
-#include "Renderer.h"
 #include "Model.h"
 #include "Light.h"
 #include "Camera.h"
@@ -15,8 +14,7 @@ private:
     std::vector<Model*>  m_models;
     std::vector<Light*>  m_lights;
     std::vector<Camera*> m_cameras;
-    Renderer            *renderer;
-
+    GLuint program;
     int                  m_activeModel;
     int                  m_activeLight;
     int                  m_activeCamera;
@@ -42,11 +40,10 @@ private:
     glm::vec4 m_bloomThreshold;
     float m_bloomThresh;
 public:
-    Scene() = delete;
-    Scene(Renderer *renderer) : renderer(renderer), m_activeModel(DISABLED), m_activeLight(DISABLED), m_activeCamera(DISABLED), m_bDrawVecNormal(false), m_vnScaleFactor(2.f), m_fnScaleFactor(2.f), m_bgColor(COLOR(YURI_BG)), m_polygonColor(COLOR(YURI_POLYGON)), m_wireframeColor(COLOR(YURI_WIRE)), m_bDrawWireframe(true), m_bBlurX(1), m_bBlurY(1), m_sigma(1.f), m_ePostEffect(NONE)
-    {
-        m_worldTransformation = I_MATRIX ;
-        m_worldTransformation[3].w = 1;
+    Scene();
+    ~Scene() {
+
+        glUseProgram(0);
     }
 
     // Loads an obj file into the scene.
@@ -140,7 +137,6 @@ public:
     glm::vec4 GetWireframeColor();
     void SetWireframeColor(const glm::vec4& wireframeColor);
     GENERATED_TEXTURE GetGeneratedTexture();
-    void SetGeneratedTexture(GENERATED_TEXTURE texture);
     //Light API:
 
     int  GetActiveLightIdx();

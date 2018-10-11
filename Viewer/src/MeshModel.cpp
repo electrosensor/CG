@@ -1,6 +1,4 @@
 #include "MeshModel.h"
-#include "Util.h"
-#include "Face.h"
 
 using namespace std;
 using namespace glm;
@@ -71,6 +69,9 @@ vec2 vec2fFromStream(std::istream& issLine)
 }
 
 MeshModel::MeshModel(const string& fileName, const Surface& material) : m_modelTransformation(SCALING_MATRIX4(0.5f)),
+                                               m_scaleTransformation(I_MATRIX),
+                                               m_translateTransformation(I_MATRIX),
+                                               m_rotateTransformation(I_MATRIX),
 											   m_normalTransformation(I_MATRIX),
                                                m_worldTransformation(I_MATRIX),
                                                m_modelCentroid(ZERO_VEC3),
@@ -113,9 +114,39 @@ void MeshModel::SetModelTransformation(mat4x4& transformation)
     m_modelTransformation = transformation;
 }
 
+void MeshModel::SetScaleTransformation(glm::mat4x4& transformation)
+{
+    m_scaleTransformation = transformation;
+}
+
+void MeshModel::SetTranslateTransformation(glm::mat4x4& transformation)
+{
+    m_translateTransformation = transformation;
+}
+
+void MeshModel::SetRotateTransformation(glm::mat4x4& transformation)
+{
+    m_rotateTransformation = transformation;
+}
+
 const mat4x4& MeshModel::GetModelTransformation()
 {
     return m_modelTransformation;
+}
+
+const glm::mat4x4& MeshModel::GetScaleTransformation()
+{
+    return m_scaleTransformation;
+}
+
+const glm::mat4x4& MeshModel::GetTranslateTransformation()
+{
+    return m_translateTransformation;
+}
+
+const glm::mat4x4& MeshModel::GetRotateTransformation()
+{
+    return m_rotateTransformation;
 }
 
 void MeshModel::LoadFile(const string& fileName)
@@ -268,10 +299,65 @@ void MeshModel::LoadFile(const string& fileName)
     m_maxCoords.y     = NORMALIZE_COORDS(maxCoords.y     , totalMin, totalMax);
     m_maxCoords.z     = NORMALIZE_COORDS(maxCoords.z     , totalMin, totalMax);
 
+
+    ////////////////
+
+    unsigned VerticesPositionsSize = m_vPositionsSize * 3;
+    GLfloat* VerticesPositions = new GLfloat[VerticesPositionsSize];
+    for (size_t i = 0, j = 0; j < m_vPositionsSize; i += 3, j++)
+    {
+        VerticesPositions[i] = (GLfloat)m_vertexPositions[j].x;
+        VerticesPositions[i + 1] = (GLfloat)m_vertexPositions[j].y;
+        VerticesPositions[i + 2] = (GLfloat)m_vertexPositions[j].z;
+
+    }
+
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(VerticesPositions[0]) * VerticesPositionsSize, VerticesPositions, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glEnableVertexAttribArray(0);
+
+
+    unsigned VerticesColorsSize = VerticesPositionsSize;
+    GLfloat* VerticesColors = new GLfloat[VerticesPositionsSize];
+    for (size_t i = 0, j = 0; j < VerticesPositionsSize && i < VerticesPositionsSize; i += 3, j++)
+    {
+        VerticesColors[i] = (GLfloat)(m_surface.m_ambientColor.x);
+        VerticesColors[i + 1] = (GLfloat)(m_surface.m_ambientColor.y);
+        VerticesColors[i + 2] = (GLfloat)(m_surface.m_ambientColor.z);
+    }
+    glBindTexture(GL_COLOR_BUFFER_BIT, TEX);
+    glBufferData(GL_COLOR_BUFFER_BIT, VerticesColorsSize * sizeof(GLfloat), VerticesColors, GL_STATIC_DRAW);
+
+
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glEnableVertexAttribArray(1);
+
+
+
+    glBindVertexArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 }
 
 void MeshModel::Draw(std::tuple<std::vector<Face>, std::vector<glm::vec3>, std::vector<glm::vec3>, std::vector<glm::vec3> >& modelData)
 {
+
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    glDrawArrays(GL_TRIANGLES, 0, m_vPositionsSize * 3);
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+
 	for (size_t i = 0; i < m_polygonsSize; i++)
 	{
      

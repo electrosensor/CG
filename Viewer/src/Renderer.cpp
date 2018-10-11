@@ -4,8 +4,7 @@
 #include <imgui/imgui.h>
 #include "Util.h"
 #include "Defs.h"
-#include "glm/common.hpp"
-#include <glm/gtc/matrix_transform.hpp>
+
 using namespace std;
 using namespace glm;
 
@@ -598,23 +597,7 @@ GENERATED_TEXTURE Renderer::GetGeneratedTexture()
 // don't linger here for now, we will have a few tutorials about opengl later.
 void Renderer::initOpenGLRendering()
 {
-    // Creates a unique identifier for an opengl texture.
-    glGenTextures(1, &glScreenTex);
-    // Same for vertex array object (VAO). VAO is a set of buffers that describe a renderable object.
-    glGenVertexArrays(1, &glScreenVtc);
-    // Makes this VAO the current one.
-    glBindVertexArray(glScreenVtc);
-    // Makes GL_TEXTURE0 the current active texture unit
-    glActiveTexture(GL_TEXTURE0);
-    // Makes glScreenTex (which was allocated earlier) the current texture.
-    glBindTexture(GL_TEXTURE_2D, glScreenTex);
-    // malloc for a texture on the gpu.
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, m_width, m_height, 0, GL_RGB, GL_FLOAT, nullptr);
 
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-//     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    
-    glViewport(0, 0, m_width, m_height);
 }
 
 void Renderer::getDeltas(IN float x1, IN float x2, IN float y1, IN float y2, IN float d1, IN float d2, OUT float* pDx, OUT float* pDy, OUT float* pDd)
@@ -657,63 +640,83 @@ void Renderer::createOpenGLBuffer()
 
 void Renderer::SwapBuffers()
 {    
+    // Same for vertex array object (VAO). VAO is a set of buffers that describe a renderable object.
+    glGenVertexArrays(1, &glScreenVtc);
+    // Makes this VAO the current one.
+    glBindVertexArray(glScreenVtc);
+//     // Creates a unique identifier for an opengl texture.
+//     glGenTextures(1, &glScreenTex);
+//     // Makes glScreenTex (which was allocated earlier) the current texture.
+//     glBindTexture(GL_TEXTURE_2D, glScreenTex);
+//     // Makes GL_TEXTURE0 the current active texture unit
+//     glActiveTexture(GL_TEXTURE0);
+//     // malloc for a texture on the gpu.
+//     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, m_width, m_height, 0, GL_RGB, GL_FLOAT, nullptr);
+
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    //     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+
+    glClearColor(m_bgColor.x, m_bgColor.y, m_bgColor.z, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glBindBuffer(GL_ARRAY_BUFFER, glScreenVtc);
-
-    // This is the opengl way for doing malloc on the gpu. 
-    glBufferData(GL_ARRAY_BUFFER, mVerticesPositionsSize*sizeof(GLfloat), mVerticesPositions, GL_STATIC_DRAW);
+//     glGenBuffers(1, &glVertices);
+//     glBindBuffer(GL_ARRAY_BUFFER, glVertices);
+// 
+//         // This is the opengl way for doing malloc on the gpu. 
+//         glBufferData(GL_ARRAY_BUFFER, mVerticesPositionsSize*sizeof(GLfloat), mVerticesPositions, GL_STATIC_DRAW);
 
     // memcopy vtc to buffer[0,sizeof(vtc)-1]
 //     glBufferSubData(GL_ARRAY_BUFFER, 0, mVerticesPositionsSize * sizeof(GLfloat), mVerticesPositions);
 // //     // memcopy tex to buffer[sizeof(vtc),sizeof(vtc)+sizeof(tex)]
 //     glBufferSubData(GL_ARRAY_BUFFER, mVerticesPositionsSize * sizeof(GLfloat), mVerticesColorsSize * sizeof(GLfloat), mVerticesColors);
-    // Loads and compiles a sheder.
+    // Loads and compiles a shader.
 
-    GLuint program = InitShader("vshader.glsl", "fshader.glsl");
-    // Make this program the current one.
-    glUseProgram(program);
-    // Tells the shader where to look for the vertex position data, and the data dimensions.
-    GLint  vPosition = glGetAttribLocation(program, "vPosition");
-    glEnableVertexAttribArray(vPosition);
-    glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+//         GLuint program = InitShader("vshader.glsl", "fshader.glsl");
+//         // Make this program the current one.
+//         glUseProgram(program);
+//         // Tells the shader where to look for the vertex position data, and the data dimensions.
+//         GLint  vPosition = glGetAttribLocation(program, "vPosition");
+//         glEnableVertexAttribArray(vPosition);
+//         glVertexAttribPointer(vPosition, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+// 
 
-
-    //     // Makes GL_TEXTURE0 the current active texture unit
-    glActiveTexture(GL_TEXTURE0);
-    //     // Makes glScreenTex (which was allocated earlier) the current texture.
-    glBindTexture(GL_TEXTURE_2D, glScreenTex);
+    // Makes glScreenTex (which was allocated earlier) the current texture.
+    //glBindTexture(GL_COLOR_BUFFER_BIT, glScreenTex);
     //     // memcopy's colorBuffer into the gpu.
     //glfwLoadTexture2D(imagepath, 0);
-    glBufferData(GL_TEXTURE_2D, mVerticesColorsSize * sizeof(GLfloat), mVerticesColors, GL_STATIC_DRAW);
+    //glBufferData(GL_COLOR_BUFFER_BIT, mVerticesColorsSize * sizeof(GLfloat), mVerticesColors, GL_STATIC_DRAW);
 
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_width, m_height, GL_RGB, GL_FLOAT, mVerticesColors/*mvTexturesBuffer*/);
+    //glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_width, m_height, GL_RGB, GL_FLOAT, mVerticesColors/*mvTexturesBuffer*/);
     //     // Tells opengl to use mipmapping
-    glGenerateMipmap(GL_TEXTURE_2D);
+    //glGenerateMipmap(GL_TEXTURE_2D);
 
-    // Same for texture coordinates data.
-    GLint  vTexCoord = glGetAttribLocation(program, "vTexCoord");
-    glEnableVertexAttribArray(vTexCoord);
-    glVertexAttribPointer(vTexCoord, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+        // Same for texture coordinates data.
+//         GLint  vTexCoord = glGetAttribLocation(Util::program, "vTexCoord");
+//         glEnableVertexAttribArray(vTexCoord);
+//         glVertexAttribPointer(vTexCoord, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    //glProgramUniform1i( program, glGetUniformLocation(program, "texture"), 0 );
+        //glProgramUniform1i( program, glGetUniformLocation(program, "texture"), 0 );
 
-    // Tells the shader to use GL_TEXTURE0 as the texture id.
+        // Tells the shader to use GL_TEXTURE0 as the texture id.
 
-    glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)m_width / (float)m_height, 0.1f, 100.0f);
+//         glm::mat4 Projection = glm::perspective(glm::radians(45.0f), (float)m_width / (float)m_height, 0.1f, 100.0f);
 
-    //glm::mat4 Projection = glm::ortho(-10.0f,10.0f,-10.0f,10.0f,0.0f,100.0f); // In world coordinates
+        //glm::mat4 Projection = glm::ortho(-10.0f,10.0f,-10.0f,10.0f,0.0f,100.0f); // In world coordinates
 
-    glm::mat4 View = glm::lookAt(
-        glm::vec3(4, 3, 3), // Camera is at (4,3,3), in World Space
-        glm::vec3(0, 0, 0), // and looks at the origin
-        glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
-    );
-    GLuint MatrixID = glGetUniformLocation(program, "MVP");
-    glm::mat4 mvp = Projection * View/* * m_objectTransform*/;
-
-    glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
-
+//         glm::mat4 View = glm::lookAt(
+//             glm::vec3(4, 3, 3), // Camera is at (4,3,3), in World Space
+//             glm::vec3(0, 0, 0), // and looks at the origin
+//             glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
+//         );
+//         GLuint ModelMatrixID = glGetUniformLocation(Util::program, "Model");
+//         glUniformMatrix4fv(ModelMatrixID, 1, GL_FALSE, &m_objectTransform[0][0]);
+// 
+//         GLuint ViewMatrixID = glGetUniformLocation(Util::program, "View");
+//         glUniformMatrix4fv(ViewMatrixID, 1, GL_FALSE, &m_cameraTransform[0][0]);
+// 
+//         GLuint ProjectionMatrixID = glGetUniformLocation(Util::program, "Projection");
+//         glUniformMatrix4fv(ProjectionMatrixID, 1, GL_FALSE, &m_cameraProjection[0][0]);
 
 //     pDispBuffer = colorBuffer;
 //     
@@ -734,13 +737,17 @@ void Renderer::SwapBuffers()
 //     }
 
 
+    // 
+    //     // Finally renders the data.
+
+//         glBindVertexArray(glScreenVtc);
+//         glBindBuffer(GL_ARRAY_BUFFER, glVertices);
 // 
-//     // Finally renders the data.
-    // Enable depth test
-    glEnable(GL_DEPTH_TEST);
-    // Accept fragment if it closer to the camera than the former one
-    glDepthFunc(GL_LESS);
-    glDrawArrays(GL_TRIANGLES, 0, mVerticesPositionsSize);
+//         glDrawArrays(GL_TRIANGLES, 0, mVerticesPositionsSize);
+// 
+//         glBindVertexArray(0);
+//         glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 }
 
 void Renderer::ClearColorBuffer()

@@ -2,8 +2,7 @@
 
 
 #include "Model.h"
-#include "Defs.h"
-#include "Util.h"
+
 
 /*
  * MeshModel class. Mesh model object represents a triangle mesh (loaded fron an obj file).
@@ -13,6 +12,9 @@
 class MeshModel : public Model
 {
 	protected :
+        GLuint VAO;
+        GLuint VBO;
+        GLuint TEX;
 
         size_t m_verticesSize;
         glm::vec3 *m_vertices;
@@ -24,21 +26,31 @@ class MeshModel : public Model
         glm::vec3* m_vertexPositions;
 
 		// Add more attributes.
+        glm::mat4x4 m_scaleTransformation;
+        glm::mat4x4 m_translateTransformation;
+        glm::mat4x4 m_rotateTransformation;
+
         glm::mat4x4 m_modelTransformation;
 		glm::mat4x4 m_worldTransformation;
 		glm::mat4x4 m_normalTransformation;
         glm::vec3   m_modelCentroid;
-        Surface m_surface;
 
 	public:
+        Surface m_surface;
 		MeshModel(const std::string& fileName, const Surface& material);
 		~MeshModel();
 
         const glm::mat4x4& GetModelTransformation() override;
+        const glm::mat4x4& GetScaleTransformation() override;
+        const glm::mat4x4& GetTranslateTransformation() override;
+        const glm::mat4x4& GetRotateTransformation() override;
 		const glm::mat4x4& GetWorldTransformation() override;
 		const glm::mat4x4& GetNormalTransformation() override;
 
         void SetModelTransformation(glm::mat4x4& transformation) override;
+        void SetScaleTransformation(glm::mat4x4& transformation) override;
+        void SetTranslateTransformation(glm::mat4x4& transformation) override;
+        void SetRotateTransformation(glm::mat4x4& transformation) override;
 		void SetWorldTransformation(glm::mat4x4& transformation) override;
 		void SetNormalTransformation(glm::mat4x4& transformation) override;
 

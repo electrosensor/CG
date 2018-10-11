@@ -35,8 +35,10 @@ private:
     //##############################
     //##openGL stuff. Don't touch.##
     //##############################
-    GLuint glScreenTex;
+    
     GLuint glScreenVtc;
+    GLuint glScreenTex;
+    GLuint glVertices;
     void createOpenGLBuffer();
     void initOpenGLRendering();
     //##############################
